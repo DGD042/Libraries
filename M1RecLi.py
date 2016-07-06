@@ -684,7 +684,7 @@ class M1RecLi:
 				ValRi = ValR[Fi:Ff]
 				# Se calcula la correlación
 				XX, YY, N = utl.NoNaN(RecHi,ValRi)
-				CCP,CCS,QQ = cr.CorrC(XX,YY,0,0.05)
+				CCP,CCS,QQ = cr.CorrC(XX,YY,True,0,0.05)
 
 				# Se extraen los datos
 				E_Mi = E_M[Fi:Ff]
@@ -720,6 +720,7 @@ class M1RecLi:
 				axs[i].xaxis.set_major_formatter(myFmt)
 				axs[i].set_ylim([-8,8])
 				x += 1
+
 			# Se plotea la legenda y se guarda la imágen
 			plt.tight_layout()
 			if FlagV == True:
@@ -754,7 +755,7 @@ class M1RecLi:
 				ValRi = ValR[Fi:Ff]
 				# Se calcula la correlación
 				XX, YY, N = utl.NoNaN(RecHi,ValRi)
-				CCP,CCS,QQ = cr.CorrC(XX,YY,0,0.05)
+				CCP,CCS,QQ = cr.CorrC(XX,YY,True,0,0.05)
 
 				# Se extraen los datos
 				E_Mi = E_M[Fi:Ff]
@@ -788,7 +789,7 @@ class M1RecLi:
 				axs[i].set_xticklabels(xlabels, rotation=40)
 				axs[i].xaxis.set_major_formatter(myFmt)
 				axs[i].set_ylim([-8,8])
-				
+				x += 1
 			# Se plotea la legenda y se guarda la imágen
 			plt.tight_layout()
 			if FlagV == True:
@@ -923,7 +924,7 @@ class M1RecLi:
 			
 			# Se calcula la correlación
 			XX, YY, N = utl.NoNaN(RecHi,ValRi)
-			CCP,CCS,QQ = cr.CorrC(XX,YY,0,0.05)
+			CCP,CCS,QQ = cr.CorrC(XX,YY,True,0,0.05)
 
 			# Se extraen los datos
 			E_Mi = E_M
@@ -1062,7 +1063,8 @@ class M1RecLi:
 		TotalminDE2 = TotalminD2[:,Fi:Ff]
 
 
-		Fecha2,fTotalH,NH,fTotalD,ND,fTotalmaxD,NmaxD,fTotalminD,NminD,Caso,Hu,ZTH = self.PVTCalc(ZT2,TotalHE2,TotalDE2,\
+		Fecha2,fTotalH,NH,fTotalD,ND,fTotalmaxD,NmaxD,fTotalminD,NminD,Caso,Hu,ZTH,std_errH,std_errD,std_errDM,std_errDm\
+			= self.PVTCalc(ZT2,TotalHE2,TotalDE2,\
 			TotalmaxDE2,TotalminDE2,Year,Year,len(TotalH-1))
 
 		print()

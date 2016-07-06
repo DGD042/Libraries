@@ -1,0 +1,4 @@
+*.pyc
+M1RecLi.py
+.DS_Store
+.gitignore

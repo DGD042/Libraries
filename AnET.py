@@ -353,7 +353,8 @@ class AnET:
 
 
 
-		return Pres_F, P_amp, P_p, P_t, P_var, P_fr, P_Per, P_A 
+		#return Pres_F, P_amp, P_p, P_t, P_var, P_fr, P_Per, P_A 
+		return Pres_F, P_amp, p_fil, P_t, P_var, P_fr, P_Per, P_A 
 
 	def FilFFTr(self,f,t,FiltHi,FiltHf,dt=1,flag=True,Pathimg='',x1=0,x2=50,V='Pres',tt='minutos',Ett=0,ii=1,ix='pos'):
 

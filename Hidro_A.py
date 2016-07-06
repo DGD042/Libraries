@@ -504,7 +504,7 @@ class Hidro_A:
 
 		return MesesM1, MesesMM1, MesesMD1,MesesME1,CiDT1,DesT1,ErrT1, MesesM2, MesesMM2, MesesMD2,MesesME2,CiDT2,DesT2,ErrT2
 
-	def CiclDP(self,MesesMM,PathImg='',Name='',Name2=''):
+	def CiclDP(self,MesesMM,PathImg='',Name='',Name2='',FlagMan=True):
 		'''
 			DESCRIPTION:
 		
@@ -565,7 +565,10 @@ class Hidro_A:
 		F = plt.figure(figsize=(15,10))
 		plt.rcParams.update({'font.size': 22})
 		#plt.plot(CiDT, 'k-', lw = 1.5)
-		plt.contourf(x3,np.arange(1,14),ProcP3,v,vmax=8,vmin=0)
+		if FlagMan == True:
+			plt.contourf(x3,np.arange(1,14),ProcP3,v,vmax=8,vmin=0)
+		else:
+			plt.contourf(x3,np.arange(1,14),ProcP3)
 		plt.title('Ciclo diurno de la precipitación en el año en ' + Name2,fontsize=26 )  # Colocamos el título del gráfico
 		plt.ylabel('Meses',fontsize=24)  # Colocamos la etiqueta en el eje x
 		plt.xlabel('Horas',fontsize=24)  # Colocamos la etiqueta en el eje y
@@ -575,7 +578,10 @@ class Hidro_A:
 		axs.xaxis.set_ticks(np.arange(0,25,1))
 		axs.set_xticklabels(x2)
 		plt.tight_layout()
-		cbar = plt.colorbar(boundaries=bounds,ticks=v)
+		if FlagMan == True:
+			cbar = plt.colorbar(boundaries=bounds,ticks=v)
+		else:
+			cbar = plt.colorbar()
 		cbar.set_label('Precipitación [%]')
 		plt.gca().invert_yaxis()
 		plt.legend(loc=1)

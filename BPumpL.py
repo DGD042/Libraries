@@ -256,7 +256,157 @@ class BPumpL:
 
 		return PrecCS, VCS, Fechas
 
-	def graphEv(self,Prec_Ev,Pres_F_Ev,T_F_Ev,V1,V2,V3,V11,V22,V33,Ax1,Ax2,Ax3,L1,L2,L3,L11,L22,L33,ii=1,ix='pos',PathImg='',FlagT=True,DTT='5'):
+	def ExEvDN(self,PrecC,VC,FechaEv,Mid=0):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende separar los eventos que se presentan de día
+		y de noche.
+		_________________________________________________________________________
+
+			INPUT:
+		+ PrecC: Diagrama de compuestos de Precipitación
+		+ VC: Diagrama de compuestos de la variable que se quiere tener.
+		+ FechaEv: Fecha de cada uno de los eventos.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- PrecCS: Precipitación en compuestos por trimestre.
+		- VCS: Diagrama de la variable por trimestre.
+		- Fechas: Fechas en donde se dan los diferentes eventoss.
+		'''
+
+		# Se inician las variables de los trimestres
+		PrecCS = dict()
+		VCS = dict()
+		Fechas = dict()
+
+		Hours=[]
+
+		# Se extraen los datos de los diferentes trimestres.
+		for i in range(len(FechaEv)):
+			Hours.append(FechaEv[i][Mid][11:13])
+
+		x = [0 for k in range(2)]
+		# Se extraen los diferentes trimestres
+		for ii,i in enumerate(Hours):
+			M = int(i)
+
+			if M >=6 and M <= 17:
+				if x[0] == 0:
+					PrecCS[0] = PrecC[ii]
+					VCS[0] = VC[ii]
+					Fechas[0] = FechaEv[ii]
+					x[0] += 1
+				else:
+					PrecCS[0] = np.vstack((PrecCS[0],PrecC[ii]))
+					VCS[0] = np.vstack((VCS[0],VC[ii]))
+					Fechas[0] = np.vstack((Fechas[0],FechaEv[ii]))
+			else:
+				if x[1] == 0:
+					PrecCS[1] = PrecC[ii]
+					VCS[1] = VC[ii]
+					Fechas[1] = FechaEv[ii]
+					x[1] += 1
+				else:
+					PrecCS[1] = np.vstack((PrecCS[1],PrecC[ii]))
+					VCS[1] = np.vstack((VCS[1],VC[ii]))
+					Fechas[1] = np.vstack((Fechas[1],FechaEv[ii]))
+
+		return PrecCS, VCS, Fechas
+
+	def ExEvENSO(self,PrecC,VC,FechaEv,Nino,Nina,Normal):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende separar los diferentes periodos en meses Niño,
+		Niña y Normal.
+		_________________________________________________________________________
+
+			INPUT:
+		+ PrecC: Diagrama de compuestos de Precipitación
+		+ VC: Diagrama de compuestos de la variable que se quiere tener.
+		+ FechaEv: Fecha de los eventos.
+		+ Nino: Matriz para los meses Niño, Se debe incluir una matriz con filas
+				los años y columnas los diferentes meses.
+		+ Nina: Matriz para los meses Niña, Se debe incluir una matriz con filas
+				los años y columnas los diferentes meses.
+		+ Normal: Matriz para los meses Normales, Se debe incluir una matriz con filas
+				  los años y columnas los diferentes meses.
+		Las matrices de los años Niño, Niña y Normal deben estar desde 1950
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- PrecCS: Precipitación en compuestos por trimestre.
+		- VCS: Diagrama de la variable por trimestre.
+		- Fechas: Fechas en donde se dan los diferentes eventoss.
+		'''
+
+		# Se inician las variables de los trimestres
+		PrecCS = dict()
+		VCS = dict()
+		Fechas = dict()
+
+		Months = []
+		Year = []
+		# Se extraen los datos de los diferentes trimestres.
+		for i in range(len(FechaEv)):
+			Months.append(FechaEv[i][0][5:7])
+			Year.append(FechaEv[i][0][0:4])
+
+		
+		YearsN = [k for k in range(1950,2051)]
+		YearsN = np.array(YearsN)
+
+		x1 = 0
+		x2 = 0
+		x3 = 0
+		# Niño 0, Niña 1, Normal 2.
+
+		# Se extraen los diferentes periodos
+		for ii,i in enumerate(Months):
+			M = int(i)
+			Y = int(Year[ii])
+			if Y == 2016:
+				continue
+			else: 
+				x = np.where(YearsN == Y)[0]
+				
+				if Nino[x,M-1] == 1:
+					if x1 == 0:
+						PrecCS[0] = PrecC[ii]
+						VCS[0] = VC[ii]
+						Fechas[0] = FechaEv[ii]
+						x1 += 1
+					else:
+						PrecCS[0] = np.vstack((PrecCS[0],PrecC[ii]))
+						VCS[0] = np.vstack((VCS[0],VC[ii]))
+						Fechas[0] = np.vstack((Fechas[0],FechaEv[ii]))
+				if Nina[x,M-1] == 1:
+					if x2 == 0:
+						PrecCS[1] = PrecC[ii]
+						VCS[1] = VC[ii]
+						Fechas[1] = FechaEv[ii]
+						x2 += 1
+					else:
+						PrecCS[1] = np.vstack((PrecCS[1],PrecC[ii]))
+						VCS[1] = np.vstack((VCS[1],VC[ii]))
+						Fechas[1] = np.vstack((Fechas[1],FechaEv[ii]))
+
+				if Normal[x,M-1] == 1:
+					if x3 == 0:
+						PrecCS[2] = PrecC[ii]
+						VCS[2] = VC[ii]
+						Fechas[2] = FechaEv[ii]
+						x3 += 1
+					else:
+						PrecCS[2] = np.vstack((PrecCS[2],PrecC[ii]))
+						VCS[2] = np.vstack((VCS[2],VC[ii]))
+						Fechas[2] = np.vstack((Fechas[2],FechaEv[ii]))
+
+		return PrecCS, VCS, Fechas
+
+	def graphEv(self,Prec_Ev,Pres_F_Ev,T_F_Ev,V1,V2,V3,V11,V22,V33,Ax1,Ax2,Ax3,L1,L2,L3,L11,L22,L33,ii=1,ix='pos',PathImg='',FlagT=True,DTT='5',flagLim=False,Lim='none',Lim1=0,Lim2=0,Lim3=0):
 		'''
 			DESCRIPTION:
 		
@@ -449,6 +599,9 @@ class BPumpL:
 		# -----------------------
 		if V11 == 'Prec':
 			if FlagT==True:
+
+				
+
 				# Se obtienen las correlaciones
 				CCP,CCS,QQ = cr.CorrC(Pres_F_EvM,T_F_EvM,True,0)
 				CCP2,CCS,QQ2 = cr.CorrC(Pres_F_EvM,Prec_EvM,True,0)
@@ -464,7 +617,10 @@ class BPumpL:
 				# Precipitación
 				a11 = ax11.errorbar(xx, Prec_EvM, yerr=Prec_EvE, fmt='o-', color=L11, label = V1)		
 				ax11.set_title(r'Promedio de Eventos',fontsize=24)
-				ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=20)
+				if DTT == '1 h':
+					ax11.set_xlabel("Tiempo [cada "+ DTT + "]",fontsize=20)
+				else:
+					ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=20)
 				ax11.set_ylabel(Ax1,fontsize=20)
 
 				# Presión barométrica
@@ -496,46 +652,72 @@ class BPumpL:
 
 				# Se incluyen las correlaciones
 				# Valores para el posicionamiento
-				LM = np.max(T_F_EvM)
-				Lm= np.min(T_F_EvM)
+				LM = np.max(Prec_EvM)
+				Lm= np.min(Prec_EvM)
 				#L = (LM+Lm)/2
-				L = LM-1
-				SLP = 0.1
-				SLS = 0.0
 				
-				Lx = 3
-				Sx = 21
+				
+				if DTT == '5' or DTT == '15':
+					L = LM
+					SLP = 0.15
+					SLS = 0.0
+					Lx = 3
+					Sx = 21
+				elif DTT == '30':
+					L = LM
+					SLP = 0.25
+					SLS = 0.15
+					Lx = 2
+					Sx = 4.5
+				elif DTT == '1 h':
+					L = LM-1
+					SLP = 0.5
+					SLS = 0.0
+					Lx = 1
+					Sx = 2
+
 				
 				FS = 20
 
-				axxx11.text(Lx,L+SLP, r'$r_{Pearson}(%s,%s)=$' %(V22,V33), fontsize=FS)
-				axxx11.text(Lx,L+SLS, r'$r_{Pearson}(%s,%s)=$' %(V11,V22), fontsize=FS)
+				ax11.text(Lx,L+SLP, r'$r_{Pearson}(%s,%s)=$' %(V22,V33), fontsize=FS)
+				ax11.text(Lx,L+SLS, r'$r_{Pearson}(%s,%s)=$' %(V11,V22), fontsize=FS)
 				if CCP >= 0: # Cuando la correlación es positiva
 					if CCP >= QQMP:
-						axxx11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='blue')
+						ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='blue')
 					else:
-						axxx11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='red')
+						ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='red')
 				elif CCP <0: # Cuando la correlación es negativa
 					if CCP <= QQMP:
-						axxx11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='blue')
+						ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='blue')
 					else:
-						axxx11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='red')
+						ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='red')
 
 				if CCP2 >= 0: # Cuando la correlación es positiva
 					if CCP2 >= QQMP2:
-						axxx11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='blue')
+						ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='blue')
 					else:
-						axxx11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='red')
+						ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='red')
 				elif CCP2 <0: # Cuando la correlación es negativa
 					if CCP2 <= QQMP2:
-						axxx11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='blue')
+						ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='blue')
 					else:
-						axxx11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='red')
+						ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='red')
 
+				if Lim == 'all':
+					ax11.set_ylim(Lim1)
+					axx11.set_ylim(Lim2)
+					axxx11.set_ylim(Lim3)
+				elif Lim == '1':
+					ax11.set_ylim(Lim1)
+				elif Lim == '2':
+					axx11.set_ylim(Lim2)
+				elif Lim == '3':
+					axxx11.set_ylim(Lim2)
 
 				#plt.tight_layout()
 				plt.savefig(PathImg+'Average/' + ix + '_' + 'PE_' + V11 + 'V' + V22+'V' + V33 +'_' + str(ii) + '.png')
 				plt.close('all')
+
 
 				#f, ax11 = plt.subplots(111, axes_class=AA.Axes, figsize=(20,10))
 				f = plt.figure(figsize=(20,10))
@@ -544,7 +726,10 @@ class BPumpL:
 				# Precipitación
 				a11 = ax11.errorbar(xx, Prec_EvM, yerr=Prec_EvD, fmt='o-', color=L11, label = V1)
 				ax11.set_title(r'Promedio de Eventos',fontsize=24)
-				ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=20)
+				if DTT == '1 h':
+					ax11.set_xlabel("Tiempo [cada "+ DTT + "]",fontsize=20)
+				else:
+					ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=20)
 				ax11.set_ylabel(Ax1,fontsize=20)
 
 				# Presión barométrica
@@ -803,8 +988,8 @@ class BPumpL:
 
 		if flagPel == True:
 			# Se mira si la ruta existe o se crea
-			if not os.path.exists(PathImg+'Atractors/Mov_1Ev/'+ix+'/'):
-				os.makedirs(PathImg+'Atractors/Mov_1Ev/'+ix+'/')
+			if not os.path.exists(PathImg+'Atractors/Mov_1Ev/'+ix+'/'+str(EvN)):
+				os.makedirs(PathImg+'Atractors/Mov_1Ev/'+ix+'/'+str(EvN))
 			lfs = 28
 			CE = 20
 			i = EvN
@@ -814,7 +999,10 @@ class BPumpL:
 				# axs = fig.add_subplot(111, projection='3d')	
 				# axs.plot(Pres_F_Ev[i-1][C1:C2+1],T_F_Ev[i-1][C1:C2+1],Prec_Ev[i-1][C1:C2+1])
 				# if ~np.isnan(Pres_F_Ev[i-1][pp]) or ~np.isnan(T_F_Ev[i-1][pp]) or ~np.isnan(Prec_Ev[i-1][pp]):
-				# 	axs.scatter(Pres_F_Ev[i-1][pp],T_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50)
+				# 	if Prec_Ev[i-1][pp] > 0:
+				# 		axs.scatter(Pres_F_Ev[i-1][pp],T_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50,color='r')
+				# 	else:
+				# 		axs.scatter(Pres_F_Ev[i-1][pp],T_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50)
 				# #axs.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
 				# axs.set_title('Evento Número '+str(i),fontsize=lfs)
 				# axs.set_xlabel(Ax2,fontsize=lfs-4)
@@ -837,7 +1025,10 @@ class BPumpL:
 				axs = fig.add_subplot(121, projection='3d')	
 				axs.plot(Pres_F_Ev[i-1][C1:C2+1],T_F_Ev[i-1][C1:C2+1],Prec_Ev[i-1][C1:C2+1])
 				if ~np.isnan(Pres_F_Ev[i-1][pp]) or ~np.isnan(T_F_Ev[i-1][pp]) or ~np.isnan(Prec_Ev[i-1][pp]):
-					axs.scatter(Pres_F_Ev[i-1][pp],T_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50)
+					if Prec_Ev[i-1][pp] > 0:
+						axs.scatter(Pres_F_Ev[i-1][pp],T_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50,color='r')
+					else:
+						axs.scatter(Pres_F_Ev[i-1][pp],T_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50)
 				#axs.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
 				axs.set_title('Evento Número '+str(i),fontsize=lfs)
 				axs.set_xlabel(Ax2,fontsize=lfs-4)
@@ -847,7 +1038,11 @@ class BPumpL:
 				axs = fig.add_subplot(122, projection='3d')	
 				axs.plot(T_F_Ev[i-1][C1:C2+1],Pres_F_Ev[i-1][C1:C2+1],Prec_Ev[i-1][C1:C2+1])
 				if ~np.isnan(Pres_F_Ev[i-1][pp]) or ~np.isnan(T_F_Ev[i-1][pp]) or ~np.isnan(Prec_Ev[i-1][pp]):
-					axs.scatter(T_F_Ev[i-1][pp],Pres_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50)
+					if Prec_Ev[i-1][pp] > 0:
+						axs.scatter(T_F_Ev[i-1][pp],Pres_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50,color='r')
+					else:
+						axs.scatter(T_F_Ev[i-1][pp],Pres_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50)
+					#axs.scatter(T_F_Ev[i-1][pp],Pres_F_Ev[i-1][pp],Prec_Ev[i-1][pp],s=50)
 				#axs.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
 				axs.set_title('Evento Número '+str(i),fontsize=lfs)
 				axs.set_xlabel(Ax3,fontsize=lfs-4)
@@ -858,11 +1053,11 @@ class BPumpL:
 				plt.tight_layout()
 				if pp <100:
 					if pp <10:
-						plt.savefig(PathImg +'Atractors/Mov_1Ev/' + ix + '/' + ix + '_' + 'AtrTEv_'+ V11 +'V' + V22+'V' + V33 + '_00' + str(pp) +'.png')
+						plt.savefig(PathImg +'Atractors/Mov_1Ev/' + ix + '/' + str(EvN) + '/' + ix + '_' + 'AtrTEv_'+ V11 +'V' + V22+'V' + V33 + '_00' + str(pp) +'.png')
 					else:
-						plt.savefig(PathImg +'Atractors/Mov_1Ev/' + ix + '/' + ix + '_' + 'AtrTEv_'+ V11 +'V' + V22+'V' + V33 + '_0' + str(pp) +'.png')
+						plt.savefig(PathImg +'Atractors/Mov_1Ev/' + ix + '/' + str(EvN) + '/' + ix + '_' + 'AtrTEv_'+ V11 +'V' + V22+'V' + V33 + '_0' + str(pp) +'.png')
 				else:
-					plt.savefig(PathImg +'Atractors/Mov_1Ev/' + ix + '/' + ix + '_' + 'AtrTEv_'+ V11 +'V' + V22+'V' + V33 + '_' + str(pp) +'.png')
+					plt.savefig(PathImg +'Atractors/Mov_1Ev/' + ix + '/' + str(EvN) + '/' + ix + '_' + 'AtrTEv_'+ V11 +'V' + V22+'V' + V33 + '_' + str(pp) +'.png')
 				plt.close('all')
 
 	def RainDT(self,Prec):
@@ -1109,16 +1304,17 @@ class BPumpL:
 					# 	print('xpM='+str(xpM))
 					# 	print('PresChangeA='+str(PresChangeA[i]))
 					# 	print('PresRateBA='+str(PresRateA[i]))
-			else:
+			elif dt < 60:
 				# Filtrado adicional de la serie
 				qq = np.isnan(PrecC[i,:x[0]+1])
 				sq = sum(qq)
-				if sq >= x[0]/2 or xmm == 0:
+				if sq >= x[0]/2 or xmm <= 1:
 					PresChangeB[i] = np.nan
 					PresRateB[i] = np.nan
 					PresChangeA[i] = np.nan
 					PresRateA[i] = np.nan
 				else:
+
 					# Se encuentra el mínimo de presión antes del evento
 					PresMin = np.nanmin(PresC[i,xmm-2:xmm+3]) # Valor del mínimo
 					xpm = np.where(PresC[i,xmm-2:xmm+3] == PresMin)[0]+xmm-2 # Posición del mínimo
@@ -1136,6 +1332,63 @@ class BPumpL:
 						except:
 							PresMaxB = np.nanmax(PresC[i,:xpm+1]) # Valor máximo antes
 							xpM = np.where(PresC[i,:xpm+1] == PresMaxB)[0] # Posición del máximo antes
+					# print('Before')
+					# print('xpm='+str(xpm))
+					# print('xpM='+str(xpM))
+					if np.isnan(PresMaxB) or np.isnan(PresMin) or xpM == xpm:
+						PresChangeB[i] = np.nan
+						PresRateB[i] = np.nan
+					else:
+						PresChangeB[i] = PresMaxB - PresMin
+						PresRateB[i] = PresChangeB[i]/((xpM-xpm-1)*dt/60) # Rate en hPa/h
+					
+					# print('PresChangeB='+str(PresChangeB[i]))
+					# print('PresRateB='+str(PresRateB[i]))
+
+					# Se encuentra el cambio de presión durante el evento.
+					PresMaxA = np.nanmax(PresC[i,xpm:x[0]+5]) # Valor máximo
+					xpM = np.where(PresC[i,xpm:x[0]+6] == PresMaxA)[0]+xpm # Posición del máximo antes
+
+					if np.isnan(PresMaxA) or np.isnan(PresMin) or xpM == xpm:
+						PresChangeA[i] = np.nan
+						PresRateA[i] = np.nan
+					else:
+						PresChangeA[i] = PresMaxA - PresMin
+						PresRateA[i] = PresChangeA[i]/((xpM-xpm+1)*dt/60) # Rate en hPa/h
+					# if i == 426:
+					# 	print('After')
+					# 	print('xpm='+str(xpm))
+					# 	print('xpM='+str(xpM))
+					# 	print('PresChangeA='+str(PresChangeA[i]))
+					# 	print('PresRateBA='+str(PresRateA[i]))
+			else:
+				# Filtrado adicional de la serie
+				qq = np.isnan(PrecC[i,:x[0]+1])
+				sq = sum(qq)
+				if sq >= x[0]/2 or xmm <= 1:
+					PresChangeB[i] = np.nan
+					PresRateB[i] = np.nan
+					PresChangeA[i] = np.nan
+					PresRateA[i] = np.nan
+				else:
+
+					# Se encuentra el mínimo de presión antes del evento
+					PresMin = np.nanmin(PresC[i,xmm-2:xmm+3]) # Valor del mínimo
+					xpm = np.where(PresC[i,xmm-2:xmm+3] == PresMin)[0]+xmm-2 # Posición del mínimo
+					# print('xpm=',xpm)
+					# print('xmm=',xmm)
+					print(xpm)
+					if xpm == 0:
+					# Se encuentra el cambio de presión antes del evento
+						PresMaxB = PresMin
+						xpM = xpm
+					else:
+						try:
+							PresMaxB = np.nanmax(PresC[i,xmm-(dt-1)/3:xpm+1]) # Valor máximo antes
+							xpM = np.where(PresC[i,xmm-(dt-1)/3:xpm+1] == PresMaxB)[0]+xmm-(dt-1)/3 # Posición del máximo antes
+						except:
+							PresMaxB = np.nanmax(PresC[i,:xpm[0]+1]) # Valor máximo antes
+							xpM = np.where(PresC[i,:xpm[0]+1] == PresMaxB)[0] # Posición del máximo antes
 					# print('Before')
 					# print('xpm='+str(xpm))
 					# print('xpM='+str(xpM))
