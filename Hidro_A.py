@@ -3,31 +3,34 @@
 #______________________________________________________________________________
 #
 #						Coded by Daniel González Duque
-#						    Last revised 24/03/2016
+#						    Last revised 11/03/2016
 #______________________________________________________________________________
 #______________________________________________________________________________
 
 #______________________________________________________________________________
 #
-# DESCRIPCIÓN DE LA CLASE:
-# 	En esta clase se incluyen las rutinas para realizar los diferentes análisis
-#	hidrológicos que se necesiten.
+# CLASS DESCRIPTION:
+# 	This class have different routines for hydrological analysis. 
+#
+#	This class do not use Pandas in any function, it uses directories and save
+#	several images in different folders. It is important to include the path 
+#	to save the images.
+#	
 #______________________________________________________________________________
 
 import numpy as np
 import sys
 import csv
-import xlrd # Para poder abrir archivos de Excel
+import xlrd 
 import xlsxwriter as xlsxwl
-import scipy.io as sio # Para poder trabajar con archivos .mat
-from scipy import stats as st # Para realizar las regresiones
+import scipy.io as sio
+from scipy import stats as st
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates # Manejo de dateticks
+import matplotlib.dates as mdates
 import matplotlib.mlab as mlab
 import time
 import warnings
 
-# Se importan los paquetes para manejo de fechas
 from datetime import date, datetime, timedelta
 
 from UtilitiesDGD import UtilitiesDGD
@@ -37,11 +40,10 @@ utl = UtilitiesDGD()
 class Hidro_A:
 
 	def __init__(self):
-
 		'''
 			DESCRIPTION:
 
-		Este es el constructor por defecto, no realiza ninguna acción.
+		This is the build up function.
 		'''
 
 	def CiclD(self,Var,Fecha,FlagG=True,PathImg='',NameA='',VarL='',VarLL='',C='k',Name='',flagTri=False,flagTriP=False,PathImgTri='',DTH=24):
@@ -741,4 +743,100 @@ class Hidro_A:
 		plt.close('all')
 
 		return MesM,MesD,MesE
+
+	def EstAnom(self,VMes):
+		'''
+			DESCRIPTION:
+		
+		This function takes the monthly data and generates the data anomalies and the
+		standarized data.
+
+		The calculation is done using the following equation:
+
+			Z = \frac{x-\mu}{\sigma}
+		_________________________________________________________________________
+
+			INPUT:
+		+ VMes: Mounthly average of the variable.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- Anom: Anomalie data results.
+		- StanA: Standarized data results.
+		'''
+
+		# Variable initialization
+		Anom = np.empty(len(VMes))
+		StanA = np.empty(len(VMes))
+
+
+		# Variable reshape
+		VarM = np.reshape(VMes[:],(-1,12))
+		
+		# Annual calculations
+		MesM = np.nanmean(VarM,axis=0) # Annual Average.
+		MesD = np.nanstd(VarM,axis=0) # Annual deviation.
+
+		# Anomalie cycle
+		x = 0
+		for i in range(len(VarM)):
+			for j in range(12):
+				Anom[x] = VarM[i,j] - MesM[j] # Anomalies
+				StanA[x] = (VarM[i,j] - MesM[j])/MesD[j] # Standarized data
+				x += 1
+
+
+		return Anom,StanA
+
+	def MTrData(self,VMes):
+		'''
+			DESCRIPTION:
+		
+		This function takes the monthly data and generates a series with all the
+		different months, as well as a series with the trimester data. The data must
+		hace full years.
+		_________________________________________________________________________
+
+			INPUT:
+		+ VMes: Mounthly average of the variable.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- Months: Matrix with all the months in the column and years in the rows.
+		- Trim: Matrix with all the trimesters in the columns and years in the rows.
+		'''
+		# Variable reshape
+		Months = np.reshape(VMes[:],(-1,12))
+
+		# Variable initialization
+		Trim = np.empty((len(Months),4))
+
+		DEF = np.empty(3)
+		MAM = np.empty(3)
+		JJA = np.empty(3)
+		SON = np.empty(3)
+
+		# Cycle to calculate the trimesters
+		x = 0
+		for i in range(len(Months)):
+			if x == len(Months)-1:
+				DEF = np.empty(3)*np.nan
+			else:
+				DEF[0] = Months[i,11]
+				DEF[1:3] = Months[i+1,0:2]
+
+			MAM = Months[i,1:4]
+			JJA = Months[i,4:7]
+			SON = Months[i,7:11]
+
+			Trim[i,0] = np.mean(DEF)
+			Trim[i,1] = np.mean(MAM)
+			Trim[i,2] = np.mean(JJA)
+			Trim[i,3] = np.mean(SON)
+
+			x += 1
+
+		return Months, Trim
+
+
 
