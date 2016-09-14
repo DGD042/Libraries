@@ -809,8 +809,10 @@ class ExtractD:
 			DESCRIPTION:
 		
 		Con esta función se pretende cambiar de escala temporal los datos,
-		agregándolos a diferentes escalas temporales, se deben incertar series
-		completas de tiempo, se recomienda utilizar la función .
+		agregándolos a diferentes escalas temporales, se deben insertar series
+		completas de tiempo.
+
+		Los datos faltantes deben estar como NaN.
 		_________________________________________________________________________
 
 			INPUT:
@@ -820,6 +822,7 @@ class ExtractD:
 		+ V1C: Variable que se desea cambiar de escala temporal. 
 		+ dt: Delta de tiempo para realizar la agregación, depende de la naturaleza
 			  de los datos.
+			  Si se necesitan datos mensuales, el valor del dt debe ser 1.
 		+ escala: Escala a la cual se quieren pasar los datos:
 				0: de minutal o horario.
 				1: a diario.
@@ -1737,10 +1740,10 @@ class ExtractD:
 		for i in range(NEst):
 			ID.append(S.cell(x,0).value)
 			Names.append(S.cell(x,1).value)
-			ZT.append(str(S.cell(x,4).value))
-			FIns.append(S.cell(x,6).value)
-			Lat.append(S.cell(x,7).value)
-			Lon.append(S.cell(x,8).value)
+			ZT.append(str(S.cell(x,5).value))
+			FIns.append(S.cell(x,7).value)
+			Lat.append(S.cell(x,8).value)
+			Lon.append(S.cell(x,9).value)
 			x += 1
 		
 		# Se busca la posición del ID
