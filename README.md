@@ -17,5 +17,5 @@ Important notes:
 	translate all the different information in english, I hope whoever 
 	finds this repository make good use for it.
 
-	ALL THE INFORMATION ON THIS REPOSITORY OS FREE TO USE!
+	ALL THE INFORMATION ON THIS REPOSITORY ARE FREE TO USE!
 	I ONLY ASK FOR ACKNOWLEDGEMENT.
