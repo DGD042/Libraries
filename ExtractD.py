@@ -11,7 +11,9 @@
 #
 # DESCRIPCIÓN DE LA CLASE:
 # 	En esta clase se incluyen las rutinas para tratar datos de diferentes
-#	fuentes de información, extraer los datos y completarlos.
+#	fuentes de información, extraer los datos y completarlos y generar 
+#	cambios de escala a la información. Además esta librería también genera
+#	archivos en diferentes formatos para el posterior uso de la información.
 #
 #	Esta libreria es de uso libre y puede ser modificada a su gusto, si tienen
 #	algún problema se pueden comunicar con el programador al correo:
@@ -50,7 +52,8 @@ class ExtractD:
 		defecto siempre extrae la primera columna y luego la segunda, si es
 		necesario extraer otra columna adicional se debe incluir un vector en n.
 
-		Máximo se extraerán 4 columnas.
+		Máximo se extraerán 4 columnas y los datos que se extraen deben estar en
+		flias y las variables en columnas.
 		_________________________________________________________________________
 
 			INPUT:
@@ -105,8 +108,82 @@ class ExtractD:
 			utl.ExitError('ED','ExtractD','No se pueden incluir más de dos columans con texto.')
 
 		if flagD == True:
-			utl.ExitError('ED','ExtractD',\
-				'Todavía no se a codificado esta parte,\n por favor contacte al administrador')
+
+			# Se inicializan las variables que se van a extraer
+			if mi == 1:
+				Tiempo = []
+			elif mi==2:
+				Tiempo = []
+				Hora = []
+
+			if m >= 1 and m<=4:
+				V1 = []
+				V2 = []
+				V3 = []
+				V4 = []
+			else:
+				utl.ExitError('ED','ExtractD',\
+					'No se pueden extraer tantas variables, por favor reduzca el número de variables')
+
+			# --------------------------------------
+			# Se abre el archivo de Excel
+			# --------------------------------------
+			book = xlrd.open_workbook(Tot)
+			# Se carga la página en donde se encuentra el información
+			S = book.sheet_by_index(sheet)
+
+			# Se extren los encabezados
+			if Header == True:
+				if mi == 1:
+					Head0 = S.cell(rrr-1,ni).value
+				else:
+					Head0 = S.cell(rrr-1,ni[0]).value # Se toman los encabezados
+					Head01 = S.cell(rrr-1,ni[1]).value  # Se toman los encabezados
+				if m == 1:
+					Head1 = S.cell(rrr-1,n).value
+				else:
+					Head1 = S.cell(rrr-1,n[0]).value
+					try:
+						Head2 = S.cell(rrr-1,n[1]).value
+					except:
+						Head2 = np.nan
+					try:
+						Head3 = S.cell(rrr-1,n[2]).value
+					except:
+						Head3 = np.nan
+					try:
+						Head4 = S.cell(rrr-1,n[3]).value
+					except:
+						Head4 = np.nan
+
+
+			# Se genera un ciclo para extraer toda la información
+			k = 1
+			xx = rrr # Contador de las filas
+			while k == 1:
+				if mi == 1:
+					if m == 1:
+						try:
+							# Se verifica que se esté sacando una variable correcta
+							a = S.cell(xx,ni).value # Tiempo, debería estar completo
+							if a != '':
+								# Se carga el Tiempo
+								Tiempo.append(S.cell(xx,ni).value)
+								# Se carga la variable
+								V1.append(S.cell(xx,n).value)
+								if V1[-1] == '':
+									V1[-1] = np.nan
+						except IndexError:
+							k = 2
+						xx += 1
+
+			if Header == True:
+			# Se guarda la información
+				if mi == 1:
+					if m == 1:
+						Head = [Head0,Head1]
+						return Tiempo, V1, Head
+			
 
 		elif flagD == False:
 
@@ -217,7 +294,7 @@ class ExtractD:
 						except:
 							V4.append(float('nan'))
 				r += 1
-
+			f.close()
 			if Header == True:
 				if mi == 1:
 					if m == 1: 
@@ -578,16 +655,13 @@ class ExtractD:
 			elif flagM == False:
 				FechaD = [(j +'-'+ Hora[i]+'00') for i,j in enumerate(Fecha)]
 		elif flagH == False:
-			FechaD = FechaD
+			FechaD = Fecha
 
 		# Se toma la fecha de inicio y la fecha final para hacer el vector completo de fechas
 		yeari = Fecha[0][0:4]
-		yearf = Fecha[len(Fecha)-1][0:4]
-
-		
+		yearf = Fecha[-1][0:4]
 
 		rr = 0
-		
 		# Se realiza el vector completo de fechas
 		for result in utl.perdelta(date(int(yeari), 1, 1), date(int(yearf)+1, 1, 1), timedelta(days=1)):
 			#print(result.strftime('%Y%m%d'))
@@ -626,7 +700,7 @@ class ExtractD:
 						if rr == 0:
 							FechaN[0] = result
 							if i < 10:
-								FechaC[rr] = FR + '-0' +str(i)+'00'
+								FechaC[rr] = FR + '-0' +str(i)+'00'								
 							else:
 								FechaC[rr] = FR + '-' +str(i)+'00'
 						else:
@@ -635,40 +709,35 @@ class ExtractD:
 								FechaC.append(FR + '-0' +str(i)+'00')
 							else:
 								FechaC.append(FR + '-' +str(i)+'00')
-					rr +=1
+						rr +=1
 			elif flagH == False:
 				if rr == 0:
 					FechaC[rr] = FR
 					FechaN[0] = result
-
 				else:
-					FechaC[rr].append(FR)
-					FechaN[0].append(result)
+					FechaC.append(FR)
+					FechaN.append(result)
 					
 				rr +=1
 				
 
 		#Se analizan las fechas reales vs las fechas del documento
-		V1C = [float('nan') for k in FechaC] # Vector real de valores
+		V1C = np.empty(len(FechaC))*np.nan # Vector real de valores
 
-		x = 0 # Contador para las fechas del archivo
-		for i,j in enumerate(FechaC):
 
-			if len(FechaD) == x:
-				xx = x
-			else:
-				if j == FechaD[x]:	
-					#print(j)
-					#print(x)
-					V1C[i] = V1[x]
-					x +=1
-					# Los archivos pueden problemas con la toma de datos si se repiten los datos
-					# se toma el primero de ellos.
-					if len(FechaD) == x: 
-						xx = x
-					else:
-						if FechaD[x-1] == FechaD[x]:
-							x +=1
+		FechaC = np.array(FechaC)
+		FechaD = np.array(FechaD)
+		V1 = np.array(V1)
+
+		x = FechaC.searchsorted(FechaD)
+
+		V1C[x] = V1
+
+
+		# # Se llena el vector con los datos reales
+		# for i,j in enumerate(FechaD):
+		# 	x = FechaC.index(j)
+		# 	V1C[x] = V1[i]
 
 		return FechaC, V1C, FechaN,FechaD
 
@@ -778,6 +847,22 @@ class ExtractD:
 		# -------------------------------------------
 		#Se analizan las fechas reales vs las fechas del documento
 		
+
+		# V1C2 = np.empty(len(FechaC2))*np.nan # Vector real de valores
+		# FechaC = np.array(FechaC)
+		# FechaC2 = np.array(FechaC2)
+		# V1C = np.array(V1C)
+
+		# yeari = FechaC[0][0:4] # Separador de la Fecha
+		# if int(yeari) < int(ai):
+		# 	x = FechaC.searchsorted(FechaC2)
+		# 	V1C2[x] = V1C
+		# else:
+		# 	x = FechaC2.searchsorted(FechaC)
+		# 	print(x)
+		# 	V1C2[x] = V1C
+
+
 		V1C2 = [float('nan') for k in FechaC2] # Vector real de valores
 		yeari = FechaC[0][0:4] # Separador de la Fecha
 		x = 0 # Contador para las fechas del archivo
@@ -788,7 +873,7 @@ class ExtractD:
 					xx = x
 				else:
 					if j == FechaC2[x]:	
-						
+						#print(j,FechaC2[x])
 						V1C2[x] = V1C[i]
 						x +=1
 		else:
@@ -797,14 +882,13 @@ class ExtractD:
 				if len(FechaC) == x:
 					xx = x
 				else:
-					if j == FechaC[x]:	
-						
+					if j == FechaC[x]:							
 						V1C2[i] = V1C[x]
 						x +=1
 
 		return FechaC2,FechaN2,V1C2
 
-	def Ca_E(self,FechaC,V1C,dt=24,escala=1,op='mean',flagMa=False):
+	def Ca_E(self,FechaC,V1C,dt=24,escala=1,op='mean',flagMa=False,flagDF=False):
 		'''
 			DESCRIPTION:
 		
@@ -833,6 +917,10 @@ class ExtractD:
 		+ flagMa: Para ver si se quieren los valores máximos y mínimos.
 				True: Para obtenerlos.
 				False: Para no calcularos.
+		+ flagDF: Para ver si se quieren los datos faltantes por mes, solo funciona
+				  en los datos que se dan diarios.
+				True: Para calcularlos.
+				False: Para no calcularos.
 		_________________________________________________________________________
 		
 			OUTPUT:
@@ -859,6 +947,9 @@ class ExtractD:
 		VE = ["" for k in range(1)]
 		VEMax = ["" for k in range(1)]
 		VEMin = ["" for k in range(1)]
+
+		NF = [] # Porcentaje de datos faltantes
+		NNF = [] # Porcentaje de datos no faltantes
 		rr = 0
 
 		# -------------------------------------------
@@ -979,6 +1070,8 @@ class ExtractD:
 						if i == int(yeari) and j == 1:
 							q = np.isnan(V1C[d:dtt])
 							qq = sum(q)
+							NF.append(qq/len(V1C[d:dtt]))
+							NNF.append(1-NF[-1])
 							if qq > DF.days/2:
 								VE[0] = float('nan')
 								if flagMa == True:
@@ -1001,6 +1094,8 @@ class ExtractD:
 						else:
 							q = np.isnan(V1C[d:dtt])
 							qq = sum(q)
+							NF.append(qq/len(V1C[d:dtt]))
+							NNF.append(1-NF[-1])
 							if qq > DF.days/2:
 								VE.append(float('nan'))
 								if flagMa == True:
@@ -1032,6 +1127,7 @@ class ExtractD:
 					if i == 0:
 						q = np.isnan(V1C[i:dtt])
 						qq = sum(q)
+						
 						if qq > dt/2:
 							VE[0] = float('nan')
 							if flagMa == True:
@@ -1087,6 +1183,8 @@ class ExtractD:
 						if i == int(yeari) and j == 1:
 							q = np.isnan(V1C[d:dtt])
 							qq = sum(q)
+							NF.append(qq/len(V1C[d:dtt]))
+							NNF.append(1-NF[-1])	
 							if qq > DF.days/2:
 								VE[0] = float('nan')
 								if flagMa == True:
@@ -1109,6 +1207,8 @@ class ExtractD:
 						else:
 							q = np.isnan(V1C[d:dtt])
 							qq = sum(q)
+							NF.append(qq/len(V1C[d:dtt]))
+							NNF.append(1-NF[-1])
 							if qq > DF.days/2:
 								VE.append(float('nan'))
 								if flagMa == True:
@@ -1134,9 +1234,15 @@ class ExtractD:
 		# Se dan los resultados
 		# -------------------------------------------
 		if flagMa == True:
-			return FechaEs, FechaNN, VE, VEMax, VEMin
+			if  flagDF:
+				return FechaEs, FechaNN, VE, VEMax, VEMin, NF,NNF
+			else:
+				return FechaEs, FechaNN, VE, VEMax, VEMin
 		elif flagMa == False:
-			return FechaEs, FechaNN, VE
+			if flagDF:
+				return FechaEs, FechaNN, VE,NF,NNF
+			else:
+				return FechaEs, FechaNN, VE
 
 	def EDH(self,Tot,flagD=True,sheet=1,Header=True,n=2):
 
@@ -1711,6 +1817,7 @@ class ExtractD:
 		+ Pathout: Ruta con nombre del archivo.
 		+ Name: Nombre del documento.
 		+ Var: Variable.
+		+ Hdt: Delta de tiempo.
 		_________________________________________________________________________
 		
 			OUTPUT:
@@ -1788,9 +1895,7 @@ class ExtractD:
 			# Se escribe el encabezado
 			self.HeadEIA(NameE,ZTE,FInsE,LatE,LonE,Var2,worksheet,W)
 			# Se llenan los datos
-			xx = self.HourEIA(i,Ai,V,Hdt,xx,worksheet,W)
-
-
+			xx = self.HourEIA(Ai,i,V,Hdt,xx,worksheet,W)
 
 	def HeadEIA(self,NameE,ZTE,FInsE,LatE,LonE,Var,worksheet,W):
 		'''
@@ -1824,6 +1929,146 @@ class ExtractD:
 		worksheet.write(5,1, LonE)
 		worksheet.write(6,0, r'ALTITUDE',bold) 
 		worksheet.write(6,1, ZTE[0]+',' +ZTE[1:-2] +'m')
+		worksheet.write(7,0, r'INSTALLED',bold)
+		worksheet.write(7,1, FInsE)
+		worksheet.write(8,0, r'VARIABLE',bold)
+		worksheet.write(8,1, Var)
+
+	def SaEIANev(self,Fecha,V,VD,VDmax,VDmin,Pathout,Name,Var,Var2,Hdt=1,PathDataBase=''):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende guardar los datos en una plantilla similar
+		a la plantilla de la EIA para los datos de los sensores.
+		_________________________________________________________________________
+
+			INPUT:
+		+ Fecha: Fecha de las variables en formato yyyy/mm/dd-HHMM.
+		+ V: Variable que se quiere guardar en la plantilla
+		+ VD: Variable en agregación diaria.
+		+ VDmax: Variable en agregación diaria máxima.
+		+ VDmin: Variable en agregación diaria mínima.
+		+ Pathout: Ruta con nombre del archivo.
+		+ Name: Nombre del documento.
+		+ Var: Variable.
+		+ Var2: Variable con unidades.
+		+ Hdt: Delta de tiempo.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja un archivo .xlsx con todos los datos.
+		'''
+
+		# Se carga el documento de la base de datos
+		Tot = PathDataBase + 'Data_Imp.xlsx'
+		book = xlrd.open_workbook(Tot) # Se carga el archivo
+		S = book.sheet_by_index(1) # Datos para trabajar
+		NEst = int(S.cell(1,0).value) # Número de estaciones y sensores que se van a extraer
+
+
+		# Se inicializan las variables que se tomarán del documento
+		x = 3 # Contador
+		ID = []
+		Names = []
+		ZT = []
+		FIns = []
+		Lat = []
+		Lon = []
+		Marker = []
+		# Se llaman las variables
+		for i in range(NEst):
+			ID.append(S.cell(x,2).value)
+			Names.append(S.cell(x,1).value)
+			ZT.append(str(S.cell(x,3).value))
+			FIns.append(S.cell(x,7).value)
+			Lat.append(S.cell(x,4).value)
+			Lon.append(S.cell(x,5).value)
+			Marker.append(str(S.cell(x,7).value))
+			x += 1
+		
+		# Se busca la posición del ID
+		q = ID.index(Name)
+
+		ZTE = ZT[q]
+		FInsE = FIns[q]
+		LatE = Lat[q]
+		LonE = Lon[q]
+		NameE = Name + ' ' + Var
+		NameEE = Name +' - GPS mark ' + Marker[q]
+
+		# Se crea el documento 
+		Nameout = Pathout + NameE +'.xlsx'
+		W = xlsxwl.Workbook(Nameout)
+		bold = W.add_format({'bold': True,'align': 'left'})
+		boldc = W.add_format({'bold': True,'align': 'center'})
+		date_format_str = 'yyyy/mm/dd-HHMM'
+		date_format = W.add_format({'num_format': date_format_str,'align': 'left'})
+		
+
+		Ai = int(Fecha[0][0:4])
+		Af = int(Fecha[-1][0:4])
+
+		# Se crean las primeras hojas
+		worksheet = W.add_worksheet('Min Daily Records')
+		self.HeadEIANev(NameEE,ZTE,FInsE,LatE,LonE,Var2,worksheet,W)
+		self.DailyEIA(Ai,Af,VDmin,worksheet,W)
+
+		worksheet = W.add_worksheet('Max Daily Records')
+		self.HeadEIANev(NameEE,ZTE,FInsE,LatE,LonE,Var2,worksheet,W)
+		self.DailyEIA(Ai,Af,VDmax,worksheet,W)
+
+		worksheet = W.add_worksheet('AV Daily Records')
+		self.HeadEIANev(NameEE,ZTE,FInsE,LatE,LonE,Var2,worksheet,W)
+		self.DailyEIA(Ai,Af,VD,worksheet,W)
+
+		xx = 0 
+		# Se realiza la escritura de la información
+		for i in range(Ai,Af+1):
+			
+			# Se agrega la hoja de cada año
+			worksheet = W.add_worksheet(str(i))
+			# Se escribe el encabezado
+			self.HeadEIANev(NameEE,ZTE,FInsE,LatE,LonE,Var2,worksheet,W)
+			# Se llenan los datos
+			xx = self.HourEIANev(Ai,i,V,Hdt,xx,worksheet,W)
+
+			
+
+	def HeadEIANev(self,NameE,ZTE,FInsE,LatE,LonE,Var,worksheet,W):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende escribir el inicio de los archivos de la
+		base de datos de la escuela.
+		_________________________________________________________________________
+
+			INPUT:
+
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja un archivo .xlsx con todos los datos.
+		'''
+
+		bold = W.add_format({'bold': True,'align': 'left'})
+		boldc = W.add_format({'bold': True,'align': 'center'})
+		date_format_str = 'yyyy/mm/dd-HHMM'
+		date_format = W.add_format({'num_format': date_format_str,'align': 'left'})
+
+		worksheet.write(0,0, r'Programa en Ingeniería Ambiental - Escuela de Ingeniería de Antioquia',bold) # Titulo
+		worksheet.write(2,0, r'SENSOR',bold) # Sensor
+		worksheet.write(2,1, r'U23-001 HOBO® Temperature/Relative Humidity Data')
+		worksheet.write(3,0, r'NAME',bold) # Nombre
+		worksheet.write(3,1, NameE) # Nombre
+		worksheet.write(4,0, r'LATITUDE',bold) 
+		worksheet.write(4,1, LatE)
+		worksheet.write(5,0, r'LONGITUDE',bold) 
+		worksheet.write(5,1, LonE)
+		worksheet.write(6,0, r'ALTITUDE',bold) 
+		try:
+			worksheet.write(6,1, ZTE[0]+',' +ZTE[1:-2] +'m')
+		except:
+			worksheet.write(6,1, 'NNN')
 		worksheet.write(7,0, r'INSTALLED',bold)
 		worksheet.write(7,1, FInsE)
 		worksheet.write(8,0, r'VARIABLE',bold)
@@ -2012,4 +2257,253 @@ class ExtractD:
 
 		return xx
 
+	def HourEIANev(self,Ai,ii,VD,Hdt,xx,worksheet,W):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende escribir los datos horarios de la plantilla.
+		_________________________________________________________________________
 
+			INPUT:
+
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja un archivo .xlsx con todos los datos.
+		'''
+		# Meses
+		Mes = ['January','February','March','April','May','June',\
+		'July','August','Septiembre','October','November','December']
+
+		bold = W.add_format({'bold': True,'align': 'left'})
+		boldc = W.add_format({'bold': True,'align': 'center'})
+		date_format_str = 'yyyy/mm/dd-HHMM'
+		date_format = W.add_format({'num_format': date_format_str,'align': 'left'})
+
+		# Contador de datos
+		x = 12 # Donde comienzan los datos
+		if ii == Ai:
+			xx = 0 # Contador de la matriz de los datos
+
+		for i in range(1,13):
+
+			# Se escriben los encabezados
+			worksheet.write(x-2,0, r'MONTH',boldc)
+			worksheet.write(x-2,1, Mes[i-1])
+			worksheet.write(x-1,0, r'DAY/HOUR',boldc)
+			for j in range(1,32):
+				worksheet.write(x-1,j, j,boldc)
+			# Se calcula el delta de tiempo
+			dt = 24/Hdt
+			h = 0 # Contador de horas
+			m = 0 # Contador de minutos
+			for g in range(0,int(dt)):
+				if g == 0:
+					MM = str(int(m))
+					HH = str(h)
+					worksheet.write(x+g,0, HH+':0'+MM,boldc)
+				else:
+					if m == 60:
+						h += 1
+						m = 0
+					MM = str(int(m))
+					HH = str(h)
+					if m < 10:
+						worksheet.write(x+g,0, HH+':0'+MM,boldc)
+					else:
+						worksheet.write(x+g,0, HH+':'+MM,boldc)
+				m += Hdt*60
+
+			worksheet.write(x+25,0, r'Min',boldc)
+			worksheet.write(x+26,0, r'Max',boldc)
+			worksheet.write(x+27,0, r'Average',boldc)
+
+			Fi = date(ii,i,1)
+			if i == 12:
+				Ff = date(ii+1,1,1)
+			else:
+				Ff = date(ii,i+1,1)
+			DF = Ff-Fi
+
+			# Se incluyen los datos
+			for j in range(0,DF.days):
+				VC = [] # Variable para hacer los otros cálculos
+				for g in range(int(dt)):
+					VC.append(VD[xx])
+					# Se escriben los datos
+					if np.isnan(VD[xx]):
+						worksheet.write(x+g,j+1,'')
+					else:	
+						worksheet.write(x+g,j+1,VD[xx])
+					xx += 1
+
+				# Se calculan los medios, máximos y mínimos de cada mes
+				M = np.nanmean(np.array(VC))
+				Mmin = np.nanmin(np.array(VC))
+				Mmax = np.nanmax(np.array(VC))
+
+				if np.isnan(Mmin):
+					worksheet.write(x+25,j+1, '',bold)
+				else:
+					worksheet.write(x+25,j+1, Mmin,bold)
+
+				if np.isnan(Mmax):
+					worksheet.write(x+26,j+1, '',bold)
+				else:
+					worksheet.write(x+26,j+1, Mmax,bold)
+
+				if np.isnan(M):
+					worksheet.write(x+27,j+1, '',bold)
+				else:
+					worksheet.write(x+27,j+1, M,bold)
+
+			x += 32
+
+		return xx
+
+	def CSVEIA(self,fieldnames,FechaCT,TC,DPC,HRC,Pathout,Name):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende guardar los datos de la EIA en un archivo .csv.
+		
+		Esta función guardará las tres variables: Temperatura, Temperatura a punto 
+		de rocío y Humedad Relativa.
+		_________________________________________________________________________
+
+			INPUT:
+			+ filednames: Encabezados de las variables.
+			+ FechaCt: Vector de fechas.
+			+ TC: Temperatura.
+			+ DPC: Temperatura de punto de rocío.
+			+ HRC: Humedad Relativa
+			+ Pathout: Ruta de salida.
+			+ Name: Nombre del archivo.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja un archivo .csv con todos los datos.
+		'''
+
+		data1=[] # Se inicializa la variable de los datos sin valores NaN
+		# Datos
+		for i in range(len(TC)):
+			if np.isnan(TC[i]) and np.isnan(DPC[i]) and np.isnan(HRC[i]):
+				data1.append((str(FechaCT[i])+'; ; ; ').split(';'))
+			elif np.isnan(TC[i]) and np.isnan(DPC[i]):
+				data1.append((str(FechaCT[i])+'; ; ;'+str(HRC[i])).split(';'))
+			elif np.isnan(TC[i]) and np.isnan(HRC[i]):
+				data1.append((str(FechaCT[i])+'; ;'+str(DPC[i])+'; ').split(';'))
+			elif np.isnan(DPC[i]) and np.isnan(HRC[i]):
+				data1.append((str(FechaCT[i])+';'+str(TC[i])+'; ; ').split(';'))
+			elif np.isnan(TC[i]):
+				data1.append((str(FechaCT[i])+'; ;'+str(DPC[i])+';'+str(HRC[i])).split(';'))
+			elif np.isnan(DPC[i]):
+				data1.append((str(FechaCT[i])+';'+str(TC[i])+'; '+';'+str(HRC[i])).split(';'))
+			elif np.isnan(HRC[i]):
+				data1.append((str(FechaCT[i])+';'+str(TC[i])+';'+str(DPC[i])+'; ').split(';'))
+			else:
+				data1.append((str(FechaCT[i])+';'+str(TC[i])+';'+str(DPC[i])+';'+str(HRC[i])).split(';'))
+			
+
+		my_list1=[]
+		# Se juntan los valores
+		for values in data1[:]:
+			inner_dict = dict(zip(fieldnames, values))
+			my_list1.append(inner_dict)
+
+		nameout1 = Pathout + Name + '.csv'
+
+		self.WriteD(nameout1,fieldnames,my_list1)
+
+	def CSVCUASHI(self,Fecha,T,Pathout,Name,VariableCode,V=0):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende guardar los datos de la EIA en un archivo .csv
+		con la plantilla de CUASHI.
+
+		Si es necesario modificar algo de la plantilla se debe realizar manualmente
+		_________________________________________________________________________
+
+			INPUT:
+			+ filednames: Encabezados de las variables.
+			+ FechaCt: Vector de fechas.
+			+ T: Variable que se quiere guardar.
+			+ Pathout: Ruta de salida.
+			+ Name: Nombre del archivo.
+			+ V: Value accuracy conditional. 1: Temperature
+											 2: Relative Humidity
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja un archivo .csv con todos los datos.
+		'''
+
+		# Se guardan los archivos en un .csv por aparte
+		# Encabezados
+		fieldnames = ['DataValue','ValueAccuracy','LocalDateTime','UTCOffset','DateTimeUTC','SiteCode',\
+			'VariableCode','OffsetValue','OffsetTypeCode','CensorCode','QualifierCode','MethodCode',\
+			'SourceCode','SampleCode','DerivedFromID','QualityControlLevelCode']
+		data1=[] # Se inicializa la variable de los datos sin valores NaN
+		TT = ['' for k in range(len(T))]
+		# Datos
+		for i in range(len(T)):
+			if ~np.isnan(T[i]):
+				TT[i] = T[i]
+
+		FechaCUASHI=[]
+		for i in Fecha:
+			Year = i[0:4]
+			Month = i[5:7]
+			Day = i[8:10]
+			HH = i[11:13]
+			MM = i[13:15]
+			FechaCUASHI.append(Month+'/'+Day+'/'+Year+' '+HH+':'+MM)
+		
+		LocalDate = FechaCUASHI
+		UTCOffset = '-5'
+		DateTimeUTC = ''
+		SiteCode = Name
+		
+		OffsetValue = ''
+		OffsetTypeCode = ''
+		CensorCode = ''
+		QualifierCode = ''
+		MethodCode = 'HOBO_datalogger'
+		SourceCode = 'EIA'
+		SampleCode = ''
+		DerivedFromID = ''
+		QualityControlLevelCode = 0
+
+		my_list1=[]
+		for i in range(len(TT)):
+			if V == 0: # Para datos de temperatura
+				if TT[i] == '':
+					ValueAc = ''
+				elif TT[i] >= 0:
+					ValueAc = 0.21
+				elif TT[i] < 0:
+					ValueAc = 0.7
+			elif V == 1: # Para datos de humedad
+				if TT[i] == '':
+					ValueAc = ''
+				elif TT[i] >= 10 and TT[i] <= 90:
+					ValueAc = 2.5
+				elif TT[i] > 90:
+					ValueAc = 4.5
+			else: # No se ha programado
+				ValueAc = ''
+
+
+			# Se juntan los valores
+			
+			data1 = [str(TT[i]),str(ValueAc),str(LocalDate[i]),str(UTCOffset),str(DateTimeUTC)\
+				,str(SiteCode),str(VariableCode),str(OffsetValue),str(OffsetTypeCode),str(CensorCode)\
+				,str(QualifierCode),str(MethodCode),str(SourceCode),str(SampleCode),str(DerivedFromID)\
+				,str(QualityControlLevelCode)]
+			inner_dict = dict(zip(fieldnames, data1))
+			my_list1.append(inner_dict)
+			
+		nameout1 = Pathout+ Name + '.csv'
+		self.WriteD(nameout1,fieldnames,my_list1)
