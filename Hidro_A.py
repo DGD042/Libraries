@@ -26,6 +26,7 @@ import xlsxwriter as xlsxwl
 import scipy.io as sio
 from scipy import stats as st
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import matplotlib.dates as mdates
 import matplotlib.mlab as mlab
 import time
@@ -59,7 +60,7 @@ class Hidro_A:
 
 			INPUT:
 		+ Var: Variable que se desea tratar.
-		+ Fecha: Variable con la Fecha inicial y la fecha final de los datos.
+		+ Fecha: Variable con el año inicial y el año final de los datos.
 		+ FalgG: Activador para desarrollar las gráfcias.
 		+ PathImg: Ruta para guardar las imágenes.
 		+ NameA: Nombre de la estación de las imágenes
@@ -231,6 +232,8 @@ class Hidro_A:
 				# 			else:
 				# 				HHL.append(str(i)+'30')
 
+			# Se crea la ruta en donde se guardarán los archivos
+			utl.CrFolder(PathImg)
 
 			for ii,i in enumerate(range(1,13)):
 				axs[ii].errorbar(HH,MesesMM[i],yerr=MesesME[i],fmt='-',color=C,label=VarLL)
@@ -300,39 +303,55 @@ class Hidro_A:
 
 
 			# Se grafica la curva anual
-			F = plt.figure(figsize=(15,10))
-			plt.rcParams.update({'font.size': 22})
+			# Parámetros de la gráfica
+			fH = 20
+			fV = fH*(2/3)
+			
+			F = plt.figure(figsize=utl.cm2inch(fH,fV))
+			plt.rcParams.update({'font.size': 14,'font.family': 'sans-serif'\
+				,'font.sans-serif': 'Arial'})
 			#plt.plot(CiDT, 'k-', lw = 1.5)
-			plt.errorbar(HH,CiDT,yerr=ErrT,fmt='-',color=C,label=VarLL)
-			plt.title('Ciclo diurno de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
-			plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
-			plt.xlabel('Horas',fontsize=24)  # Colocamos la etiqueta en el eje y
-			axes = plt.gca()
-			axes.set_xlim([0,23])
-			plt.gca().xaxis.set_ticks(HH2)
-			plt.gca().set_xticklabels(HHL,rotation=90)
-			plt.legend(loc=1)
+			plt.errorbar(HH,CiDT,yerr=ErrT,fmt='-',color=C,label=VarLL,lw=1.5)
+			plt.title('Ciclo Diurno de ' + VarLL + ' en ' + Name,fontsize=16 )  # Colocamos el título del gráfico
+			plt.ylabel(VarL,fontsize=14)  # Colocamos la etiqueta en el eje x
+			plt.xlabel('Horas',fontsize=14)  # Colocamos la etiqueta en el eje y
+			ax = plt.gca()
+			plt.xlim([0,23])
+			# plt.gca().xaxis.set_ticks(HH2)
+			# plt.gca().set_xticklabels(HHL,rotation=90)
+			# plt.legend(loc=1)
 			plt.grid()
-			plt.savefig(PathImg + 'CTErr_' + NameA+'.png' )
+			# The minor ticks are included
+			xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+			MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+			minorLocatorx = MultipleLocator(MxL)
+			yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+			MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+			minorLocatory = MultipleLocator(MyL)
+			plt.gca().xaxis.set_minor_locator(minorLocatorx)
+			plt.gca().yaxis.set_minor_locator(minorLocatory)
+			plt.savefig(PathImg + 'CTErr_' + NameA+'.png',format='png',dpi=200 )
 			plt.close('all')
 
-			F = plt.figure(figsize=(15,10))
-			plt.rcParams.update({'font.size': 22})
-			#plt.plot(CiDT, 'k-', lw = 1.5)
-			plt.errorbar(HH,CiDT,yerr=DesT,fmt='-',color=C,label=VarLL)
-			plt.title('Ciclo diurno de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
-			plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
-			plt.xlabel('Horas',fontsize=24)  # Colocamos la etiqueta en el eje y
-			axes = plt.gca()
-			axes.set_xlim([0,23])
-			plt.gca().xaxis.set_ticks(HH2)
-			plt.gca().set_xticklabels(HHL,rotation=90)
-			plt.legend(loc=1)
-			plt.grid()
-			plt.savefig(PathImg + 'CTDes_' + NameA+'.png' )
-			plt.close('all')
+			# F = plt.figure(figsize=(15,10))
+			# plt.rcParams.update({'font.size': 22})
+			# #plt.plot(CiDT, 'k-', lw = 1.5)
+			# plt.errorbar(HH,CiDT,yerr=DesT,fmt='-',color=C,label=VarLL)
+			# plt.title('Ciclo diurno de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
+			# plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
+			# plt.xlabel('Horas',fontsize=24)  # Colocamos la etiqueta en el eje y
+			# axes = plt.gca()
+			# axes.set_xlim([0,23])
+			# plt.gca().xaxis.set_ticks(HH2)
+			# plt.gca().set_xticklabels(HHL,rotation=90)
+			# plt.legend(loc=1)
+			# plt.grid()
+			# plt.savefig(PathImg + 'CTDes_' + NameA+'.png' )
+			# plt.close('all')
 
 		if flagTri == True:
+			# Se crea la ruta en donde se guardarán los archivos
+			utl.CrFolder(PathImgTri)
 			if flagTriP == True:
 				# Se grafican los trimestres
 				Trim = ['DEF','MAM','JJA','SON']
@@ -387,6 +406,89 @@ class Hidro_A:
 			return MesesM, MesesMM, MesesMD,MesesME,CiDT,DesT,ErrT,TriM,TriMM,TriMD,TriME
 		else:
 			return MesesM, MesesMM, MesesMD,MesesME,CiDT,DesT,ErrT
+
+	def CiclDPer(self,Var,Fecha,PV90=90,PV10=10,FlagG=True,PathImg='',NameA='',VarL='',VarLL='',C='k',Name='',flagTri=False,flagTriP=False,PathImgTri='',DTH=24):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende realizar el ciclo diurno de una variable a
+		partir de los datos horarios de una serie de datos, se obtendrá el ciclo
+		diurno para todos los datos totales con los percentiles que se elijan, 
+		la media y la mediana.
+
+		Además pueden obtenerse las gráficas si así se desea.
+		_________________________________________________________________________
+
+			INPUT:
+		+ Var: Variable que se desea tratar.
+		+ Fecha: Variable con el año inicial y el año final de los datos.
+		+ FalgG: Activador para desarrollar las gráfcias.
+		+ PathImg: Ruta para guardar las imágenes.
+		+ NameA: Nombre de la estación de las imágenes
+		+ VarL: Label de la variable.
+		+ VarLL: Nombre de la variable
+		+ C: Color de la línea.
+		+ Name: Nombre de la estación que se está analizando.
+		+ flagTri: Activador de variables trimestrales.
+		+ flagTriP: Activador para gráfica trimestral.
+		+ PathImgTri: Ruta para las imágenes trimestrales.
+		+ DTH: Cuantos datos se dan para completar un día, se asume que son 24 
+			   datos porque podrían estar en horas
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Este código saca 2 gráficas, una por cada mes y el promedio de todos los
+		meses.
+		- MesesMM: Variable directorio con los resultados por mes
+		
+		'''
+
+		# Se obtienen todos los datos en una matriz
+		VarM = np.reshape(Var,(-1,24))		
+
+		# Se calculan los momentos necesarios
+		zM = np.nanmean(VarM,axis=0)
+		zMed = np.nanmedian(VarM,axis=0)
+		P90 = [np.nanpercentile(VarM[:,i],PV90) for i in range(VarM.shape[1])]
+		P10 = [np.nanpercentile(VarM[:,i],PV10) for i in range(VarM.shape[1])]
+
+		if FlagG:
+			x = np.arange(0,24,24/DTH)
+			# Se genera el boxplot con los datos
+			# Parámetros de la gráfica
+			fH = 25
+			fV = fH*(2/3)
+			F = plt.figure(figsize=utl.cm2inch(fH,fV))
+			plt.rcParams.update({'font.size': 14,'font.family': 'sans-serif'\
+				,'font.sans-serif': 'Arial'})
+			plt.plot(x,zM,'k-',label='Media')
+			plt.plot(x,zMed,'k--',label='Mediana')
+			plt.fill_between(x,P10,P90,color='silver',label=r'P$_{%s}$ a P$_{%s}$' %(PV10,PV90))
+			plt.plot(x,P10,'w-',lw=0.0001)
+			plt.legend(loc=0)
+			plt.xlim([0,23])
+			ax = plt.gca()
+			yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+			MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+			plt.ylim([yTL[0]-2*MyL,yTL[-1]+2*MyL])
+			plt.title('Ciclo Diurno de ' + VarLL + ' en ' + Name,fontsize=16 )  # Colocamos el título del gráfico
+			plt.ylabel(VarL,fontsize=14)  # Colocamos la etiqueta en el eje x
+			plt.xlabel('Horas',fontsize=14)  # Colocamos la etiqueta en el eje y
+			# The minor ticks are included
+			ax = plt.gca()
+			xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+			MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+			minorLocatorx = MultipleLocator(MxL)
+			yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+			MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+			minorLocatory = MultipleLocator(MyL)
+			plt.gca().xaxis.set_minor_locator(minorLocatorx)
+			plt.gca().yaxis.set_minor_locator(minorLocatory)
+			plt.savefig(PathImg + 'CTPer_' + NameA+'.png',format='png',dpi=200 )
+			plt.close('all')
+
+		return zM,zMed,P90,P10
+
 
 	def CiclDPvP(self,Var1,Var2,Fecha,DTH=24):
 		'''
@@ -564,6 +666,10 @@ class Hidro_A:
 
 		x2 = np.hstack((x2,x2[0]))
 
+		# Se crea la ruta en donde se guardarán los archivos
+		utl.CrFolder(PathImg)
+
+		
 		F = plt.figure(figsize=(15,10))
 		plt.rcParams.update({'font.size': 22})
 		#plt.plot(CiDT, 'k-', lw = 1.5)
@@ -593,7 +699,7 @@ class Hidro_A:
 
 		return ProcP3
 
-	def CiclDV(self,MesesMM,PathImg='',Name='',Name2=''):
+	def CiclDV(self,MesesMM,PathImg='',Name='',Name2='',Var='',Var2='',Var3=''):
 		'''
 			DESCRIPTION:
 		
@@ -606,30 +712,32 @@ class Hidro_A:
 			INPUT:
 		+ MesesMM: Variable de los promedios mensuales multianuales.
 		+ PathImg: Ruta para guardar las imágenes.
-		+ Name: Nombre de las estaciones.
+		+ Name: Nombre de los documentos.
+		+ Name2: Nombre de la estación.
+		+ Var: Nombre corto de la variable.
+		+ Var2: Nombre completo de la variable
+		+ Var3: Nombre completo de la variable con unidades de medida.
 		_________________________________________________________________________
 		
 			OUTPUT:
-		Este código saca 2 gráficas, una por cada mes y el promedio de todos los
-		meses.
-		- PorcP: Variable directorio con los resultados por mes
+		Este código saca 1 gráfica teniendo el promedio de todos los meses.
 		'''
+
+		# Se crea la ruta en donde se guardarán los archivos
+		utl.CrFolder(PathImg)
+
 		# Se inicializan las variables
 		MM = ['E','F','M','A','M','J','J','A','S','O','N','D','E']
-		ProcP = np.empty((12,24)) # Porcentaje de todos los meses
+		ProcP = np.empty((12,24))
 
-		TT = sum(MesesMM)
-
+		# Ciclo para extraer los promedios
 		for ii,i in enumerate(range(1,13)):
-
-			ProcP[ii,:] = MesesMM[i]/TT*100
+			ProcP[ii,:] = MesesMM[i]
 
 		x = np.arange(0,24)
 		x3 = np.arange(0,25)
-		# for i in range(8):
-		# 	ProcP = np.roll(ProcP,1,axis=1)
-		# 	x = np.roll(x,1,axis=1)
 
+		# Se organizan las horas
 		ProcP2 = np.hstack((ProcP[:,7:],ProcP[:,:7]))
 		x2 = np.hstack((x[7:],x[:7]))
 		for i in range(len(ProcP2)):
@@ -643,8 +751,8 @@ class Hidro_A:
 		ProcP3 = np.vstack((ProcP3,ProcP3[0,:]))
 		
 		# Datos para las gráficas
-		v = np.linspace(0, 8, 9, endpoint=True)
-		bounds=[0,1,2,3,4,5,6,7,8]
+		# v = np.linspace(608, 8, 9, endpoint=True)
+		# bounds=[0,1,2,3,4,5,6,7,8]
 				
 
 		# ProcP2 = np.hstack((ProcP2,ProcP2[:,0:1]))
@@ -653,9 +761,9 @@ class Hidro_A:
 
 		F = plt.figure(figsize=(15,10))
 		plt.rcParams.update({'font.size': 22})
-		#plt.plot(CiDT, 'k-', lw = 1.5)
-		plt.contourf(x3,np.arange(1,14),ProcP3,v,vmax=8,vmin=0)
-		plt.title('Ciclo diurno de la precipitación en el año en ' + Name2,fontsize=26 )  # Colocamos el título del gráfico
+		#plt.contourf(x3,np.arange(1,14),ProcP3,v,vmax=8,vmin=0)
+		plt.contourf(x3,np.arange(1,14),ProcP3)
+		plt.title('Ciclo diurno de la ' + Var2 + ' en el año en ' + Name2,fontsize=26 )  # Colocamos el título del gráfico
 		plt.ylabel('Meses',fontsize=24)  # Colocamos la etiqueta en el eje x
 		plt.xlabel('Horas',fontsize=24)  # Colocamos la etiqueta en el eje y
 		axs = plt.gca()
@@ -664,17 +772,16 @@ class Hidro_A:
 		axs.xaxis.set_ticks(np.arange(0,25,1))
 		axs.set_xticklabels(x2)
 		plt.tight_layout()
-		cbar = plt.colorbar(boundaries=bounds,ticks=v)
-		cbar.set_label('Precipitación [%]')
+		#cbar = plt.colorbar(boundaries=bounds,ticks=v)
+		cbar = plt.colorbar()
+		cbar.set_label(Var3)
 		plt.gca().invert_yaxis()
 		plt.legend(loc=1)
 		plt.grid()
-		plt.savefig(PathImg + 'TPrec_' + Name+'.png' )
+		plt.savefig(PathImg + 'T' + Var +'_' + Name+'.png' )
 		plt.close('all')
 
-		return ProcP3
-
-	def CiclA(self,VMes,Fecha,PathImg='',Name='',VarL='',VarLL='',C='k'):
+	def CiclA(self,VMes,Fecha,PathImg='',Name='',VarL='',VarLL='',C='k',NameArch='',flagA=False):
 		'''
 			DESCRIPTION:
 		
@@ -686,11 +793,13 @@ class Hidro_A:
 
 			INPUT:
 		+ VMes: Variable de los promedios mensuales.
+		+ Fecha: Vector con año inicial y año final.
 		+ PathImg: Ruta para guardar las imágenes.
 		+ Name: Nombre de las estaciones.
 		+ VarL: Label de la variable.
 		+ VarLL: Nombre de la variable
 		+ C: Color de la línea.
+		+ NameArch: Nombre del archivo como se guardará la informaición.
 		_________________________________________________________________________
 		
 			OUTPUT:
@@ -715,7 +824,11 @@ class Hidro_A:
 		MesE = [k/np.sqrt(VarMNT[ii]) for ii,k in enumerate(MesD)] # Error anual
 		#MesE = [k/np.sqrt(len(VarM)) for k in MesD] # Error anual
 
+		# Se crea la ruta en donde se guardarán los archivos
+		utl.CrFolder(PathImg)
+
 		# Figuras
+		# Grafica con barras de error estándar
 		F = plt.figure(figsize=(15,10))
 		plt.rcParams.update({'font.size': 22})
 		plt.errorbar(np.arange(1,13),MesM,yerr=MesE,fmt='-',color=C,label=VarLL)
@@ -723,12 +836,13 @@ class Hidro_A:
 		plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
 		plt.xlabel('Tiempo [Meses]',fontsize=24)  # Colocamos la etiqueta en el eje y
 		axes = plt.gca()
-		axes.set_xlim([1,12])
-		plt.legend(loc=1)
+		axes.set_xlim([0,13])
+		plt.legend(loc=0)
 		plt.grid()
-		plt.savefig(PathImg + 'CAErr_' + Name+'.png' )
+		plt.savefig(PathImg + 'CAErr_' + NameArch+'.png' )
 		plt.close('all')
 
+		# Gráfica con desviación estándar
 		F = plt.figure(figsize=(15,10))
 		plt.rcParams.update({'font.size': 22})
 		plt.errorbar(np.arange(1,13),MesM,yerr=MesD,fmt='-',color=C,label=VarLL)
@@ -736,13 +850,73 @@ class Hidro_A:
 		plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
 		plt.xlabel('Tiempo [Meses]',fontsize=24)  # Colocamos la etiqueta en el eje y
 		axes = plt.gca()
-		axes.set_xlim([1,12])
-		plt.legend(loc=1)
+		axes.set_xlim([0,13])
+		plt.legend(loc=0)
 		plt.grid()
-		plt.savefig(PathImg + 'CAD_' + Name+'.png' )
+		plt.savefig(PathImg + 'CAD_' + NameArch+'.png' )
 		plt.close('all')
 
-		return MesM,MesD,MesE
+		if flagA:
+
+			# Calculo de la serie anual
+			AnM = np.nanmean(VarM,axis=1) # Promedio anual.
+			AnD = np.nanstd(VarM,axis=1) # Desviación anual.
+			AnMNT = []
+			# Se calcula el número total de datos
+			for i in range(len(VarM[:,0])):
+				x = np.isnan(VarM[i,:])
+				q = sum(x)
+				#print(q)
+				if q >= 6:
+					AnMNT.append(np.nan)
+					AnM[i] = np.nan
+				else:
+					AnMNT.append(12)
+
+			AnE = [k/np.sqrt(AnMNT[ii]) for ii,k in enumerate(AnD)] # Error anual
+			#MesE = [k/np.sqrt(len(VarM)) for k in MesD] # Error anual
+
+			x = [date(i,1,1) for i in range(Yi,Yf+1)]
+
+			# Se crea la ruta en donde se guardarán los archivos
+			utl.CrFolder(PathImg + 'Anual/')
+
+			# Figuras
+			# Grafica con barras de error estándar
+			F = plt.figure(figsize=(15,10))
+			plt.rcParams.update({'font.size': 22})
+			plt.errorbar(x,AnM,yerr=AnE,fmt='-',color=C,label=VarLL)
+			plt.title('Serie anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
+			plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
+			plt.xlabel('Tiempo [Años]',fontsize=24)  # Colocamos la etiqueta en el eje y
+			axes = plt.gca()
+			axes.set_xlim([x[0]-timedelta(60),x[-1]+timedelta(30)])
+			plt.legend(loc=0)
+			plt.grid()
+			plt.savefig(PathImg + 'Anual/' + 'SAnErr_' + NameArch+'.png' )
+			plt.close('all')
+
+			# Gráfica con desviación estándar
+			F = plt.figure(figsize=(15,10))
+			plt.rcParams.update({'font.size': 22})
+			plt.errorbar(x,AnM,yerr=AnD,fmt='-',color=C,label=VarLL)
+			plt.title('Serie anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
+			plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
+			plt.xlabel('Tiempo [Años]',fontsize=24)  # Colocamos la etiqueta en el eje y
+			axes = plt.gca()
+			axes.set_xlim([x[0]-timedelta(60),x[-1]+timedelta(30)])
+			plt.legend(loc=0)
+			plt.grid()
+			plt.savefig(PathImg + 'Anual/' + 'SAnD_' + NameArch+'.png' )
+			plt.close('all')
+
+
+
+
+		if flagA:
+			return MesM,MesD,MesE,AnM,AnD,AnE
+		else:
+			return MesM,MesD,MesE
 
 	def EstAnom(self,VMes):
 		'''
@@ -837,6 +1011,118 @@ class Hidro_A:
 			x += 1
 
 		return Months, Trim
+
+	def PrecDryDays(self,Date,Prec,Ind=0.1):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the number of consecutive days without 
+		precipitation.
+		_________________________________________________________________________
+
+			INPUT:
+		+ Date: Vector of dates.
+		+ Prec: Precipitation vector in days.
+		+ Ind: Indicator of the minimum precipitation value.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- TotalNumDays: Vector with total number of consecutive days without 
+						precipitation.
+		- MaxNumDays: Maximum number of consecutive days without precipitation.
+		'''
+		
+		# Number of days below the indicated (Ind) value
+		x = np.where(Prec <= Ind)[0]
+
+		TotalNumDays = [] # List with all the days
+		TotalPrecCount = [] # List for the total precipitation
+		TotalDateB = [] # List of dates
+
+		# Loop to calculate all the days
+		DaysCount = 1 # Days counter
+		PrecCount = Prec[x[0]] # Precipitation counter
+		for i in range(1,len(x)):
+			if x[i] == x[i-1]+1:
+				DaysCount += 1
+				PrecCount += Prec[x[i]]
+			else:
+				TotalNumDays.append(DaysCount)
+				TotalPrecCount.append(PrecCount)
+				TotalDateB.append(Date[x[i]-DaysCount])
+				DaysCount = 1
+				PrecCount = 0
+
+		TotalNumDays = np.array(TotalNumDays)
+		# Maximum number of days withput precipitation
+		MaxNumDays = np.max(TotalNumDays)
+
+		TotalPrecCount = np.array(TotalPrecCount)
+		# Maximum value of total precipitation in those days
+		MaxPrecCount = np.max(TotalPrecCount)
+
+		# Beginning date of the maximum dry days
+		TotalDateB = np.array(TotalDateB)
+		xx = np.where(TotalNumDays == MaxNumDays)[0]
+		DateMaxDays = TotalDateB[xx]
+
+		return TotalNumDays,MaxNumDays,TotalPrecCount,MaxPrecCount,TotalDateB,DateMaxDays
+
+	def PrecMoistDays(self,Date,Prec,Ind=0.1):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the number of consecutive days with 
+		precipitation above certain value.
+		_________________________________________________________________________
+
+			INPUT:
+		+ Date: Vector of dates.
+		+ Prec: Precipitation vector in days.
+		+ Ind: Indicator of the minimum precipitation value.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- TotalNumDays: Vector with total number of consecutive days without 
+						precipitation.
+		- MaxNumDays: Maximum number of consecutive days without precipitation.
+		'''
+		
+		# Number of days below the indicated (Ind) value
+		x = np.where(Prec >= Ind)[0]
+
+		TotalNumDays = [] # List with all the days
+		TotalPrecCount = [] # List for the total precipitation
+		TotalDateB = [] # List of dates
+
+		# Loop to calculate all the days
+		DaysCount = 1 # Days counter
+		PrecCount = Prec[x[0]] # Precipitation counter
+		for i in range(1,len(x)):
+			if x[i] == x[i-1]+1:
+				DaysCount += 1
+				PrecCount += Prec[x[i]]
+			else:
+				TotalNumDays.append(DaysCount)
+				TotalPrecCount.append(PrecCount)
+				TotalDateB.append(Date[x[i]-DaysCount])
+				DaysCount = 1
+				PrecCount = 0
+
+		TotalNumDays = np.array(TotalNumDays)
+		# Maximum number of days withput precipitation
+		MaxNumDays = np.max(TotalNumDays)
+
+		TotalPrecCount = np.array(TotalPrecCount)
+		# Maximum value of total precipitation in those days
+		MaxPrecCount = np.max(TotalPrecCount)
+
+		# Beginning date of the maximum dry days
+		TotalDateB = np.array(TotalDateB)
+		xx = np.where(TotalNumDays == MaxNumDays)[0]
+		DateMaxDays = TotalDateB[xx]
+
+		return TotalNumDays,MaxNumDays,TotalPrecCount,MaxPrecCount,TotalDateB,DateMaxDays
 
 
 

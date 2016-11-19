@@ -6,14 +6,17 @@
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
-# DESCRIPCIÓN DE LA CLASE:
-# En esta clase se incluyen las rutinas varias que ayudan a manipular
-# la información y realizar procesos varios.
+# CLASS DESCRPITION:
+# This class allows the user to do some function and data manipulation. 
+# This class also have some functions that are needed to use the other
+# libraries, so it is crucial that you have this library alone with the
+# the other libraries.
 # ----------------------------------------------------------------------
 
 
 import numpy as np
 import sys
+import os
 
 class UtilitiesDGD:
 
@@ -29,9 +32,10 @@ class UtilitiesDGD:
 
 		'''
 			DESCRIPTION:
+
 		Este detiene la ejecución de un código por un error que se
 		presente que no deje avanzar la ejecución.
-
+		_________________________________________________________________________
 			INPUT:
 		+ fn: Función que produjo el error
 		+ cl: Clase que produjo el error
@@ -41,17 +45,38 @@ class UtilitiesDGD:
 		print('Error in the function '+fn+' from the class '+cl+': '+msg)
 		sys.exit(0)
 
+
+	def CrFolder(self,Path):
+		'''
+			DESCRIPTION:
+		
+		This function creates a folder in the given path, if the path does not exist
+		then it creates the path itself
+		_________________________________________________________________________
+
+			INPUT:
+		+ Path: Path that needs to be created
+		_________________________________________________________________________
+			OUTPUT:
+		This function create all the given path.
+		'''
+
+		# Se mira si la ruta existe o se crea
+		if not os.path.exists(Path):
+			os.makedirs(Path)
+
 	def BTS(self,T):
 
 		'''
 			DESCRIPTION:
 		
-		Con esta función se pretende hacer un reordenamiento de una serie utilizando "Boot-straping"
-		en este caso se reordenan las dos series.
+		Con esta función se pretende hacer un reordenamiento de una serie utilizando 
+		"Boot-straping" en este caso se reordenan las dos series.
+		_________________________________________________________________________
 
 			INPUT:
 		+ T: Serie de datos que se va a reordenar
-		
+		_________________________________________________________________________
 			OUTPUT:
 		- TT: Serie reordenada.
 		'''
@@ -74,11 +99,12 @@ class UtilitiesDGD:
 		
 		Con esta función se pretende hacer un reordenamiento de una serie utilizando "Boot-straping"
 		en este caso se reordena una de las series.
+		_________________________________________________________________________
 
 			INPUT:
 		+ T1: Primera serie de datos que se va a reordenar.
 		+ T2: Segunda serie de datos que se va a reordenar.
-		
+		_________________________________________________________________________
 			OUTPUT:
 		- TT1: Primera serie reordenada.
 		- TT2: Segunda serie reordenada.
@@ -104,13 +130,14 @@ class UtilitiesDGD:
 		'''
 			DESCRIPTION:
 		
-		Función extraída de internet que permite realizar vectores de fechas a partir de dos fechas
-
+		Función extraída de internet que permite realizar vectores de fechas a 
+		partir de dos fechas
+		_________________________________________________________________________
 			INPUT:
 		+ start: Fecha de inicio.
 		+ end: Fecha de final.
 		+ delta: Paso de tiempo
-		
+		_________________________________________________________________________
 		
 			OUTPUT:
 		
@@ -202,3 +229,25 @@ class UtilitiesDGD:
 					VV[i] = utl.Interp(1,V[i-1],2,3,V[i+1])
 
 		return VV
+
+	def cm2inch(self,*tupl):
+		'''
+			DESCRIPTION:
+		
+		This functions allows to change centimeters to inch so you can denote
+		the size of the figure you want to save.
+		_________________________________________________________________________
+
+			INPUT:
+		+ *tupl: Tuple variable with centimeter values.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- tuple: Values in inch.
+		'''
+		inch = 2.54
+		if isinstance(tupl[0], tuple):
+			return tuple(i/inch for i in tupl[0])
+		else:
+			return tuple(i/inch for i in tupl)
+

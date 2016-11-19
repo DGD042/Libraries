@@ -192,7 +192,7 @@ class AnET:
 
 			INPUT:
 		+ f: Los datos a los que se les va a sacar la transformada de Fourier.
-		+ t: La serie temporal utilizada para obtener las dfrecuencias.
+		+ t: La serie temporal utilizada para obtener las de frecuencias.
 		+ Filt_Hi: Hora de inicio del filtro (esta asociado al Periodo NO a la frecuencia).
 		+ Filt_Hf: Hora final del filtro (esta asociado al Periodo NO a la frecuencia).
 		+ dt: el paso de tiempo determinado para la serie de tiempo.
@@ -256,6 +256,8 @@ class AnET:
 		#Pres_FF = np.sqrt((Pres_F.real**2) + (Pres_F.imag**2))
 
 		if flag:
+			# Se crea la carpeta
+			utl.CrFolder(Pathimg+'Comp/')
 
 			# Se halla el pico máximo
 			x = np.where(P_p[:-1] == max(P_p[:-1]))
@@ -713,7 +715,6 @@ class AnET:
 
 		return amplitud, potencia, total, var, W, Period, f_signal
 
-
 	def SFilFFTr(self,f,t,Filt_Hi,Filt_Hf):
 
 		'''
@@ -762,3 +763,46 @@ class AnET:
 		cut_signal = irfft(cut_f_signal) # Se encuentra la serie ya filtrada
 
 		return cut_signal, P_amp, P_p, P_t, P_var, W, P_Per, f_signal
+
+	def AnomGen(self,M,dt):
+		'''
+			DESCRIPTION:
+		
+		This function takes a series and calculates anomalies with certain delta
+		of time.
+
+		The calculation is done using the following equation:
+
+			Z = x-\mu
+		_________________________________________________________________________
+
+			INPUT:
+		+ M: Data series.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- Anom: Anomalie data results.
+		'''
+
+		# Variable initialization
+		Anom = np.empty(len(M))
+
+		# Variable reshape
+		VarM = np.reshape(M[:],(-1,dt))
+		
+		# Mean calculation
+		MeanM = np.nanmean(VarM,axis=0)
+
+		# Anomalie cycle
+		x = 0
+		for i in range(len(VarM)):
+			for j in range(dt):
+				if np.isnan(VarM[i,j]):
+					Anom[x] = np.nan
+				else:
+					Anom[x] = VarM[i,j] - MeanM[j] # Anomalies
+				x += 1
+
+
+		return Anom
+

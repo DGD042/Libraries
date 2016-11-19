@@ -30,7 +30,6 @@ import matplotlib.mlab as mlab
 import time
 from mpl_toolkits.axes_grid1 import host_subplot
 import mpl_toolkits.axisartist as AA
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import os
 
@@ -77,6 +76,8 @@ class BPumpL:
 		Esta función libera un subplot con todas las figuras de las diferentes 
 		variables.
 		'''
+		# Se crea la ruta en donde se guardarán los archivos
+		utl.CrFolder(PathImg+ 'Manizales/Series/')
 		plt.close('all')
 		lfs = 16
 		fig, axs = plt.subplots(2,2, figsize=(15, 8), facecolor='w', edgecolor='k')
@@ -256,7 +257,7 @@ class BPumpL:
 
 		return PrecCS, VCS, Fechas
 
-	def ExEvDN(self,PrecC,VC,FechaEv,Mid=0):
+	def ExEvDN(self,PrecC,VC,FechaEv,Mid):
 		'''
 			DESCRIPTION:
 		
@@ -268,6 +269,7 @@ class BPumpL:
 		+ PrecC: Diagrama de compuestos de Precipitación
 		+ VC: Diagrama de compuestos de la variable que se quiere tener.
 		+ FechaEv: Fecha de cada uno de los eventos.
+		+ Mid: Valor del medio.
 		_________________________________________________________________________
 		
 			OUTPUT:
@@ -283,16 +285,78 @@ class BPumpL:
 
 		Hours=[]
 
-		# Se extraen los datos de los diferentes trimestres.
+		# Se extraen los datos de las diferentes horas.
 		for i in range(len(FechaEv)):
 			Hours.append(FechaEv[i][Mid][11:13])
 
 		x = [0 for k in range(2)]
-		# Se extraen los diferentes trimestres
+		# Se extraen las diferentes horas.
 		for ii,i in enumerate(Hours):
 			M = int(i)
 
 			if M >=6 and M <= 17:
+				if x[0] == 0:
+					PrecCS[0] = PrecC[ii]
+					VCS[0] = VC[ii]
+					Fechas[0] = FechaEv[ii]
+					x[0] += 1
+				else:
+					PrecCS[0] = np.vstack((PrecCS[0],PrecC[ii]))
+					VCS[0] = np.vstack((VCS[0],VC[ii]))
+					Fechas[0] = np.vstack((Fechas[0],FechaEv[ii]))
+			else:
+				if x[1] == 0:
+					PrecCS[1] = PrecC[ii]
+					VCS[1] = VC[ii]
+					Fechas[1] = FechaEv[ii]
+					x[1] += 1
+				else:
+					PrecCS[1] = np.vstack((PrecCS[1],PrecC[ii]))
+					VCS[1] = np.vstack((VCS[1],VC[ii]))
+					Fechas[1] = np.vstack((Fechas[1],FechaEv[ii]))
+
+		return PrecCS, VCS, Fechas
+
+	def ExEvDH(self,PrecC,VC,FechaEv,Mid,Hi=6,Hf=17):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende separar los eventos a dos espacios de horas
+		diferentes.
+		_________________________________________________________________________
+
+			INPUT:
+		+ PrecC: Diagrama de compuestos de Precipitación
+		+ VC: Diagrama de compuestos de la variable que se quiere tener.
+		+ FechaEv: Fecha de cada uno de los eventos.
+		+ Mid: Valor del medio.
+		+ Hi: Hora inicial.
+		+ Hf: Hora final.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- PrecCS: Precipitación en compuestos por trimestre.
+		- VCS: Diagrama de la variable por trimestre.
+		- Fechas: Fechas en donde se dan los diferentes eventoss.
+		'''
+
+		# Se inician las variables de los trimestres
+		PrecCS = dict()
+		VCS = dict()
+		Fechas = dict()
+
+		Hours=[]
+
+		# Se extraen los datos de las diferentes horas.
+		for i in range(len(FechaEv)):
+			Hours.append(FechaEv[i][Mid][11:13])
+
+		x = [0 for k in range(2)]
+		# Se extraen las diferentes horas.
+		for ii,i in enumerate(Hours):
+			M = int(i)
+
+			if M >=Hi and M <= Hf:
 				if x[0] == 0:
 					PrecCS[0] = PrecC[ii]
 					VCS[0] = VC[ii]
@@ -415,7 +479,7 @@ class BPumpL:
 		_________________________________________________________________________
 
 			INPUT:
-		+ Prec_EV: Diagrama de compuestos de Precipitación.
+		+ Prec_Ev: Diagrama de compuestos de Precipitación.
 		+ Pres_F_Ev: Diagrama de compuestos de la variable.
 		+ V1: Variable 1.
 		+ V2: Variable 2.
@@ -434,25 +498,33 @@ class BPumpL:
 		'''
 		warnings.filterwarnings('ignore')
 		# ---- 
+
+		# Se crea la ruta en donde se guardarán los archivos
+		utl.CrFolder(PathImg)
+		utl.CrFolder(PathImg + 'Average/')
+		utl.CrFolder(PathImg + 'Histograms/')
+
+		# Se organizan las variables para generar el 0 en el punto máximo de la
+		# precipitación.
+
+		Time = Prec_Ev.shape[1]
+		Time_G = np.arange(-Time/2,Time/2)
+
 		# Valores generales para los gráficos
-
 		Afon = 14; Tit = 18; Axl = 16
-
-
 		# Se grafican los primeros 6 eventos 
 
 		f, ((ax11,ax12,ax13), ((ax21,ax22,ax23))) = plt.subplots(2,3, figsize=(20,10))
 		plt.rcParams.update({'font.size': Afon})
 		# Precipitación Ev 1
-		a11 = ax11.plot(np.arange(0,len(Prec_Ev[0])),Prec_Ev[0],L1, label = V1)
+		a11 = ax11.plot(Time_G,Prec_Ev[0],L1, label = V1)
 		ax11.set_title(r"Evento 1",fontsize=Tit)
 		#ax11.set_xlabel("Tiempo [cada 5 min]",fontsize=Axl)
 		ax11.set_ylabel(Ax1,fontsize=Axl)
-		ax11.set_xlim([0,len(Prec_Ev[0]+1)])
+		#ax11.set_xlim([Time_G[0],Time_G[len(Prec_Ev[0])-1]+1])
 		# Presión barométrica
 		axx11 = ax11.twinx()
-		a112 = axx11.plot(np.arange(0,len(Prec_Ev[0])),Pres_F_Ev[0],L2, label = V2)
-		axx11.set_xlim([0,len(Pres_F_Ev[0]+1)])
+		a112 = axx11.plot(Time_G,Pres_F_Ev[0],L2, label = V2)
 		#axx11.set_ylabel("Presión [hPa]",fontsize=Axl)
 
 		# added these three lines
@@ -461,14 +533,14 @@ class BPumpL:
 		#ax11.legend(lns, labs, loc=0)
 
 		# Precipitación Ev 2
-		a12 = ax12.plot(Prec_Ev[1],L1, label = u'Precipitación')
+		a12 = ax12.plot(Time_G,Prec_Ev[1],L1, label = u'Precipitación')
 		ax12.set_title(r"Evento 2",fontsize=Tit)
 		#ax11.set_xlabel("Tiempo [cada 5 min]",fontsize=Axl)
 		#ax12.set_ylabel("Precipitación [mm]",fontsize=Axl)
 
 		# Presión barométrica
 		axx12 = ax12.twinx()
-		a122 = axx12.plot(Pres_F_Ev[1],L2, label = u'Presión Barométrica')
+		a122 = axx12.plot(Time_G,Pres_F_Ev[1],L2, label = u'Presión Barométrica')
 		#axx11.set_ylabel("Presión [hPa]",fontsize=Axl)
 
 		# added these three lines
@@ -477,14 +549,14 @@ class BPumpL:
 		#ax12.legend(lns, labs, loc=0)
 
 		# Precipitación Ev 3
-		a13 = ax13.plot(Prec_Ev[2],L1, label = V1)
+		a13 = ax13.plot(Time_G,Prec_Ev[2],L1, label = V1)
 		ax13.set_title(r"Evento 3",fontsize=Tit)
 		#ax11.set_xlabel("Tiempo [cada 5 min]",fontsize=Axl)
 		#ax12.set_ylabel("Precipitación [mm]",fontsize=Axl)
 
 		# Presión barométrica
 		axx13 = ax13.twinx()
-		a132 = axx13.plot(Pres_F_Ev[2],L2, label = V2)
+		a132 = axx13.plot(Time_G,Pres_F_Ev[2],L2, label = V2)
 		axx13.set_ylabel(Ax2,fontsize=Axl)
 
 		# added these three lines
@@ -494,14 +566,14 @@ class BPumpL:
 		
 
 		# Precipitación Ev 4
-		a21 = ax21.plot(Prec_Ev[3],L1, label = u'Precipitación')
+		a21 = ax21.plot(Time_G,Prec_Ev[3],L1, label = u'Precipitación')
 		ax21.set_title(r"Evento 4",fontsize=Tit)
 		ax21.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=Axl)
 		ax21.set_ylabel(Ax1,fontsize=Axl)
 
 		# Presión barométrica
 		axx21 = ax21.twinx()
-		a212 = axx21.plot(Pres_F_Ev[3],L2, label = u'Presión Barométrica')
+		a212 = axx21.plot(Time_G,Pres_F_Ev[3],L2, label = u'Presión Barométrica')
 		#axx11.set_ylabel("Presión [hPa]",fontsize=Axl)
 
 		# added these three lines
@@ -510,14 +582,14 @@ class BPumpL:
 		#ax11.legend(lns, labs, loc=0)
 
 		# Precipitación Ev 5
-		a22 = ax22.plot(Prec_Ev[4],L1, label = u'Precipitación')
+		a22 = ax22.plot(Time_G,Prec_Ev[4],L1, label = u'Precipitación')
 		ax22.set_title(r"Evento 5",fontsize=Tit)
 		ax22.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=Axl)
 		#ax12.set_ylabel("Precipitación [mm]",fontsize=Axl)
 
 		# Presión barométrica
 		axx22 = ax22.twinx()
-		a222 = axx22.plot(Pres_F_Ev[4],L2, label = u'Presión Barométrica')
+		a222 = axx22.plot(Time_G,Pres_F_Ev[4],L2, label = u'Presión Barométrica')
 		#axx11.set_ylabel("Presión [hPa]",fontsize=Axl)
 
 		# added these three lines
@@ -526,14 +598,14 @@ class BPumpL:
 		#ax12.legend(lns, labs, loc=0)
 		ev = 5
 		# Precipitación Ev 3
-		a23 = ax23.plot(Prec_Ev[ev],L1, label = u'Precipitación')
+		a23 = ax23.plot(Time_G,Prec_Ev[ev],L1, label = u'Precipitación')
 		ax23.set_title(r"Evento %s" %(ev+1),fontsize=Tit)
 		ax23.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=Axl)
 		#ax12.set_ylabel("Precipitación [mm]",fontsize=Axl)
 
 		# Presión barométrica
 		axx23 = ax23.twinx()
-		a232 = axx23.plot(Pres_F_Ev[ev],L2, label = u'Presión Barométrica')
+		a232 = axx23.plot(Time_G,Pres_F_Ev[ev],L2, label = u'Presión Barométrica')
 		axx23.set_ylabel(Ax2,fontsize=Axl)
 
 		# added these three lines
@@ -576,7 +648,7 @@ class BPumpL:
 		f, (ax11) = plt.subplots( figsize=(20,10))
 		plt.rcParams.update({'font.size': 18})
 		# Precipitación
-		a11 = ax11.plot(Prec_EvM,L1, label = V1)
+		a11 = ax11.plot(Time_G,Prec_EvM,L1, label = V1)
 		ax11.set_title(r'Promedio de Eventos',fontsize=24)
 		ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=20)
 		ax11.set_ylabel(Ax1,fontsize=20)
@@ -584,7 +656,7 @@ class BPumpL:
 		# Presión barométrica
 		axx11 = ax11.twinx()
 
-		a112 = axx11.plot(Pres_F_EvM,L2, label = V2)
+		a112 = axx11.plot(Time_G,Pres_F_EvM,L2, label = V2)
 		axx11.set_ylabel(Ax2,fontsize=20)
 
 		# added these three lines
@@ -594,7 +666,7 @@ class BPumpL:
 
 		plt.savefig(PathImg +'Average/' + ix + '_' + 'P_' + V11 + 'V' + V22 +'_' + str(ii) + '.png')
 		plt.close('all')
-		xx = np.arange(0,len(Prec_EvM))
+		xx = Time_G
 		
 		# -----------------------
 		if V11 == 'Prec':
@@ -661,13 +733,13 @@ class BPumpL:
 					L = LM
 					SLP = 0.15
 					SLS = 0.0
-					Lx = 3
+					Lx = -50
 					Sx = 21
 				elif DTT == '30':
 					L = LM
-					SLP = 0.25
+					SLP = 0.30
 					SLS = 0.15
-					Lx = 2
+					Lx = -10
 					Sx = 4.5
 				elif DTT == '1 h':
 					L = LM-1
@@ -714,12 +786,12 @@ class BPumpL:
 				elif Lim == '3':
 					axxx11.set_ylim(Lim2)
 
+				ax11.set_xlim([min(xx)-1,max(xx)+1])
+
 				#plt.tight_layout()
 				plt.savefig(PathImg+'Average/' + ix + '_' + 'PE_' + V11 + 'V' + V22+'V' + V33 +'_' + str(ii) + '.png')
 				plt.close('all')
 
-
-				#f, ax11 = plt.subplots(111, axes_class=AA.Axes, figsize=(20,10))
 				f = plt.figure(figsize=(20,10))
 				ax11 = host_subplot(111, axes_class=AA.Axes)
 				plt.rcParams.update({'font.size': 18})
@@ -759,6 +831,8 @@ class BPumpL:
 				axx11.axis["right"].label.set_color(color=L22)
 				axxx11.axis["right"].label.set_color(color=L33)
 
+				ax11.set_xlim([min(xx)-1,max(xx)+1])
+
 				#plt.tight_layout()
 				plt.savefig(PathImg +'Average/' + ix + '_' + 'PD_' + V11 + 'V' + V22+'V' + V33 +'_' + str(ii) + '.png')
 				plt.close('all')
@@ -772,7 +846,7 @@ class BPumpL:
 				qT = ~np.isnan(T_F_Ev)
 
 				n = 100 # Número de bins
-				PrecH,PrecBin = np.histogram(Prec_Ev[qPres],bins=n); [float(i) for i in PrecH]
+				PrecH,PrecBin = np.histogram(Prec_Ev[qPrec],bins=n); [float(i) for i in PrecH]
 				PresH,PresBin = np.histogram(Pres_F_Ev[qPres],bins=n); [float(i) for i in PresH]
 				TH,TBin = np.histogram(T_F_Ev[qT],bins=n); [float(i) for i in TH]
 
@@ -1130,7 +1204,7 @@ class BPumpL:
 
 		return ds, dp, In
 
-	def PRvDP(self,PrecC,PresC,dt=1,M=60*4):
+	def PRvDP(self,PrecC,PresC,dt=1,M=60*4,flagEv=False,PathImg='',Name=''):
 		'''
 		DESCRIPTION:
 	
@@ -1144,6 +1218,7 @@ class BPumpL:
 		+ PresC: Diagrama de compuestos de presión barométrica.
 		+ dt: delta de tiempo que se tienen en los diagramas de compuestos.
 		+ M: Mitad en donde se encuentran los datos.
+		+ flagEV: 
 		_________________________________________________________________________
 
 			OUTPUT:
@@ -1165,6 +1240,13 @@ class BPumpL:
 		PresChangeA = np.empty(len(PrecC))*np.nan
 		#DurPres = np.empty(len(PrecC))*np.nan
 		xx = []
+
+		PosiminPres = []
+		PosimaxPres = []
+		PosimaxPresA = []
+
+		PrecPre = []
+		PrecPos = []
 		# Ciclo para todos los diferentes eventos
 		for i in range(len(PrecC)):
 			x = 0
@@ -1175,7 +1257,7 @@ class BPumpL:
 			xx.append(x)
 			x = [M]
 			# Se encuentra el mínimo de precipitación antes de ese punto
-			xm = np.where(PrecC[i,:x[0]+1]<=0.10)[0]
+			xm = np.where(PrecC[i,:x[0]]<=0.10)[0]
 			#print(xm)
 
 			# Se mira si es mínimo de antes por 10 minutos consecutivos de mínimos
@@ -1209,11 +1291,13 @@ class BPumpL:
 				# 	if xm[a] == xm[a-1]+1 and xm[a] == xm[a-2]+2 and xm[a] == xm[a-3]+3 and\
 				# 		xm[a] == xm[a-4]+4 and:
 
-			# Se encuentra el mínimo de precipitación antes de ese punto
-			xM = np.where(PrecC[i,x[0]:]<=0.10)[0]+x[0]
+			# Se encuentra el máximo de precipitación antes de ese punto
+			xM = np.where(PrecC[i,x[0]+1:]<=0.10)[0]+x[0]+1
 
+
+			print(x[0])
 			#print('i='+str(i))
-			#print('xM='+str(xM))
+			print('xM='+str(xM))
 
 			# Se busca el mínimo después del máximo
 			k = 1
@@ -1244,6 +1328,9 @@ class BPumpL:
 
 			DurPrec[i] = (xMM-xmm+1)*dt/60
 
+			PrecPre.append(xmm)
+			PrecPos.append(xMM)
+
 			# Se hace el proceso para los datos de presión
 			if dt == 1:
 				utl.ExitError('PRvDP','BPumpL','No se ha realizado esta subrutina')
@@ -1258,20 +1345,20 @@ class BPumpL:
 					PresRateA[i] = np.nan
 				else:
 					# Se encuentra el mínimo de presión antes del evento
-					PresMin = np.nanmin(PresC[i,xmm-2:xmm+3]) # Valor del mínimo
-					xpm = np.where(PresC[i,xmm-2:xmm+3] == PresMin)[0]+xmm-2 # Posición del mínimo
-					
+					PresMin = np.nanmin(PresC[i,xmm-10:xmm+5]) # Valor del mínimo
+					xpm = np.where(PresC[i,xmm-10:xmm+5] == PresMin)[0]+xmm-10 # Posición del mínimo
+
 					# print('xpm=',xpm)
 					# print('xmm=',xmm)
-					
-					if xpm[0] <= 10:
+
 					# Se encuentra el cambio de presión antes del evento
+					if xpm[0] <= 15:					
 						PresMaxB = PresMin
 						xpM = xpm
 					else:
 						try:
-							PresMaxB = np.nanmax(PresC[i,xmm-12:xpm+1]) # Valor máximo antes
-							xpM = np.where(PresC[i,xmm-12:xpm+1] == PresMaxB)[0]+xmm-12 # Posición del máximo antes
+							PresMaxB = np.nanmax(PresC[i,xmm-35:xpm+1]) # Valor máximo antes
+							xpM = np.where(PresC[i,xmm-35:xpm+1] == PresMaxB)[0]+xmm-35 # Posición del máximo antes
 						except:
 							PresMaxB = np.nanmax(PresC[i,:xpm+1]) # Valor máximo antes
 							xpM = np.where(PresC[i,:xpm+1] == PresMaxB)[0] # Posición del máximo antes
@@ -1285,12 +1372,15 @@ class BPumpL:
 						PresChangeB[i] = PresMaxB - PresMin
 						PresRateB[i] = PresChangeB[i]/((xpM-xpm-1)*dt/60) # Rate en hPa/h
 					
+					PosiminPres.append(xpm)
+					PosimaxPres.append(xpM)
+
 					# print('PresChangeB='+str(PresChangeB[i]))
 					# print('PresRateB='+str(PresRateB[i]))
 
 					# Se encuentra el cambio de presión durante el evento.
-					PresMaxA = np.nanmax(PresC[i,xpm:x[0]+5]) # Valor máximo
-					xpM = np.where(PresC[i,xpm:x[0]+6] == PresMaxA)[0]+xpm # Posición del máximo antes
+					PresMaxA = np.nanmax(PresC[i,xpm:x[0]+10]) # Valor máximo
+					xpM = np.where(PresC[i,xpm:x[0]+10] == PresMaxA)[0]+xpm # Posición del máximo antes
 
 					if np.isnan(PresMaxA) or np.isnan(PresMin) or xpM == xpm:
 						PresChangeA[i] = np.nan
@@ -1304,37 +1394,61 @@ class BPumpL:
 					# 	print('xpM='+str(xpM))
 					# 	print('PresChangeA='+str(PresChangeA[i]))
 					# 	print('PresRateBA='+str(PresRateA[i]))
-			elif dt < 60:
+
+					PosimaxPresA.append(xpM)
+			elif dt < 60 and dt > 5:
 				# Filtrado adicional de la serie
 				qq = np.isnan(PrecC[i,:x[0]+1])
 				sq = sum(qq)
-				if sq >= x[0]/2 or xmm <= 1:
+				if sq >= x[0]/2 or xmm <= 4:
 					PresChangeB[i] = np.nan
 					PresRateB[i] = np.nan
 					PresChangeA[i] = np.nan
 					PresRateA[i] = np.nan
 				else:
 
+					# print('Before')
+					print('xmm='+str(xmm))
+
 					# Se encuentra el mínimo de presión antes del evento
-					PresMin = np.nanmin(PresC[i,xmm-2:xmm+3]) # Valor del mínimo
-					xpm = np.where(PresC[i,xmm-2:xmm+3] == PresMin)[0]+xmm-2 # Posición del mínimo
-					# print('xpm=',xpm)
+					PresMin = np.nanmin(PresC[i,xmm-4:xmm+2]) # Valor del mínimo
+					xpm = np.where(PresC[i,xmm-4:xmm+2] == PresMin)[0]+xmm-4 # Posición del mínimo
+					c = len(xpm)
+					if c >=2:
+						xpm = xpm[len(xpm)-1]
+					print('xpm=',xpm)
 					# print('xmm=',xmm)
+					print('xMM=',xMM)
 					
-					if xpm[0] <= 1:
+					if xpm <= 1:
 					# Se encuentra el cambio de presión antes del evento
 						PresMaxB = PresMin
 						xpM = xpm
 					else:
 						try:
-							PresMaxB = np.nanmax(PresC[i,xmm-(dt-1)/3:xpm+1]) # Valor máximo antes
-							xpM = np.where(PresC[i,xmm-(dt-1)/3:xpm+1] == PresMaxB)[0]+xmm-(dt-1)/3 # Posición del máximo antes
+							PresMaxB = np.nanmax(PresC[i,xmm-5:xpm]) # Valor máximo antes
+							#xpM = np.where(PresC[i,xmm-(dt-1)/3:xpm+1] == PresMaxB)[0]+xmm-(dt-1)/3 # Posición del máximo antes
+							xpM = np.where(PresC[i,xmm-5:xpm] == PresMaxB)[0]+xmm-5 # Posición del máximo antes
+							c = len(xpM)
+							if c >=2:
+								xpM = xpM[len(xpM)-1]
 						except:
 							PresMaxB = np.nanmax(PresC[i,:xpm+1]) # Valor máximo antes
 							xpM = np.where(PresC[i,:xpm+1] == PresMaxB)[0] # Posición del máximo antes
-					# print('Before')
+							c = len(xpM)
+							if c >=2:
+								xpM = xpM[len(xpM)-1]
+
+					print('xpM=',xpM)
+					
+					
+
+
+					
 					# print('xpm='+str(xpm))
 					# print('xpM='+str(xpM))
+					print(np.isnan(PresMaxB))
+					print(np.isnan(PresMin))
 					if np.isnan(PresMaxB) or np.isnan(PresMin) or xpM == xpm:
 						PresChangeB[i] = np.nan
 						PresRateB[i] = np.nan
@@ -1342,12 +1456,20 @@ class BPumpL:
 						PresChangeB[i] = PresMaxB - PresMin
 						PresRateB[i] = PresChangeB[i]/((xpM-xpm-1)*dt/60) # Rate en hPa/h
 					
+					PosiminPres.append(xpm)
+					PosimaxPres.append(xpM)
+
+
 					# print('PresChangeB='+str(PresChangeB[i]))
 					# print('PresRateB='+str(PresRateB[i]))
 
 					# Se encuentra el cambio de presión durante el evento.
-					PresMaxA = np.nanmax(PresC[i,xpm:x[0]+5]) # Valor máximo
-					xpM = np.where(PresC[i,xpm:x[0]+6] == PresMaxA)[0]+xpm # Posición del máximo antes
+					PresMaxA = np.nanmax(PresC[i,xmm+1:xMM]) # Valor máximo
+					xpM = np.where(PresC[i,xmm+1:xMM] == PresMaxA)[0]+xmm+1 # Posición del máximo antes
+
+					c = len(xpM)
+					if c >=2:
+						xpM = xpM[len(xpM)-1]
 
 					if np.isnan(PresMaxA) or np.isnan(PresMin) or xpM == xpm:
 						PresChangeA[i] = np.nan
@@ -1361,6 +1483,9 @@ class BPumpL:
 					# 	print('xpM='+str(xpM))
 					# 	print('PresChangeA='+str(PresChangeA[i]))
 					# 	print('PresRateBA='+str(PresRateA[i]))
+
+
+					PosimaxPresA.append(xpM)
 			else:
 				# Filtrado adicional de la serie
 				qq = np.isnan(PrecC[i,:x[0]+1])
@@ -1419,6 +1544,426 @@ class BPumpL:
 					# 	print('PresChangeA='+str(PresChangeA[i]))
 					# 	print('PresRateBA='+str(PresRateA[i]))
 
+			
+
+
+		if flagEv == True:
+			print('\n Se desarrollan las gráficas')
+			# Se crea la ruta en donde se guardarán los archivos
+			utl.CrFolder(PathImg+Name+'/')
+			# Tiempo
+			Time = PrecC.shape[1]
+			Time_G = np.arange(-Time/2,Time/2)
+			
+			# Valores generales para los gráficos
+			Afon = 18; Tit = 22; Axl = 20
+
+			for i in range(len(PrecC)):
+				if i <= 946:
+					f = plt.figure(figsize=(20,10))
+					plt.rcParams.update({'font.size': Afon})
+					ax11 = host_subplot(111, axes_class=AA.Axes)
+					# Precipitación
+					a11 = ax11.plot(Time_G,PrecC[i],'-b', label = 'Precipitación')
+					ax11.set_title(Name+r" Evento " + str(i),fontsize=Tit)
+					ax11.set_xlabel("Tiempo [cada 5 min]",fontsize=Axl)
+					ax11.set_ylabel('Precipitación [mm]',fontsize=Axl)
+					#ax11.set_xlim([Time_G[0],Time_G[len(Prec_Ev[0])-1]+1])
+					# Presión barométrica
+					axx11 = ax11.twinx()
+					a112 = axx11.plot(Time_G,PresC[i],'-k', label = 'Presión Barométrica')
+					axx11.set_ylabel("Presión [hPa]",fontsize=Axl)
+
+					# print(PosiminPres[i])
+					# print(PosimaxPres[i])
+					# print(Time_G.shape)
+					# Líneas de eventos
+					L1 = ax11.plot([Time_G[PosiminPres[i]],Time_G[PosiminPres[i]]],[0,np.nanmax(PrecC[i])],'--b', label = 'Min Pres') # Punto mínimo
+					L2 = ax11.plot([Time_G[PosimaxPres[i]],Time_G[PosimaxPres[i]]],[0,np.nanmax(PrecC[i])],'--r', label = 'Max Pres Antes') # Punto máximo B
+					L3 = ax11.plot([Time_G[PosimaxPresA[i]],Time_G[PosimaxPresA[i]]],[0,np.nanmax(PrecC[i])],'--g', label = 'Max Pres Después') # Punto máximo A
+
+					# Líneas para la precipitación
+					L4 = ax11.plot([Time_G[PrecPre[i]],Time_G[PrecPre[i]]],[0,np.nanmax(PrecC[i])],'-.b', label = 'Inicio Prec') # Inicio del aguacero
+					L5 = ax11.plot([Time_G[PrecPos[i]],Time_G[PrecPos[i]]],[0,np.nanmax(PrecC[i])],'-.g', label = 'Fin Prec') # Fin del aguacero
+
+					# added these three lines
+					lns = a11+a112+L1+L2+L3+L4+L5
+					labs = [l.get_label() for l in lns]
+					ax11.legend(lns, labs, loc=0)
+					
+					#plt.tight_layout()
+					plt.savefig(PathImg + Name + '/' + Name + '_' + 'Ev_' + str(i) + '.png')
+					plt.close('all')
+
+		return DurPrec, MaxPrec, PresRateB,PresRateA,PresChangeB,PresChangeA,xx
+
+
+	def PRvDP_T(self,PrecC,PresC,dt=1,M=60*4,flagEv=False,PathImg='',Name=''):
+		'''
+		DESCRIPTION:
+	
+		Con esta función se pretende encontrar la tasa de cambio de presión junto
+		con la duración de las diferentes tormentas para luego ser gráficada por
+		aparte.
+		_________________________________________________________________________
+
+			INPUT:
+		+ PrecC: Diagrama de compuestos de precipitación.
+		+ PresC: Diagrama de compuestos de presión barométrica.
+		+ dt: delta de tiempo que se tienen en los diagramas de compuestos.
+		+ M: Mitad en donde se encuentran los datos.
+		+ flagEV: 
+		_________________________________________________________________________
+
+			OUTPUT:
+		- DurPrec: Duración del evento de precipitación.
+		- MaxPrec: Máximo de precipitación.
+		- PresRateB: Tasa de cambio de presión antes.
+		- PresRateA: Tasa de cambio de presión después.
+		- PresChangeB: Cambio de presión antes.
+		- PresChangeA: Cambio de presión después.
+		- DurPres: Duración de presión.
+		'''
+
+		# Se inicializan las variables que se necesitan
+		DurPrec = np.empty(len(PrecC))*np.nan
+		MaxPrec = np.empty(len(PrecC))*np.nan
+		PresRateB = np.empty(len(PrecC))*np.nan
+		PresRateA = np.empty(len(PrecC))*np.nan
+		PresChangeB = np.empty(len(PrecC))*np.nan
+		PresChangeA = np.empty(len(PrecC))*np.nan
+		#DurPres = np.empty(len(PrecC))*np.nan
+		xx = []
+
+		PosiminPres = []
+		PosimaxPres = []
+		PosimaxPresA = []
+
+		PrecPre = []
+		PrecPos = []
+		# Ciclo para todos los diferentes eventos
+		for i in range(len(PrecC)):
+			x = 0
+			xm = 0
+			# Se encuentra se encuentra la posición del máximo de precipitación
+			MaxPrec[i] = np.nanmax(PrecC[i,:])
+			#x = np.where(PrecC[i,:] == MaxPrec[i])[0]
+			xx.append(x)
+			x = [M]
+			# Se encuentra el mínimo de precipitación antes de ese punto
+			xm = np.where(PrecC[i,:x[0]]<=0.10)[0]
+			#print(xm)
+
+			# Se mira si es mínimo de antes por 10 minutos consecutivos de mínimos
+			k = 1
+			a = len(xm)-1
+			while k == 1:
+				
+				if dt == 1:
+					utl.ExitError('PRvDP','BPumpL','No se ha realizado esta subrutina')
+				elif dt == 5:
+					
+					if a == -1:
+						xmm = 0
+						k = 2
+						break
+					if xm[a] == xm[a-1]+1:
+						xmm = xm[a]
+						k = 2
+					else:
+						a = a-1
+						if a == 0:
+							xmm = xm[0]
+							k = 2
+				else:
+					if a == -1:
+						xmm = 0
+					else:
+						xmm = xm[a]
+					k = 2
+				# elif dt == 1:
+				# 	if xm[a] == xm[a-1]+1 and xm[a] == xm[a-2]+2 and xm[a] == xm[a-3]+3 and\
+				# 		xm[a] == xm[a-4]+4 and:
+
+			# Se encuentra el máximo de precipitación antes de ese punto
+			xM = np.where(PrecC[i,x[0]+1:]<=0.10)[0]+x[0]+1
+
+
+			#print(x[0])
+			#print('i='+str(i))
+			#print('xM='+str(xM))
+
+			# Se busca el mínimo después del máximo
+			k = 1
+			a = 0
+			while k == 1:
+				aa = len(xM)
+				if aa == 1 or aa == 0:
+					xMM = len(PrecC[i,:])-1
+					k = 2
+					break
+				if dt == 1:
+					utl.ExitError('PRvDP','BPumpL','No se ha realizado esta subrutina')
+				elif dt == 5:
+					if xM[a] == xM[a+1]-1:
+						xMM = xM[a]
+						k = 2
+					else:
+						a = a+1
+						if a == len(xM)-1:
+							xMM = xM[len(xM)-1]
+							k = 2
+				else:
+					xMM = xM[a]
+					k = 2
+
+			# print(xMM)
+			# print(xmm)
+
+			DurPrec[i] = (xMM-xmm+1)*dt/60
+
+			PrecPre.append(xmm)
+			PrecPos.append(xMM)
+
+			# Se hace el proceso para los datos de presión
+			if dt == 1:
+				utl.ExitError('PRvDP','BPumpL','No se ha realizado esta subrutina')
+			elif dt == 5:
+				# Filtrado adicional de la serie
+				qq = np.isnan(PrecC[i,:x[0]+1])
+				sq = sum(qq)
+				if sq >= x[0]/2 or xmm == 0:
+					PresChangeB[i] = np.nan
+					PresRateB[i] = np.nan
+					PresChangeA[i] = np.nan
+					PresRateA[i] = np.nan
+				else:
+
+					# Se encuentra el mínimo de presión antes del evento
+					PresMin = np.nanmin(PresC[i,xmm-10:xmm+5]) # Valor del mínimo
+					xpm = np.where(PresC[i,xmm-10:xmm+5] == PresMin)[0]+xmm-10 # Posición del mínimo
+
+					# Se encuentra el cambio de presión antes del evento
+					PresRateBM = [(PresC[i,xmm]-PresC[i,xmm-kk])/((kk)*dt/60) for kk in range(1,xmm+1)]
+					PresChangeBM = [(PresC[i,xmm]-PresC[i,xmm-kk]) for kk in range(1,xmm+1)]
+					PresRateB[i] = np.nanmin(PresRateBM)
+					xpM = xmm-1-np.where(np.array(PresRateBM) == PresRateB[i])[0]
+					m = np.where(np.array(PresRateBM) == PresRateB[i])[0]
+					PresChangeB[i] = PresChangeBM[m]
+					
+					PosiminPres.append(xpm)
+					PosimaxPres.append(xpM)
+
+					# print('PresChangeB='+str(PresChangeB[i]))
+					# print('PresRateB='+str(PresRateB[i]))
+
+					# Se encuentra el cambio de presión durante el evento.
+					PresRateAM = [(PresC[i,kk]-PresC[i,xmm])/((kk-xmm)*dt/60) for kk in range(xmm+1,len(PresC[i]))]
+					PresChangeAM = [(PresC[i,kk]-PresC[i,xmm]) for kk in range(xmm+1,len(PresC[i]))]
+					PresRateA[i] = np.nanmax(PresRateAM)
+					xpM = xmm+np.where(np.array(PresRateAM) == PresRateA[i])[0]
+					m = np.where(np.array(PresRateAM) == PresRateA[i])[0]
+					PresChangeA[i] = PresChangeAM[m]
+
+					PosimaxPresA.append(xpM)
+			elif dt < 60 and dt > 5:
+				# Filtrado adicional de la serie
+				qq = np.isnan(PrecC[i,:x[0]+1])
+				sq = sum(qq)
+				if sq >= x[0]/2 or xmm <= 4:
+					PresChangeB[i] = np.nan
+					PresRateB[i] = np.nan
+					PresChangeA[i] = np.nan
+					PresRateA[i] = np.nan
+				else:
+
+					# print('Before')
+					print('xmm='+str(xmm))
+
+					# Se encuentra el mínimo de presión antes del evento
+					PresMin = np.nanmin(PresC[i,xmm-4:xmm+2]) # Valor del mínimo
+					xpm = np.where(PresC[i,xmm-4:xmm+2] == PresMin)[0]+xmm-4 # Posición del mínimo
+					c = len(xpm)
+					if c >=2:
+						xpm = xpm[len(xpm)-1]
+					print('xpm=',xpm)
+					# print('xmm=',xmm)
+					print('xMM=',xMM)
+					
+					if xpm <= 1:
+					# Se encuentra el cambio de presión antes del evento
+						PresMaxB = PresMin
+						xpM = xpm
+					else:
+						try:
+							PresMaxB = np.nanmax(PresC[i,xmm-5:xpm]) # Valor máximo antes
+							#xpM = np.where(PresC[i,xmm-(dt-1)/3:xpm+1] == PresMaxB)[0]+xmm-(dt-1)/3 # Posición del máximo antes
+							xpM = np.where(PresC[i,xmm-5:xpm] == PresMaxB)[0]+xmm-5 # Posición del máximo antes
+							c = len(xpM)
+							if c >=2:
+								xpM = xpM[len(xpM)-1]
+						except:
+							PresMaxB = np.nanmax(PresC[i,:xpm+1]) # Valor máximo antes
+							xpM = np.where(PresC[i,:xpm+1] == PresMaxB)[0] # Posición del máximo antes
+							c = len(xpM)
+							if c >=2:
+								xpM = xpM[len(xpM)-1]
+
+					print('xpM=',xpM)
+					
+					
+
+
+					
+					# print('xpm='+str(xpm))
+					# print('xpM='+str(xpM))
+					print(np.isnan(PresMaxB))
+					print(np.isnan(PresMin))
+					if np.isnan(PresMaxB) or np.isnan(PresMin) or xpM == xpm:
+						PresChangeB[i] = np.nan
+						PresRateB[i] = np.nan
+					else:
+						PresChangeB[i] = PresMaxB - PresMin
+						PresRateB[i] = PresChangeB[i]/((xpM-xpm-1)*dt/60) # Rate en hPa/h
+					
+					PosiminPres.append(xpm)
+					PosimaxPres.append(xpM)
+
+
+					# print('PresChangeB='+str(PresChangeB[i]))
+					# print('PresRateB='+str(PresRateB[i]))
+
+					# Se encuentra el cambio de presión durante el evento.
+					PresMaxA = np.nanmax(PresC[i,xmm+1:xMM]) # Valor máximo
+					xpM = np.where(PresC[i,xmm+1:xMM] == PresMaxA)[0]+xmm+1 # Posición del máximo antes
+
+					c = len(xpM)
+					if c >=2:
+						xpM = xpM[len(xpM)-1]
+
+					if np.isnan(PresMaxA) or np.isnan(PresMin) or xpM == xpm:
+						PresChangeA[i] = np.nan
+						PresRateA[i] = np.nan
+					else:
+						PresChangeA[i] = PresMaxA - PresMin
+						PresRateA[i] = PresChangeA[i]/((xpM-xpm+1)*dt/60) # Rate en hPa/h
+					# if i == 426:
+					# 	print('After')
+					# 	print('xpm='+str(xpm))
+					# 	print('xpM='+str(xpM))
+					# 	print('PresChangeA='+str(PresChangeA[i]))
+					# 	print('PresRateBA='+str(PresRateA[i]))
+
+
+					PosimaxPresA.append(xpM)
+			else:
+				# Filtrado adicional de la serie
+				qq = np.isnan(PrecC[i,:x[0]+1])
+				sq = sum(qq)
+				if sq >= x[0]/2 or xmm <= 1:
+					PresChangeB[i] = np.nan
+					PresRateB[i] = np.nan
+					PresChangeA[i] = np.nan
+					PresRateA[i] = np.nan
+				else:
+
+					# Se encuentra el mínimo de presión antes del evento
+					PresMin = np.nanmin(PresC[i,xmm-2:xmm+3]) # Valor del mínimo
+					xpm = np.where(PresC[i,xmm-2:xmm+3] == PresMin)[0]+xmm-2 # Posición del mínimo
+					# print('xpm=',xpm)
+					# print('xmm=',xmm)
+					print(xpm)
+					if xpm == 0:
+					# Se encuentra el cambio de presión antes del evento
+						PresMaxB = PresMin
+						xpM = xpm
+					else:
+						try:
+							PresMaxB = np.nanmax(PresC[i,xmm-(dt-1)/3:xpm+1]) # Valor máximo antes
+							xpM = np.where(PresC[i,xmm-(dt-1)/3:xpm+1] == PresMaxB)[0]+xmm-(dt-1)/3 # Posición del máximo antes
+						except:
+							PresMaxB = np.nanmax(PresC[i,:xpm[0]+1]) # Valor máximo antes
+							xpM = np.where(PresC[i,:xpm[0]+1] == PresMaxB)[0] # Posición del máximo antes
+					# print('Before')
+					# print('xpm='+str(xpm))
+					# print('xpM='+str(xpM))
+					if np.isnan(PresMaxB) or np.isnan(PresMin) or xpM == xpm:
+						PresChangeB[i] = np.nan
+						PresRateB[i] = np.nan
+					else:
+						PresChangeB[i] = PresMaxB - PresMin
+						PresRateB[i] = PresChangeB[i]/((xpM-xpm-1)*dt/60) # Rate en hPa/h
+					
+					# print('PresChangeB='+str(PresChangeB[i]))
+					# print('PresRateB='+str(PresRateB[i]))
+
+					# Se encuentra el cambio de presión durante el evento.
+					PresMaxA = np.nanmax(PresC[i,xpm:x[0]+5]) # Valor máximo
+					xpM = np.where(PresC[i,xpm:x[0]+6] == PresMaxA)[0]+xpm # Posición del máximo antes
+
+					if np.isnan(PresMaxA) or np.isnan(PresMin) or xpM == xpm:
+						PresChangeA[i] = np.nan
+						PresRateA[i] = np.nan
+					else:
+						PresChangeA[i] = PresMaxA - PresMin
+						PresRateA[i] = PresChangeA[i]/((xpM-xpm+1)*dt/60) # Rate en hPa/h
+					# if i == 426:
+					# 	print('After')
+					# 	print('xpm='+str(xpm))
+					# 	print('xpM='+str(xpM))
+					# 	print('PresChangeA='+str(PresChangeA[i]))
+					# 	print('PresRateBA='+str(PresRateA[i]))
+
+			
+
+
+		if flagEv == True:
+			print('\n Se desarrollan las gráficas')
+			# Se crea la ruta en donde se guardarán los archivos
+			utl.CrFolder(PathImg+Name+'/')
+			# Tiempo
+			Time = PrecC.shape[1]
+			Time_G = np.arange(-Time/2,Time/2)
+			
+			# Valores generales para los gráficos
+			Afon = 18; Tit = 22; Axl = 20
+
+			for i in range(len(PrecC)):
+				if i <= 946:
+					f = plt.figure(figsize=(20,10))
+					plt.rcParams.update({'font.size': Afon})
+					ax11 = host_subplot(111, axes_class=AA.Axes)
+					# Precipitación
+					a11 = ax11.plot(Time_G,PrecC[i],'-b', label = 'Precipitación')
+					ax11.set_title(Name+r" Evento " + str(i),fontsize=Tit)
+					ax11.set_xlabel("Tiempo [cada 5 min]",fontsize=Axl)
+					ax11.set_ylabel('Precipitación [mm]',fontsize=Axl)
+					#ax11.set_xlim([Time_G[0],Time_G[len(Prec_Ev[0])-1]+1])
+					# Presión barométrica
+					axx11 = ax11.twinx()
+					a112 = axx11.plot(Time_G,PresC[i],'-k', label = 'Presión Barométrica')
+					axx11.set_ylabel("Presión [hPa]",fontsize=Axl)
+
+					# print(PosiminPres[i])
+					# print(PosimaxPres[i])
+					# print(Time_G.shape)
+					# Líneas de eventos
+					L1 = ax11.plot([Time_G[PosiminPres[i]],Time_G[PosiminPres[i]]],[0,np.nanmax(PrecC[i])],'--b', label = 'Min Pres') # Punto mínimo
+					L2 = ax11.plot([Time_G[PosimaxPres[i]],Time_G[PosimaxPres[i]]],[0,np.nanmax(PrecC[i])],'--r', label = 'Max Pres Antes') # Punto máximo B
+					L3 = ax11.plot([Time_G[PosimaxPresA[i]],Time_G[PosimaxPresA[i]]],[0,np.nanmax(PrecC[i])],'--g', label = 'Max Pres Después') # Punto máximo A
+
+					# Líneas para la precipitación
+					L4 = ax11.plot([Time_G[PrecPre[i]],Time_G[PrecPre[i]]],[0,np.nanmax(PrecC[i])],'-.b', label = 'Inicio Prec') # Inicio del aguacero
+					L5 = ax11.plot([Time_G[PrecPos[i]],Time_G[PrecPos[i]]],[0,np.nanmax(PrecC[i])],'-.g', label = 'Fin Prec') # Fin del aguacero
+
+					# added these three lines
+					lns = a11+a112+L1+L2+L3+L4+L5
+					labs = [l.get_label() for l in lns]
+					ax11.legend(lns, labs, loc=0)
+					
+					#plt.tight_layout()
+					plt.savefig(PathImg + Name + '/' + Name + '_' + 'Ev_' + str(i) + '.png')
+					plt.close('all')
 
 		return DurPrec, MaxPrec, PresRateB,PresRateA,PresChangeB,PresChangeA,xx
 
