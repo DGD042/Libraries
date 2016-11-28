@@ -25,6 +25,7 @@ import os
 import warnings
 from pandas import Series, DataFrame
 import random
+from sklearn.metrics import mutual_info_score
 
 
 class FyC_Class:
@@ -366,6 +367,27 @@ class FyC_Class:
 		P = 1-(b**(-S/d))
 
 		return P
+
+	def calc_MI(self,x, y, bins):
+		'''
+			DESCRIPTION:
+		
+		Esta función calcula la información mútua entre dos variables
+		_________________________________________________________________________
+
+			INPUT:
+		+ x: Serie de datos de una variable.
+		+ y: Serie de datos de la otra variable.
+		+ bins: Cantidad de intervalos de clase para calcular el histograma 
+				conjunto.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- P: Value of P.
+		'''
+		c_xy = np.histogram2d(x, y, bins)[0]
+		mi = mutual_info_score(None, None, contingency=c_xy)
+		return mi
 		
 
 

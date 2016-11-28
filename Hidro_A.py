@@ -35,7 +35,9 @@ import warnings
 from datetime import date, datetime, timedelta
 
 from UtilitiesDGD import UtilitiesDGD
+from Hydro_Plotter import Hydro_Plotter
 utl = UtilitiesDGD()
+HyPl = Hydro_Plotter()
 
 
 class Hidro_A:
@@ -301,53 +303,9 @@ class Hidro_A:
 				plt.savefig(PathImg + 'CMPPrec_' + NameA +'.png' )
 				plt.close('all')
 
-
-			# Se grafica la curva anual
-			# Parámetros de la gráfica
-			fH = 20
-			fV = fH*(2/3)
+			# Se hacen las gráficas individuales
+			HyPl.DalyCycle(HH,CiDT,ErrT,VarL,VarLL,Name,NameA,PathImg,color=C,label=VarLL,lw=1.5)
 			
-			F = plt.figure(figsize=utl.cm2inch(fH,fV))
-			plt.rcParams.update({'font.size': 14,'font.family': 'sans-serif'\
-				,'font.sans-serif': 'Arial'})
-			#plt.plot(CiDT, 'k-', lw = 1.5)
-			plt.errorbar(HH,CiDT,yerr=ErrT,fmt='-',color=C,label=VarLL,lw=1.5)
-			plt.title('Ciclo Diurno de ' + VarLL + ' en ' + Name,fontsize=16 )  # Colocamos el título del gráfico
-			plt.ylabel(VarL,fontsize=14)  # Colocamos la etiqueta en el eje x
-			plt.xlabel('Horas',fontsize=14)  # Colocamos la etiqueta en el eje y
-			ax = plt.gca()
-			plt.xlim([0,23])
-			# plt.gca().xaxis.set_ticks(HH2)
-			# plt.gca().set_xticklabels(HHL,rotation=90)
-			# plt.legend(loc=1)
-			plt.grid()
-			# The minor ticks are included
-			xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
-			MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-			minorLocatorx = MultipleLocator(MxL)
-			yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
-			MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
-			minorLocatory = MultipleLocator(MyL)
-			plt.gca().xaxis.set_minor_locator(minorLocatorx)
-			plt.gca().yaxis.set_minor_locator(minorLocatory)
-			plt.savefig(PathImg + 'CTErr_' + NameA+'.png',format='png',dpi=200 )
-			plt.close('all')
-
-			# F = plt.figure(figsize=(15,10))
-			# plt.rcParams.update({'font.size': 22})
-			# #plt.plot(CiDT, 'k-', lw = 1.5)
-			# plt.errorbar(HH,CiDT,yerr=DesT,fmt='-',color=C,label=VarLL)
-			# plt.title('Ciclo diurno de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
-			# plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
-			# plt.xlabel('Horas',fontsize=24)  # Colocamos la etiqueta en el eje y
-			# axes = plt.gca()
-			# axes.set_xlim([0,23])
-			# plt.gca().xaxis.set_ticks(HH2)
-			# plt.gca().set_xticklabels(HHL,rotation=90)
-			# plt.legend(loc=1)
-			# plt.grid()
-			# plt.savefig(PathImg + 'CTDes_' + NameA+'.png' )
-			# plt.close('all')
 
 		if flagTri == True:
 			# Se crea la ruta en donde se guardarán los archivos
@@ -422,6 +380,8 @@ class Hidro_A:
 			INPUT:
 		+ Var: Variable que se desea tratar.
 		+ Fecha: Variable con el año inicial y el año final de los datos.
+		+ PV90: Valor que se quiere tomar para el percentil superrior.
+		+ PV10: Valor que se quiere tomar para el percentil inferior.
 		+ FalgG: Activador para desarrollar las gráfcias.
 		+ PathImg: Ruta para guardar las imágenes.
 		+ NameA: Nombre de la estación de las imágenes
@@ -454,41 +414,11 @@ class Hidro_A:
 
 		if FlagG:
 			x = np.arange(0,24,24/DTH)
-			# Se genera el boxplot con los datos
-			# Parámetros de la gráfica
-			fH = 25
-			fV = fH*(2/3)
-			F = plt.figure(figsize=utl.cm2inch(fH,fV))
-			plt.rcParams.update({'font.size': 14,'font.family': 'sans-serif'\
-				,'font.sans-serif': 'Arial'})
-			plt.plot(x,zM,'k-',label='Media')
-			plt.plot(x,zMed,'k--',label='Mediana')
-			plt.fill_between(x,P10,P90,color='silver',label=r'P$_{%s}$ a P$_{%s}$' %(PV10,PV90))
-			plt.plot(x,P10,'w-',lw=0.0001)
-			plt.legend(loc=0)
-			plt.xlim([0,23])
-			ax = plt.gca()
-			yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
-			MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
-			plt.ylim([yTL[0]-2*MyL,yTL[-1]+2*MyL])
-			plt.title('Ciclo Diurno de ' + VarLL + ' en ' + Name,fontsize=16 )  # Colocamos el título del gráfico
-			plt.ylabel(VarL,fontsize=14)  # Colocamos la etiqueta en el eje x
-			plt.xlabel('Horas',fontsize=14)  # Colocamos la etiqueta en el eje y
-			# The minor ticks are included
-			ax = plt.gca()
-			xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
-			MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-			minorLocatorx = MultipleLocator(MxL)
-			yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
-			MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
-			minorLocatory = MultipleLocator(MyL)
-			plt.gca().xaxis.set_minor_locator(minorLocatorx)
-			plt.gca().yaxis.set_minor_locator(minorLocatory)
-			plt.savefig(PathImg + 'CTPer_' + NameA+'.png',format='png',dpi=200 )
-			plt.close('all')
+			HH = x
+			HyPl.DalyCyclePer(HH,zM,zMed,P10,P90,PV90,PV10,VarL,VarLL,Name,NameA,PathImg)
+			
 
 		return zM,zMed,P90,P10
-
 
 	def CiclDPvP(self,Var1,Var2,Fecha,DTH=24):
 		'''
@@ -781,7 +711,7 @@ class Hidro_A:
 		plt.savefig(PathImg + 'T' + Var +'_' + Name+'.png' )
 		plt.close('all')
 
-	def CiclA(self,VMes,Fecha,PathImg='',Name='',VarL='',VarLL='',C='k',NameArch='',flagA=False):
+	def CiclA(self,VMes,Fecha,PathImg='',Name='',VarL='',VarLL='',C='k',NameArch='',flagA=False,AH=False):
 		'''
 			DESCRIPTION:
 		
@@ -800,6 +730,7 @@ class Hidro_A:
 		+ VarLL: Nombre de la variable
 		+ C: Color de la línea.
 		+ NameArch: Nombre del archivo como se guardará la informaición.
+		+ AH: Este es un flag para saber si se hace el gráfico con el año hidrológico.
 		_________________________________________________________________________
 		
 			OUTPUT:
@@ -824,37 +755,39 @@ class Hidro_A:
 		MesE = [k/np.sqrt(VarMNT[ii]) for ii,k in enumerate(MesD)] # Error anual
 		#MesE = [k/np.sqrt(len(VarM)) for k in MesD] # Error anual
 
-		# Se crea la ruta en donde se guardarán los archivos
-		utl.CrFolder(PathImg)
+		HyPl.AnnualCycle(MesM,MesE,VarL,VarLL,Name,NameArch,PathImg,AH,color=C)
+		
+		# # Se crea la ruta en donde se guardarán los archivos
+		# utl.CrFolder(PathImg)
 
-		# Figuras
-		# Grafica con barras de error estándar
-		F = plt.figure(figsize=(15,10))
-		plt.rcParams.update({'font.size': 22})
-		plt.errorbar(np.arange(1,13),MesM,yerr=MesE,fmt='-',color=C,label=VarLL)
-		plt.title('Ciclo anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
-		plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
-		plt.xlabel('Tiempo [Meses]',fontsize=24)  # Colocamos la etiqueta en el eje y
-		axes = plt.gca()
-		axes.set_xlim([0,13])
-		plt.legend(loc=0)
-		plt.grid()
-		plt.savefig(PathImg + 'CAErr_' + NameArch+'.png' )
-		plt.close('all')
+		# # Figuras
+		# # Grafica con barras de error estándar
+		# F = plt.figure(figsize=(15,10))
+		# plt.rcParams.update({'font.size': 22})
+		# plt.errorbar(np.arange(1,13),MesM,yerr=MesE,fmt='-',color=C,label=VarLL)
+		# plt.title('Ciclo anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
+		# plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
+		# plt.xlabel('Tiempo [Meses]',fontsize=24)  # Colocamos la etiqueta en el eje y
+		# axes = plt.gca()
+		# axes.set_xlim([0,13])
+		# plt.legend(loc=0)
+		# plt.grid()
+		# plt.savefig(PathImg + 'CAErr_' + NameArch+'.png' )
+		# plt.close('all')
 
-		# Gráfica con desviación estándar
-		F = plt.figure(figsize=(15,10))
-		plt.rcParams.update({'font.size': 22})
-		plt.errorbar(np.arange(1,13),MesM,yerr=MesD,fmt='-',color=C,label=VarLL)
-		plt.title('Ciclo anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
-		plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
-		plt.xlabel('Tiempo [Meses]',fontsize=24)  # Colocamos la etiqueta en el eje y
-		axes = plt.gca()
-		axes.set_xlim([0,13])
-		plt.legend(loc=0)
-		plt.grid()
-		plt.savefig(PathImg + 'CAD_' + NameArch+'.png' )
-		plt.close('all')
+		# # Gráfica con desviación estándar
+		# F = plt.figure(figsize=(15,10))
+		# plt.rcParams.update({'font.size': 22})
+		# plt.errorbar(np.arange(1,13),MesM,yerr=MesD,fmt='-',color=C,label=VarLL)
+		# plt.title('Ciclo anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
+		# plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
+		# plt.xlabel('Tiempo [Meses]',fontsize=24)  # Colocamos la etiqueta en el eje y
+		# axes = plt.gca()
+		# axes.set_xlim([0,13])
+		# plt.legend(loc=0)
+		# plt.grid()
+		# plt.savefig(PathImg + 'CAD_' + NameArch+'.png' )
+		# plt.close('all')
 
 		if flagA:
 
