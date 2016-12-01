@@ -745,7 +745,15 @@ class Hidro_A:
 		VarM = np.reshape(VMes[:],(-1,12))
 
 		# Calculo del ciclo anual
-		MesM = np.nanmean(VarM,axis=0) # Promedio anual.
+		# Se eliminan los datos nan y se calcula el promedio anual
+		MesM = np.empty(12)
+		for i in range(12):
+			q = sum(np.isnan(VarM[:,i]))
+			if q >= len(VarM[:,i])*0.30:
+				MesM[i] = np.nan
+			else:
+				MesM[i] = np.nanmean(VarM[:,i])
+		#MesM = np.nanmean(VarM,axis=0) # Promedio anual.
 		MesD = np.nanstd(VarM,axis=0) # Desviación anual.
 		VarMNT = []
 		# Se calcula el número total de datos
@@ -790,9 +798,26 @@ class Hidro_A:
 		# plt.close('all')
 
 		if flagA:
-
 			# Calculo de la serie anual
-			AnM = np.nanmean(VarM,axis=1) # Promedio anual.
+			if VarLL == 'Precipitación' or VarLL == 'Precipitation' or VarLL == 'Prec':
+				AnM = np.empty(len(VarM[:,0]))
+				for i in range(len(VarM[:,0])):
+					q = sum(np.isnan(VarM[i,:]))
+					if q >= len(VarM[i,:])*0.30:
+						AnM[i] = np.nan
+					else:
+						AnM[i] = np.nansum(VarM[i,:])
+				#AnM = np.nansum(VarM,axis=1) # Promedio anual.
+			else:
+				AnM = np.empty(len(VarM[:,0]))
+				for i in range(len(VarM[:,0])):
+					q = sum(np.isnan(VarM[i,:]))
+					if q >= len(VarM[i,:])*0.30:
+						AnM[i] = np.nan
+					else:
+						AnM[i] = np.nanmean(VarM[i,:])
+				#AnM = np.nanmean(VarM,axis=1) # Promedio anual.
+
 			AnD = np.nanstd(VarM,axis=1) # Desviación anual.
 			AnMNT = []
 			# Se calcula el número total de datos
@@ -1043,19 +1068,27 @@ class Hidro_A:
 				PrecCount = 0
 
 		TotalNumDays = np.array(TotalNumDays)
-		# Maximum number of days withput precipitation
+		# Maximum number of days with precipitation
 		MaxNumDays = np.max(TotalNumDays)
+		x = np.where(TotalNumDays == MaxNumDays)[0]
 
 		TotalPrecCount = np.array(TotalPrecCount)
+		# Maximum of precipitation of number of days that was max
+		MaxPrecCount_MaxDay = np.max(TotalPrecCount[x])
+
 		# Maximum value of total precipitation in those days
 		MaxPrecCount = np.max(TotalPrecCount)
+		x = np.where(TotalPrecCount == MaxPrecCount)[0]
+		# Maximum number of days of the max precipitation
+		MaxNumDays_MaxPrec = np.max(TotalNumDays[x])
+
 
 		# Beginning date of the maximum dry days
 		TotalDateB = np.array(TotalDateB)
 		xx = np.where(TotalNumDays == MaxNumDays)[0]
 		DateMaxDays = TotalDateB[xx]
 
-		return TotalNumDays,MaxNumDays,TotalPrecCount,MaxPrecCount,TotalDateB,DateMaxDays
+		return TotalNumDays,MaxNumDays,TotalPrecCount,MaxPrecCount,TotalDateB,DateMaxDays,MaxPrecCount_MaxDay,MaxNumDays_MaxPrec
 
 
 

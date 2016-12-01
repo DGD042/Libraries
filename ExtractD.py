@@ -11,7 +11,7 @@
 #
 # DESCRIPCIÓN DE LA CLASE:
 # 	En esta clase se incluyen las rutinas para tratar datos de diferentes
-#	fuentes de información, extraer los datos y completarlos y generar 
+#	fuentes de información, extraer los datos, completarlos y generar 
 #	cambios de escala a la información. Además esta librería también genera
 #	archivos en diferentes formatos para el posterior uso de la información.
 #
@@ -1773,7 +1773,7 @@ class ExtractD:
 
 		return N, FechaNaN
 
-	def WriteD(self,path,fieldnames,data):
+	def WriteD(self,path,fieldnames,data,deli=','):
 		'''
 			DESCRIPTION:
 		
@@ -1794,7 +1794,7 @@ class ExtractD:
 		Esta función arroja un archivo .csv con todos los datos.
 		'''
 		with open(path, "w") as out_file:
-			writer = csv.DictWriter(out_file, delimiter=',', fieldnames=fieldnames)
+			writer = csv.DictWriter(out_file, delimiter=deli, fieldnames=fieldnames)
 
 			writer.writeheader()
 			for row in data:
@@ -2030,9 +2030,7 @@ class ExtractD:
 			# Se escribe el encabezado
 			self.HeadEIANev(NameEE,ZTE,FInsE,LatE,LonE,Var2,worksheet,W)
 			# Se llenan los datos
-			xx = self.HourEIANev(Ai,i,V,Hdt,xx,worksheet,W)
-
-			
+			xx = self.HourEIANev(Ai,i,V,Hdt,xx,worksheet,W)		
 
 	def HeadEIANev(self,NameE,ZTE,FInsE,LatE,LonE,Var,worksheet,W):
 		'''
@@ -2507,3 +2505,42 @@ class ExtractD:
 			
 		nameout1 = Pathout+ Name + '.csv'
 		self.WriteD(nameout1,fieldnames,my_list1)
+
+	def CrASCIIfile(self,data,xllcorner,yllcorner,cellsize,Nameout):
+		'''
+			DESCRIPTION:
+		
+		Con esta función se pretende guardar los datos en formato ASCII.
+		_________________________________________________________________________
+
+			INPUT:
+			+ data: Matriz de datos.
+			+ xllcorner: Left down corner coordinates.
+			+ yllcorner: Down left corner coordinates.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja un archivo .asc con todos los datos.
+		'''
+
+		# Se guarda la información
+		ncols = data.shape[1]
+		nrows = data.shape[0]
+
+		# Se abre el documento
+		f = open(Nameout, 'w')
+		# Encabezado
+		f.write('ncols '+str(int(ncols))+'\n')
+		f.write('nrows '+str(int(nrows))+'\n')
+		f.write('xllcorner '+str(float(xllcorner))+'\n')
+		f.write('yllcorner '+str(float(yllcorner))+'\n')
+		f.write('cellsize '+str(float(cellsize))+'\n')
+		f.write('nodata_value '+str(int(-9999))+'\n')
+		# Se cargan los datos
+		for i in range(len(data)):
+			d = [str(j) + ' ' for j in data[i]]
+			dd = ''.join(d)
+			ddd = dd[:-1]+'\n'
+			f.write(ddd)
+		# Se cierra el archivo
+		f.close()
