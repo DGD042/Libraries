@@ -20,6 +20,7 @@ from scipy import linalg as la # Eigen valores
 import matplotlib.pyplot as plt
 import scipy.fftpack as fftpack
 from scipy.fftpack import rfft, irfft, fftfreq # Paquete para utilizar las funciones
+from scipy import stats as st
 
 from UtilitiesDGD import UtilitiesDGD
 utl = UtilitiesDGD()
@@ -805,4 +806,78 @@ class AnET:
 
 
 		return Anom
+
+	def t_test(self,Data,Time,Alpha):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the statistical significance of a trend using a
+		t-test.
+		_________________________________________________________________________
+
+			INPUT:
+		+ Data: Data series.
+		+ Time: Time series.
+		+ Alpha: Statistical significance.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- HP: Hipotesis result: 1 if it accept, 0 if it rejects.
+		'''
+		# No NaN data
+		q = ~(np.isnan(Data))
+		
+		# Number of data
+		N = len(Data[q])
+
+		# T from table
+		T_Tab = st.t.ppf(1-Alpha, N-2)
+
+		# Correlation
+		C = st.pearsonr(Data[q],Time[q])[0]
+		CC = C**2
+		# Calculated T_Score
+		T_Cal = C*np.sqrt((N-2)/(1-CC))
+
+		if np.abs(T_Cal) < T_Tab:
+			#Accept
+			HP = 1
+		else:
+			# Reject
+			HP = 0
+
+		return HP
+
+	def Trend(self,Data,Time,Alpha=0.025):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the trend of a series.
+		_________________________________________________________________________
+
+			INPUT:
+		+ Data: Data series.
+		+ Time: Time series.
+		+ Alpha: Statistical significance.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- Tr: Trend.
+		- HP: Statistical significance
+		'''
+		# No NaN data
+		Data = np.array(Data)
+		Time = np.array(Time)
+		q = ~(np.isnan(Data))
+
+		# Trend
+		Tr, intercept, r_value, p_value, std_err = st.linregress(Time[q],Data[q])
+
+		# Statistical significance
+		HP = self.t_test(Data,Time,Alpha)
+
+		return Tr,HP
+
+
+
 

@@ -2530,17 +2530,17 @@ class ExtractD:
 		# Se abre el documento
 		f = open(Nameout, 'w')
 		# Encabezado
-		f.write('ncols '+str(int(ncols))+'\n')
-		f.write('nrows '+str(int(nrows))+'\n')
-		f.write('xllcorner '+str(float(xllcorner))+'\n')
-		f.write('yllcorner '+str(float(yllcorner))+'\n')
-		f.write('cellsize '+str(float(cellsize))+'\n')
-		f.write('nodata_value '+str(int(-9999))+'\n')
+		f.write('ncols '+str(int(ncols))+'\r\n')
+		f.write('nrows '+str(int(nrows))+'\r\n')
+		f.write('xllcorner '+str(float(xllcorner))+'\r\n')
+		f.write('yllcorner '+str(float(yllcorner))+'\r\n')
+		f.write('cellsize '+str(float(cellsize))+'\r\n')
+		f.write('nodata_value '+str(float(-9999.0))+'\r\n')
 		# Se cargan los datos
 		for i in range(len(data)):
 			d = [str(j) + ' ' for j in data[i]]
 			dd = ''.join(d)
-			ddd = dd[:-1]+'\n'
+			ddd = dd[:-1]+'\r\n'
 			f.write(ddd)
 		# Se cierra el archivo
 		f.close()
