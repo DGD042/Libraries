@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import sys
 import warnings
+from scipy import stats as st
 
 # Se importan los paquetes para manejo de fechas
 from datetime import date, datetime, timedelta
@@ -199,6 +200,73 @@ class Hydro_Plotter:
 		if flagT:
 			# Título
 			plt.title('Estado de la información de ' + Var_L + ' en la estación ' + Names,fontsize=15 )
+		plt.xlabel(u'Mes',fontsize=16)  # Colocamos la etiqueta en el eje x
+		plt.ylabel('Porcentaje de datos',fontsize=16)  # Colocamos la etiqueta en el eje y
+		plt.tight_layout()
+		plt.savefig(PathImg + Var +'_NaN_Mens' + '.png',format='png',dpi=300 )
+		plt.close('all')
+
+	def NaNMGrC(self,Date,NNF,NF,Var='',flagT=True,Var_L='',Names='',PathImg=''):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite hacer las gráficas de datos faltantes mensuales.
+
+		_________________________________________________________________________
+
+			INPUT:
+		+ Date: Vector de fechas en formato date.
+		+ Value: Vector de valores de lo que se quiere graficar.
+		+ Var: Nombre de la imagen.
+		+ flagT: Flag para saber si se incluye el título.
+		+ Var_L: Label de la variable sin unidades.
+		+ Names: Número de la cuenca.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		NN = np.array(NNF)*100
+		N = np.array(NF)*100
+
+		# Parámetros de la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='out') 
+		# Se realiza la figura 
+		p1 = plt.bar(Date,NN,color='#006600',width=31,edgecolor='none') # Disponibles
+		p2 = plt.bar(Date,N,color='#E46C0A',bottom=NN,width=31,edgecolor='none') # Faltantes
+		# Se arreglan los ejes
+		axes = plt.gca()
+		axes.set_ylim([0,100])
+		# Se cambia el label de los eje
+		xTL = axes.xaxis.get_ticklocs() # List of position in x
+		Labels2 = self.monthlab(xTL)
+		plt.xticks(xTL, Labels2) # Se cambia el valor de los ejes
+		plt.legend((p2[0],p1[0]), ('Faltantes','Disponibles'),loc=4)
+		# Labels
+		if flagT:
+			# Título
+			plt.title('Estado de la información de ' + Var_L + ' en la cuenca ' + Names,fontsize=15 )
 		plt.xlabel(u'Mes',fontsize=16)  # Colocamos la etiqueta en el eje x
 		plt.ylabel('Porcentaje de datos',fontsize=16)  # Colocamos la etiqueta en el eje y
 		plt.tight_layout()
@@ -425,7 +493,6 @@ class Hydro_Plotter:
 		plt.savefig(PathImg + 'CAErr_' + NameA+'.png',format='png',dpi=300 )
 		plt.close('all')
 
-
 	def GCorr(self,CP,VarL1,VarL2,Names,NameA,PathImg='',**args):
 		'''
 			DESCRIPTION:
@@ -487,3 +554,204 @@ class Hydro_Plotter:
 		plt.tight_layout()
 		plt.savefig(PathImg + 'Correlaciones_'+ NameA +'.png',format='png',dpi=300 )
 		plt.close('all')
+
+	def CompS(self,Date,V1,V2,Lab1,Lab2,Var_LUn,Var='',flagT=True,v='',PathImg=''):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite comparar dos series de datos
+		________________________________________________________________________
+
+			INPUT:
+		+ Date: Vector de fechas en formato date.
+		+ V1: Valores 1.
+		+ V2: Valores 2.
+		+ Lab1: Nombre de la serie 1 que se está comparando.
+		+ Lab2: Nombre de la serie 2 que se está comparando.
+		+ Var_LUn: Label de la variable con unidades, por ejemplo Precipitación (mm).
+		+ Var: Nombre de la imagen.
+		+ flagT: Flag para saber si se incluye el título.
+		+ v: Variable que se está comparando.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+		warnings.filterwarnings('ignore')
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		# Se realiza la figura 
+		plt.plot(Date,V1, 'r-', lw = 1,label=Lab1)
+		plt.plot(Date,V2, 'b-', lw = 1,label=Lab2)
+		# Se arreglan los ejes
+		axes = plt.gca()
+		plt.xlim([min(Date),max(Date)]) # Incluyen todas las fechas
+		# Se incluyen los valores de los minor ticks
+		yTL = axes.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+		# Se cambia el label de los ejes
+		xTL = axes.xaxis.get_ticklocs() # List of position in x
+		Labels2 = self.monthlab(xTL)
+		plt.xticks(xTL, Labels2) # Se cambia el label de los ejes
+		# Se rotan los ejes
+		for tick in plt.gca().get_xticklabels():
+			tick.set_rotation(45)
+		# Labels
+		if flagT:
+			plt.title('Comparación de '+v,fontsize=18)
+		plt.ylabel(Var_LUn,fontsize=16)
+		plt.legend(loc=0)
+		# Se arregla el espaciado de la figura
+		plt.tight_layout()
+		# Se guarda la figura
+		plt.savefig(PathImg +Var +'_Comp' + '.png',format='png',dpi=300)
+		plt.close('all')
+
+		# Se genera el gráfico de los errores de estimación
+		Err = V1-V2
+		ErrM = np.nanmean(Err)
+
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		# Se realiza la figura 
+		plt.plot(Date,Err, 'k-', lw = 1)
+		plt.plot([Date[0],Date[1]],[ErrM,ErrM], 'k--', lw = 1)
+		# Se arreglan los ejes
+		axes = plt.gca()
+		plt.xlim([min(Date),max(Date)]) # Incluyen todas las fechas
+		# Se incluyen los valores de los minor ticks
+		yTL = axes.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+		# Se cambia el label de los ejes
+		xTL = axes.xaxis.get_ticklocs() # List of position in x
+		Labels2 = self.monthlab(xTL)
+		plt.xticks(xTL, Labels2) # Se cambia el label de los ejes
+		# Se rotan los ejes
+		for tick in plt.gca().get_xticklabels():
+			tick.set_rotation(45)
+		# Labels
+		if flagT:
+			plt.title('Error en la medida de '+v,fontsize=18)
+		plt.ylabel(Var_LUn,fontsize=16)
+		# Se calcula la correlación
+		# q = ~(np.isnan(V1) | np.isnan(V2))
+		# CCP,sig = st.pearsonr(V1[q],V2[q])
+		# plt.text(Date[5],yTL[1], r'Correlación de Pearson:', fontsize=14)
+		# gg = 5+680
+		# if sig <= 0.05:
+		# 	plt.text(Date[gg],yTL[1], r'%s' %(round(CCP,3)), fontsize=14,color='blue')
+		# else:
+		# 	plt.text(Date[gg],yTL[1], r'%s' %(round(CCP,3)), fontsize=14,color='red')
+		# Se arregla el espaciado de la figura
+		plt.tight_layout()
+		# Se guarda la figura
+		plt.savefig(PathImg + Var+'_Err' + '.png',format='png',dpi=300)
+		plt.close('all')
+
+		q = ~np.isnan(Err)
+		E_MM = Err[q]
+
+		# Tamaño de la Figura
+		fH=25 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+
+		# Se incluye el histograma y el diagrama de dispersión
+		fig, axs = plt.subplots(1,2, figsize=utl.cm2inch(fH,fV), facecolor='w', edgecolor='k')
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		axs = axs.ravel() # Para hacer un loop con los subplots
+		axs[0].tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		axs[0].tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		axs[0].tick_params(axis='y',which='major',direction='inout') 
+		axs[0].grid()
+		axs[1].tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		axs[1].tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		axs[1].tick_params(axis='y',which='major',direction='inout') 
+		axs[1].grid()
+
+		# the histogram of the data
+		n, bins, patches = axs[0].hist(E_MM,bins=30, normed=1, facecolor='blue', alpha=0.5)
+		# add a 'best fit' line
+		axs[0].set_title('Histograma del Error de la medida',fontsize=16)
+		axs[0].set_xlabel(Var_LUn,fontsize=16)
+		axs[0].set_ylabel('Probabilidad',fontsize=16)
+		# Se incluyen los valores de los minor ticks
+		yTL = axs[0].yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+		minorLocatory = MultipleLocator(MyL)
+		axs[0].yaxis.set_minor_locator(minorLocatory)
+
+		axs[1].plot([-100,200], [-100,200], 'k-')
+		axs[1].scatter(V1, V2, linewidth='0')
+		axs[1].set_title('Diagrama de Dispersión',fontsize=16)
+		axs[1].set_xlabel(Lab1 + ' ' + Var_LUn,fontsize=16)
+		axs[1].set_ylabel(Lab2  + ' ' + Var_LUn,fontsize=16)
+		axs[1].set_ylim([np.nanmin(V2)-2,np.nanmax(V2)+2])
+		axs[1].set_xlim([np.nanmin(V1)-2,np.nanmax(V1)+2])
+		yTL = axs[1].yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+		minorLocatory = MultipleLocator(MyL)
+		axs[1].yaxis.set_minor_locator(minorLocatory)
+
+		xTL = axs[1].xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/5 # Minor tick value
+		minorLocatorx = MultipleLocator(MxL)
+		axs[1].xaxis.set_minor_locator(minorLocatorx)
+		plt.tight_layout()
+		plt.savefig(PathImg + Var+'_Hist' + '.png',format='png',dpi=300)
+		plt.close('all')
+
+
+

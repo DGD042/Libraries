@@ -1068,10 +1068,10 @@ class ExtractD:
 						dtt = dtt + DF.days # Delta de días
 
 						if i == int(yeari) and j == 1:
-							q = np.isnan(V1C[d:dtt])
+							q = ~np.isnan(V1C[d:dtt])
 							qq = sum(q)
-							NF.append(qq/len(V1C[d:dtt]))
-							NNF.append(1-NF[-1])
+							NNF.append(qq/len(V1C[d:dtt]))
+							NF.append(1-NNF[-1])
 							if qq > DF.days/2:
 								VE[0] = float('nan')
 								if flagMa == True:
@@ -1092,10 +1092,10 @@ class ExtractD:
 									except ValueError:
 										VEMin[0] = float('nan')
 						else:
-							q = np.isnan(V1C[d:dtt])
+							q = ~np.isnan(V1C[d:dtt])
 							qq = sum(q)
-							NF.append(qq/len(V1C[d:dtt]))
-							NNF.append(1-NF[-1])
+							NNF.append(qq/len(V1C[d:dtt]))
+							NF.append(1-NNF[-1])
 							if qq > DF.days/2:
 								VE.append(float('nan'))
 								if flagMa == True:
@@ -2517,6 +2517,8 @@ class ExtractD:
 			+ data: Matriz de datos.
 			+ xllcorner: Left down corner coordinates.
 			+ yllcorner: Down left corner coordinates.
+			+ cellsize
+			+ Nameout: Name out.
 		_________________________________________________________________________
 		
 			OUTPUT:

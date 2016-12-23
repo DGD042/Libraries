@@ -13,7 +13,6 @@
 # the other libraries.
 # ----------------------------------------------------------------------
 
-
 import numpy as np
 import sys
 import os
@@ -226,7 +225,7 @@ class UtilitiesDGD:
 				if i == qq[ii+1]-1:
 					VV[i] = V[i] # Se dejan los datos NaN.
 				else:
-					VV[i] = utl.Interp(1,V[i-1],2,3,V[i+1])
+					VV[i] = self.Interp(1,V[i-1],2,3,V[i+1])
 
 		return VV
 

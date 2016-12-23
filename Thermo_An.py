@@ -77,9 +77,156 @@ class Thermo_An:
 		slope, intercept, r_value, p_value, std_err = st.linregress(XX,YY)
 		if Flagline:
 			M0 = [(slope*Zmax+intercept),(slope*Zmin+intercept)]
-			M1 = [Zmin,Zmax]
+			M1 = [Zmax,Zmin]
 			return slope, intercept, r_value, M0, M1
 		return slope, intercept, r_value
+
+	def ESeq(self,T,HR=0):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the saturated vapor pressure from the Clausius
+		Clapeyron equation and the real pressure using the relative humidity.
+		_________________________________________________________________________
+
+			INPUT:
+		+ T: Temperature.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- e_s: Saturated vapor Pressure
+		- e: Real Vapor Pressure if you have HR.
+		'''
+
+		e_s = 26.66082-0.0091379024*(T+273.15)-(6106.396/(T+273.15))
+		try:
+			a = len(HR)
+			e = (HR/100)*e_s
+			return e_s,e
+		except:
+			return e_s
+
+	def AHeq(self,T,h,e,LWCFlag=True,maxLWC=0.0002):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the absolute humidity and the Liquid Water Content
+		(LWC) if asked.
+		_________________________________________________________________________
+
+			INPUT:
+		+ T: Temperature.
+		+ h: Altitude.
+		+ e: Real vapor pressure.
+		+ LWCFlag: Flag to calculate the LWC.
+		+ maxLWC: Max LWC that could be i the atmosphere.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- AH: Absolute Humidity.
+		- LWC: Liquid Water Content.
+		'''
+
+		# Calculates the Pressure from the hydrostatic equation
+		p_0 = 1009.29 # mb
+		H_0 = 8631 # m
+
+		# Pressure
+		p = p_0 * np.exp(-h/H_0) # mb
+
+		# Air density
+		rho = (p*100)/((T+273.15)*287)
+
+		# Absolute humidity
+		AH = (e*100)/((T+273.15)*461.5)
+
+		if LWCFlag:
+			LWC = (AH/np.nanmax(AH))*maxLWC
+			return AH,LWC
+		else:
+			return AH
+
+	def Tdeq(self,e):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the dew point temperature.
+		_________________________________________________________________________
+
+			INPUT:
+		+ e: Real vapor pressure.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- Td: Absolute Humidity.
+		'''
+
+		bt = 26.66082-np.log(e)
+		Td = ((bt-np.sqrt((bt**2)-223.1986))/0.0182758048)-273.15
+
+		return np.abs(Td)
+
+	def LCLeq(self,T,Td,h):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the Lifitng Condensantion level.
+		_________________________________________________________________________
+
+			INPUT:
+		+ T: Temperature.
+		+ Td: Dew Point temperature.
+		+ h: Altitude.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- LCL: Absolute Humidity.
+		'''
+
+		# Calculates the Pressure from the hydrostatic equation
+		p_0 = 1009.29 # mb
+		H_0 = 8631 # m
+
+		# Pressure
+		p = p_0 * np.exp(-h/H_0) # mb
+
+		# calcultate the LCL
+
+		LCL = (1/(((T-Td)/223.15)+1)**(3.5))*p
+
+		LCLm = np.nanmax([np.nanmax((44.3308-4.94654*((LCL*100)**(0.190263)))*1000),0])
+
+		return LCLm
+
+	def PHeq(self,h,InvFlag=False,p=0):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the Lifitng Condensantion level.
+		_________________________________________________________________________
+
+			INPUT:
+		+ h: Altitude.
+		+ InvFlag: True if you want to calculate the altitude from the pressure.
+		+ p: Pressure if InvFlag is True.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- LCL: Absolute Humidity.
+		'''
+
+		# Calculates the Pressure from the hydrostatic equation
+		p_0 = 1009.29 # mb
+		H_0 = 8631 # m
+		if InvFlag:
+			h = -H_0*np.log(p/p_0) # m
+			return h
+		else:
+			# Pressure
+			p = p_0 * np.exp(-h/H_0) # mb
+			return p
+
+		
 
 	def MALR(self,slope,intercept,Zmax=7000,Zmin=1000,LCLp=1800,FlagGraph=False,PathImg='',NameArch='',Name=''):
 		'''
@@ -105,7 +252,7 @@ class Thermo_An:
 		_________________________________________________________________________
 
 			INPUT:
-		+ 
+		+ slope: Pendiente para la temperatura
 		_________________________________________________________________________
 		
 			OUTPUT:
@@ -284,4 +431,209 @@ class Thermo_An:
 		# Se reportan los resultados
 		return Al,TM
 
+	def EqThornthwaite(self,TMonthly,TAnnual):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the PET with the Thornthwaite equation.
+		_________________________________________________________________________
 
+			INPUT:
+		+ TMonthly: Monthly temperature.
+		+ TAnnual: Annual Temperature.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- PET: Potential Evaportanspiration [mm/mes].
+		'''
+		I = 12*((TAnnual/5)**1.514)
+		a = (675*10**(-9))*I**3-(771*10**(-7))*I**2+(179*10**(-4))*I+0.492
+		PET = 1.6*(10*(TMonthly/I))**a*10
+		return PET
+	
+	def EqGarciaLopez(self,Td,HRd):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the PET with the García y López equation.
+		_________________________________________________________________________
+
+			INPUT:
+		+ Td: Daily temperature.
+		+ HRd: Daily Relative Humidity.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- PET: Potential Evaportanspiration [mm/day].
+		'''
+		n = (7.45*Td)/(234.7+Td)
+		PET = 1.21*10**n*(1-0.01*HRd)+0.21*Td-2.3
+		return PET
+
+	def EqTurcM(self,T,HR,Rs,Timescale=0,Month=30,Map=False):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the PET with the García y López equation.
+		_________________________________________________________________________
+
+			INPUT:
+		+ T: Daily temperature.
+		+ HR: Daily Relative Humidity.
+		+ Rs: Mean daily solar radiation.
+		+ Timescale: Time scale of the equaton. 0: Daily, 1: Monthly
+		+ Map: True: For several values of HR and T. False: For 1 value of HR and T.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- PET: Potential Evaportanspiration [mm/day].
+		'''
+		if Timescale == 0:
+			K = 0.013
+		elif Timescale == 1:
+			if Month == 30 or Month == 31:
+				K = 0.40
+			else:
+				K = 0.37
+		if Map:
+			x = np.where(HR < 50)
+			PET = K*(T/(T+15))*(Rs+50)
+			try:
+				PET[x] = K*(T/(T+15))*(Rs+50)*(1+((50-HR)/70))
+			except:
+				del(x)
+		else:
+			if HR >= 50:
+				PET = K*(T/(T+15))*(Rs+50)
+			else:
+				PET = K*(T/(T+15))*(Rs+50)*(1+((50-HR)/70))
+
+		return PET
+
+	def EqFAOPenmanM(self,T,HR,uh,h,p=0,Tmin=0,e_aq=0,Rn=0,Rs=0,J=1,PhiD=0,G=0):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the PET with the García y López equation.
+		_________________________________________________________________________
+
+			INPUT:
+		+ T: Daily temperature.
+		+ HR: Daily Relative Humidity.
+		+ uh: Daily wind.
+		+ h: Height.
+		+ p: Daily pressure.
+		+ Tmin: Minimum temperature.
+		+ e_aq: Vapor pressure equation. 0: for equation 1 and 1 for equation 2.
+		+ Rn: Net radiation.
+		+ Rs: Mean daily solar radiation.
+		+ J: Julian Day, Days from 1 January to 31 of December.
+		+ PhiD: Latitude in decimal degrees.
+		+ G: Sensible heat flux into the soil.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- PET: Potential Evaportanspiration [mm/day].
+		- AET: Actual Evaportanspiration [mm/day].
+		'''
+
+		# Velocidad del viento corregida
+		u2 = uh*(4.87/(np.log(67.8*h-5.42))) # [m/s]
+		
+		# Delta
+		D = (4098*(0.6108*np.exp((17.27*T)/(T+237.3))))/(T+237.3)**2
+
+		# Presión
+		if p == 0:
+			p = 101.3*((293-0.0065*h)/293)**(5.26) # [kPa]
+
+		# Constante Psicométrica
+		Gamma = 0.000665*p # [kPa/°C]
+
+		# e_s Saturation vapor pressure 
+		e_s = 0.6108*np.exp((17.27*T)/(T+237.3)) # [kPa]
+
+		# e_a
+		if e_aq == 0:
+			e_a = e_s*(HR/100)
+		else:
+			e_a = 0.6108*np.exp((17.27*Tmin)/(Tmin+237.3))
+
+		Cn = 1600
+		Cd = 0.38
+		# Latent Heat
+		lv = 2.45 # [MJ/kg]
+		# Specific heat at constant pressure
+		Cp = 1.013 * 10**(-3) # [MJ/g]
+
+		if Rn == 0:
+			if Rs == 0:
+				print('No se tiene información de radiación, no se puede hacer el cálculo')
+				sys.exit(1)
+			# Delta Term
+			DT = D/(D+Gamma*(1+0.34*u2)) 
+			# Psi Term (PT)
+			PT = Gamma/(D+Gamma*(1+0.34*u2))
+			# Temperature term
+			TT = (900/(T+273))*u2
+			# Inverse relative distance Earth-Sun (dr)
+			dr = 1+0.033*np.cos((2*np.pi/365)*J)
+			# Solar declination J = Julian day
+			d = 0.409*np.sin((2*np.pi/365)*J - 1.39)
+			# Latitud en radianes PhiD = Latitud en grados decimales
+			Phi = np.pi/180 * PhiD
+			# Sunset hour angle
+			Omega_s = np.arccos(-np.tan(Phi)*np.tan(d))
+			# Extraterrestial radiation MJ/m^2day
+			Gsc = 0.0820 # MJ/m^2min
+			Ra = (24*60)/np.pi * Gsc * dr*(Omega_s*np.sin(Phi)*np.sin(d)+\
+				(np.cos(Phi)*np.cos(d)*np.sin(Omega_s)))
+			# Clear sky solar radiation
+			Rso = (0.75 + 2*10**(-5)*h)*Ra # MJ/m^2day
+			# Net solar or net shotwave radiation
+			Rns = (1-0.23)*Rs
+			# Net outgoing long wave radiation
+			sigma = 4.903*10**(-9)
+			Rnl = sigma*(T**4)*(0.34-0.14*np.sqrt(e_a))*(1.35*(Rs/Rso)-0.35)
+			# Net radiation 
+			Rn = Rns-Rnl
+
+		# Se calcula la Evapotranspiración Potencial con
+		PET = (0.408*D*(Rn-G)+Gamma*(Cn/(T+273))*u2*(e_s-e_a))/(D+Gamma*(1+Cd*u2))
+		# Se calcula
+		z0 = 0.3
+		ra = 4.72*(np.log(2/z0))**2/(1+0.54*uh)
+		hc = 0.30
+		LAI = 5.5 + 1.5 * hc
+		rs = 200/LAI
+		# Air density
+		R_specific = 287.05
+		rho = p/(R_specific*(T+273))
+		AET = ((D*(Rn-G)+(rho*Cp/ra)*(e_s-e_a))/(lv*(D+Gamma*(1+(rs/ra)))))*1000
+
+		return PET,AET
+
+	def EqBudyko(self,P,PET):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the AET with the Budyko equation.
+		_________________________________________________________________________
+
+			INPUT:
+		+ P: Precipitation.
+		+ PET: Potential Evapotranspiration.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- PET: Potential Evaportanspiration [mm/day].
+		'''
+		if ~np.isnan(PET):
+			AET = (PET*P*np.tanh(P/PET)*(1-np.cosh(PET/P)+np.sinh(PET/P)))**(1/2)
+			
+			if np.isnan(AET):
+				AET = PET*np.tanh(P/PET)
+		else:
+			AET = np.nan
+		
+		return AET
