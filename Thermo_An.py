@@ -48,6 +48,8 @@ class Thermo_An:
 
 		This is a build up function.
 		'''
+
+	# Atmospheric Thermodynamics Equations
 	def PVTs(self,Z,T,Flagline=True,Zmax=4000,Zmin=1000):
 		'''
 			DESCRIPTION:
@@ -225,8 +227,6 @@ class Thermo_An:
 			# Pressure
 			p = p_0 * np.exp(-h/H_0) # mb
 			return p
-
-		
 
 	def MALR(self,slope,intercept,Zmax=7000,Zmin=1000,LCLp=1800,FlagGraph=False,PathImg='',NameArch='',Name=''):
 		'''
@@ -430,7 +430,168 @@ class Thermo_An:
 
 		# Se reportan los resultados
 		return Al,TM
+	
+	# Radiation	
+	def ExRad(self,Lat,J):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the daily extraterrestial solar radiation, the
+		equations are detailed by Allen et al. (1998).
+		_________________________________________________________________________
 
+			INPUT:
+		+ Lat: Latitude degrees.
+		+ J: Day of the year.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- R0: Daily extraterrestial radiation.
+		'''
+		# We pass the latitude to radians
+		LatR = Lat*(np.pi/180)
+		# Relative distance between the sun and the earth.
+		dr = 1+0.033*np.cos((2*np.pi/365)*J) 
+		# Solar declination angle
+		Inc = 0.4093*np.sin((2*np.pi/365)*J-1.39)
+		# Sunset hour angle
+		Ws = np.arccos(-np.tan(LatR)*np.tan(Inc))
+		# Extraterrestial Radiation
+		R0 = 37.6*dr*((Ws*np.sin(LatR)*np.sin(Inc))+(np.cos(LatR)*np.cos(Inc)*np.sin(Ws)))
+
+		return R0
+
+	def ExRad2(self,Lat,J):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the daily extraterrestial solar radiation, the
+		equations are detailed by Almorox et al. (2013).
+		_________________________________________________________________________
+
+			INPUT:
+		+ Lat: Latitude degrees.
+		+ J: Day of the year.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- H0: Daily extraterrestial radiation.
+		'''
+		# We pass the latitude to radians
+		LatR = Lat*(np.pi/180)
+		# Day Angle
+		Gamma = 2*np.pi*(J-1)/365
+		# Eccentricity correction factor of the Earths Orbit
+		E0 = 1.00011 + 0.034221* np.cos(Gamma)+0.00128*np.sin(Gamma)\
+			+0.000719*np.cos(2*Gamma)+0.000077*np.sin(2*Gamma)
+		# Solar declination angle
+		Inc = (0.006918-0.399912*np.cos(Gamma)+0.070257*np.sin(Gamma)\
+			-0.006758*np.cos(2*Gamma)+0.000907*np.sin(2*Gamma)-0.002697*np.cos(3*Gamma)\
+			+0.00148*np.sin(3*Gamma))
+		# Sunset hour angle
+		Ws = np.arccos((-np.sin(LatR)*np.sin(Inc))/(np.cos(LatR)*np.cos(Inc)))
+		# Extraterrestial Radiation
+		H0 = (1/np.pi)*118.108*E0*(np.cos(LatR)*np.cos(Inc)*np.sin(Ws)+(np.pi/180)\
+			*np.sin(LatR)*np.sin(Inc)*Ws)
+
+		return H0
+
+	def EqLi(self,Method,Tmax,Tmin,Lat,J):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the radiation from temperature.
+		_________________________________________________________________________
+
+			INPUT:
+		+ Method: Equation.
+		+ Tmax: Daily maximum temperature.
+		+ Tmin: Daily minimum temperature.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- R: Daily radiation.
+		'''
+		# Constants
+		a = [0,0,0,[0.043,-0.04],0.221]
+		b = [0,0,0,-0.072,-0.282]
+
+		R0 = self.ExRad(Lat,J)
+
+		if Method == 4:
+			R = R0*(b[3] + a[3][0]*Tmax+a[3][1]*Tmin)
+		elif Method == 5:
+			R = R0*(b[4]+a[4]*(Tmax-Tmin)**(0.5))
+
+		return R
+
+	def EqAlmorox(self,Method,Tmax,Tmin,Lat,J,Z=0,Tmin2=0,dTM=0):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the radiation from temperature and other variables
+		using the models described in Almorox et al. (2013).
+
+		Constants Kr, A and C must be changed depending on the region of study,
+		for more information visit the article  Almorox et al. (2013).
+		_________________________________________________________________________
+
+			INPUT:
+		+ Method: Equation.
+		+ Tmax: Daily maximum temperature.
+		+ Tmin: Daily minimum temperature.
+		+ Z: Altitude, needed for Method 2.
+		+ Tmin: Daily minimum temperature of the next day, necessary for Method 4.
+		+ dTM: Monthly average temperature delta, for Method 4.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- Hc: Daily radiation.
+		'''
+
+		H0 = self.ExRad2(Lat,J)
+
+		if Method == 1:
+			Kr = 0.1463 # For interior regions
+			Hc = H0 * (Kr*(Tmax-Tmin)**(1/2))
+		elif Method == 2:
+			P = self.PHeq(Z)
+			A = 0.1486 # For interior regions
+			Hc = H0 * (A * (P/1013)**(1/2)*(Tmax-Tmin)**(1/2)) 
+		elif Method == 4:
+			A = 0.7685
+			C = 1.15
+			dT = Tmax-0.5*(Tmin+Tmin2)
+			B = 0.036*np.exp(-0.154*dTM)
+			Hc = H0 * A * (1-np.exp(-B*dT**C))
+
+		return Hc
+
+	# Wind
+	def WindInterp(self,Ui,Uf,Zi,Zf,Z):
+		'''
+			DESCRIPTION:
+		
+		This function interpolates the wind with altitude using the approach of
+		Archer and Jacobson (2005) and Pryor et al. (2005).
+		_________________________________________________________________________
+
+			INPUT:
+		+ Ui: Wind below the altitude that would be calculated.
+		+ Uf: Wind above the altitude that would be calculated.
+		+ Zi: Altitude below.
+		+ Zf: Altitude above.
+		+ Z: Altitude in which the wind would be interpolated.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- U: Wind.
+		'''
+		a = (np.log(np.abs(Uf/Ui))/np.log(np.abs(Zf/Zi)))
+		U = Ui*(Z/Zi)**(a)
+		return U
+
+	# Evapotranspiration equations
 	def EqThornthwaite(self,TMonthly,TAnnual):
 		'''
 			DESCRIPTION:
@@ -637,3 +798,5 @@ class Thermo_An:
 			AET = np.nan
 		
 		return AET
+
+

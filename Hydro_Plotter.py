@@ -20,6 +20,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import sys
 import warnings
@@ -478,7 +479,7 @@ class Hydro_Plotter:
 		plt.grid()
 		# Argumentos que se deben incluir color=C,label=VarLL,lw=1.5
 		plt.errorbar(np.arange(1,13),MesM2,yerr=MesE2,fmt='-',**args)
-		plt.title('Ciclo anual de '+ VarLL +' de ' + Name,fontsize=16 )  # Colocamos el título del gráfico
+		plt.title('Ciclo anual de '+ VarLL +' en ' + Name,fontsize=16 )  # Colocamos el título del gráfico
 		plt.ylabel(VarL,fontsize=16)  # Colocamos la etiqueta en el eje x
 		plt.xlabel('Meses',fontsize=16)  # Colocamos la etiqueta en el eje y
 		# The minor ticks are included
@@ -487,10 +488,172 @@ class Hydro_Plotter:
 		MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
 		minorLocatory = MultipleLocator(MyL)
 		plt.gca().yaxis.set_minor_locator(minorLocatory)
-		ax.set_xlim([0,13])
+		ax.set_xlim([0.5,12.5])
 		plt.xticks(np.arange(1,13), Months2) # Se cambia el valor de los ejes
 		plt.tight_layout()
 		plt.savefig(PathImg + 'CAErr_' + NameA+'.png',format='png',dpi=300 )
+		plt.close('all')
+
+	def AnnualCycleBoxPlot(self,MesM,VarL,VarLL,Name,NameA,PathImg,AH=False):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite hacer las gráficas del ciclo anual
+
+		_________________________________________________________________________
+
+			INPUT:
+		+ MesM: Valor medio del mes, debe ir desde enero hasta diciembre.
+		+ VarL: Labes de la variable con unidades.
+		+ VarLL: Label de la variable sin unidades.
+		+ Name: Nombre de la Estación.
+		+ NameA: Nombre del archivo.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ AH: Este es un flag para saber si se hace el gráfico con el año hidrológico.
+		+ **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+		# Vector de meses
+		Months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dec']
+		if AH:
+			Months2 = Months[5:]+Months[:5]
+			MesM2 = np.hstack((MesM[5:],MesM[:5]))
+		else:
+			Months2 = Months
+			MesM2 = MesM
+
+		MesMM = np.reshape(MesM2,(-1,12))
+
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='in')
+		plt.tick_params(axis='x',which='major',direction='inout')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		ax = plt.gca()
+		ii = 0
+		for i in range(12):
+			PMM2 = MesMM[:,i]
+			NoNaN = ~np.isnan(PMM2)
+			
+			bp = plt.boxplot(PMM2[NoNaN], positions=[ii],widths=0.6,showbox=False,sym='o')
+
+			# Se cambia cada caja
+			plt.setp(bp['boxes'], color='#B9CDE5')
+			plt.setp(bp['whiskers'], color='black',linestyle='-')
+			plt.setp(bp['medians'], color='#B9CDE5',linestyle='-')
+			plt.setp(bp['fliers'], color='white',markerfacecolor='black', marker='o'\
+				,markersize=3,alpha=0.8)
+			# Estadísticos
+			median = np.median(PMM2[NoNaN])
+			upper_quartile = np.percentile(PMM2[NoNaN], 75)
+			lower_quartile = np.percentile(PMM2[NoNaN], 25)
+			Dif1 = median-lower_quartile
+			Dif2 = upper_quartile-median
+			ax.add_patch(patches.Rectangle((ii-0.3, lower_quartile), 0.6, Dif1, fill=True,\
+				facecolor='#2B65AB',edgecolor="none"))
+			ax.add_patch(patches.Rectangle((ii-0.3, median), 0.6, Dif2, fill=True,\
+				facecolor='#B9CDE5',edgecolor="none"))
+			
+			ii += 1
+		# Se calcula el promedio
+		PMMM = np.nanmean(MesMM,axis=0)
+		plt.plot(np.arange(0,ii,1),PMMM,'+--',color='k',lw=1)
+		plt.title('Ciclo anual de '+ VarLL +' en ' + Name,fontsize=16 )  # Colocamos el título del gráfico
+		plt.ylabel(VarL,fontsize=16)  # Colocamos la etiqueta en el eje x
+		plt.xlabel('Meses',fontsize=16)  # Colocamos la etiqueta en el eje y
+		# The minor ticks are included
+		ax = plt.gca()
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+		ax.set_xlim([-0.5,11.5])
+		plt.xticks(np.arange(0,12), Months2) # Se cambia el valor de los ejes
+		plt.tight_layout()
+		plt.savefig(PathImg + 'CAErr_' + NameA+'.png',format='png',dpi=300 )
+		plt.close('all')
+
+	def AnnualS(self,Fecha,AnM,AnE,VarL,VarLL,Name,NameA,PathImg,**args):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite hacer la gráfica de la serie anual
+
+		_________________________________________________________________________
+
+			INPUT:
+		+ AnM: Valor medio del An, debe ir desde enero hasta diciembre.
+		+ AnE: Barras de error de los valores.
+		+ VarL: Labes de la variable con unidades.
+		+ VarLL: Label de la variable sin unidades.
+		+ Name: Nombre de la Estación.
+		+ NameA: Nombre del archivo.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='in')
+		plt.tick_params(axis='x',which='major',direction='inout')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		# Argumentos que se deben incluir color=C,label=VarLL,lw=1.5
+		plt.errorbar(Fecha,AnM,yerr=AnE,fmt='-',**args)
+		plt.title('Serie Anual de '+ VarLL +' en ' + Name,fontsize=16 )  # Colocamos el título del gráfico
+		plt.ylabel(VarL,fontsize=16)  # Colocamos la etiqueta en el eje x
+		plt.xlabel('Años',fontsize=16)  # Colocamos la etiqueta en el eje y
+		# The minor ticks are included
+		ax = plt.gca()
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		ax.set_xlim([Fecha[0]-timedelta(60),Fecha[-1]+timedelta(30)])
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+		plt.tight_layout()
+		plt.savefig(PathImg + 'SAnErr_' + NameA+'.png',format='png',dpi=300 )
 		plt.close('all')
 
 	def GCorr(self,CP,VarL1,VarL2,Names,NameA,PathImg='',**args):
@@ -693,6 +856,9 @@ class Hydro_Plotter:
 		q = ~np.isnan(Err)
 		E_MM = Err[q]
 
+		A = np.nanmean(Err)
+		B = np.nanstd(Err)
+
 		# Tamaño de la Figura
 		fH=25 # Largo de la Figura
 		fV = fH*(2/3) # Ancho de la Figura
@@ -732,6 +898,10 @@ class Hydro_Plotter:
 		MyL = (yTL[1]-yTL[0])/5 # Minor tick value
 		minorLocatory = MultipleLocator(MyL)
 		axs[0].yaxis.set_minor_locator(minorLocatory)
+		# Se agrega la línea de promedio y desviación estándar
+		axs[0].plot([A,A],[0,yTL[-1]],'k')
+		axs[0].plot([A+B,A+B],[0,yTL[-1]],'k--')
+		axs[0].plot([A-B,A-B],[0,yTL[-1]],'k--')
 
 		axs[1].plot([-100,200], [-100,200], 'k-')
 		axs[1].scatter(V1, V2, linewidth='0')
@@ -751,6 +921,82 @@ class Hydro_Plotter:
 		axs[1].xaxis.set_minor_locator(minorLocatorx)
 		plt.tight_layout()
 		plt.savefig(PathImg + Var+'_Hist' + '.png',format='png',dpi=300)
+		plt.close('all')
+
+	def PorHid(self,PorP,PorI,PorE,Var='',flagT=True,Names='',PathImg=''):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite hacer las gráficas de datos faltantes mensuales.
+
+		_________________________________________________________________________
+
+			INPUT:
+		+ Date: Vector de fechas en formato date.
+		+ Value: Vector de valores de lo que se quiere graficar.
+		+ Var: Nombre de la imagen.
+		+ flagT: Flag para saber si se incluye el título.
+		+ Var_L: Label de la variable sin unidades.
+		+ Names: Nombre de la estación para el título.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+
+		Months2 = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dec']
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		# Parámetros de la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='out') 
+		plt.grid()
+		# Se realiza la figura (,edgecolor='none')
+		p1 = plt.bar(np.arange(0.5,12),PorP,color='#006600',width=1) # Precipitación
+		p2 = plt.bar(np.arange(0.5,12),PorI,color='blue',bottom=PorP,width=1) # Interceptación
+		p3 = plt.bar(np.arange(0.5,12),-PorE,color='red',bottom=0,width=1) # Evapotranspiración
+		plt.plot([0,13],[0,0],'k-')
+		# Se arreglan los ejes
+		axes = plt.gca()
+		axes.set_ylim([-100,100])
+		# Se cambia el label de los eje
+		ax = plt.gca()
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+		plt.xticks(np.arange(1,13), Months2) # Se cambia el valor de los ejes
+		ax.set_xlim([0,13])
+		# plt.xticks(xTL, Labels2) # Se cambia el valor de los ejes
+		plt.legend((p1[0],p2[0],p3[0]), ('Precipitación','Interceptación','Evapotranspiración'),loc=4\
+			,fontsize = 14)
+		# Labels
+		if flagT:
+			# Título
+			plt.title('Porcentajes hidrológicos en la cuenca ' + Names,fontsize=15 )
+		plt.xlabel(u'Mes',fontsize=16)  # Colocamos la etiqueta en el eje x
+		plt.ylabel('Porcentaje',fontsize=16)  # Colocamos la etiqueta en el eje y
+		plt.tight_layout()
+		plt.savefig(PathImg + Var +'Hidro_Por_Mens' + '.png',format='png',dpi=300 )
 		plt.close('all')
 
 

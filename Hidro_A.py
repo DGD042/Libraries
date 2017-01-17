@@ -711,7 +711,7 @@ class Hidro_A:
 		plt.savefig(PathImg + 'T' + Var +'_' + Name+'.png' )
 		plt.close('all')
 
-	def CiclA(self,VMes,Fecha,PathImg='',Name='',VarL='',VarLL='',C='k',NameArch='',flagA=False,AH=False):
+	def CiclA(self,VMes,Fecha,PathImg='',Name='',VarL='',VarLL='',C='k',NameArch='',flagA=False,AH=False,FlagSum=False):
 		'''
 			DESCRIPTION:
 		
@@ -742,14 +742,14 @@ class Hidro_A:
 		Yi = int(Fecha[0])
 		Yf = int(Fecha[1])
 		Meses = np.empty((1,12))
-		VarM = np.reshape(VMes[:],(-1,12))
+		VarM = np.reshape(VMes,(-1,12))
 
 		# Calculo del ciclo anual
 		# Se eliminan los datos nan y se calcula el promedio anual
 		MesM = np.empty(12)
 		for i in range(12):
 			q = sum(np.isnan(VarM[:,i]))
-			if q >= len(VarM[:,i])*0.30:
+			if q >= len(VarM[:,i])*1.00:
 				MesM[i] = np.nan
 			else:
 				MesM[i] = np.nanmean(VarM[:,i])
@@ -799,11 +799,11 @@ class Hidro_A:
 
 		if flagA:
 			# Calculo de la serie anual
-			if VarLL == 'Precipitación' or VarLL == 'Precipitation' or VarLL == 'Prec':
+			if VarLL == 'Precipitación' or VarLL == 'Precipitation' or VarLL == 'Prec' or FlagSum:
 				AnM = np.empty(len(VarM[:,0]))
 				for i in range(len(VarM[:,0])):
 					q = sum(np.isnan(VarM[i,:]))
-					if q >= len(VarM[i,:])*0.30:
+					if q >= len(VarM[i,:])*1.00:
 						AnM[i] = np.nan
 					else:
 						AnM[i] = np.nansum(VarM[i,:])
@@ -825,7 +825,7 @@ class Hidro_A:
 				x = np.isnan(VarM[i,:])
 				q = sum(x)
 				#print(q)
-				if q >= 6:
+				if q >= 9:
 					AnMNT.append(np.nan)
 					AnM[i] = np.nan
 				else:
@@ -835,41 +835,41 @@ class Hidro_A:
 			#MesE = [k/np.sqrt(len(VarM)) for k in MesD] # Error anual
 
 			x = [date(i,1,1) for i in range(Yi,Yf+1)]
+			xx = [i for i in range(Yi,Yf+1)]
 
-			# Se crea la ruta en donde se guardarán los archivos
-			utl.CrFolder(PathImg + 'Anual/')
+			HyPl.AnnualS(x,AnM,AnE,VarL,VarLL,Name,NameArch,PathImg+'Anual/',color=C)
 
-			# Figuras
-			# Grafica con barras de error estándar
-			F = plt.figure(figsize=(15,10))
-			plt.rcParams.update({'font.size': 22})
-			plt.errorbar(x,AnM,yerr=AnE,fmt='-',color=C,label=VarLL)
-			plt.title('Serie anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
-			plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
-			plt.xlabel('Tiempo [Años]',fontsize=24)  # Colocamos la etiqueta en el eje y
-			axes = plt.gca()
-			axes.set_xlim([x[0]-timedelta(60),x[-1]+timedelta(30)])
-			plt.legend(loc=0)
-			plt.grid()
-			plt.savefig(PathImg + 'Anual/' + 'SAnErr_' + NameArch+'.png' )
-			plt.close('all')
+			# # Se crea la ruta en donde se guardarán los archivos
+			# utl.CrFolder(PathImg + 'Anual/')
 
-			# Gráfica con desviación estándar
-			F = plt.figure(figsize=(15,10))
-			plt.rcParams.update({'font.size': 22})
-			plt.errorbar(x,AnM,yerr=AnD,fmt='-',color=C,label=VarLL)
-			plt.title('Serie anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
-			plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
-			plt.xlabel('Tiempo [Años]',fontsize=24)  # Colocamos la etiqueta en el eje y
-			axes = plt.gca()
-			axes.set_xlim([x[0]-timedelta(60),x[-1]+timedelta(30)])
-			plt.legend(loc=0)
-			plt.grid()
-			plt.savefig(PathImg + 'Anual/' + 'SAnD_' + NameArch+'.png' )
-			plt.close('all')
+			# # Figuras
+			# # Grafica con barras de error estándar
+			# F = plt.figure(figsize=(15,10))
+			# plt.rcParams.update({'font.size': 22})
+			# plt.errorbar(x,AnM,yerr=AnE,fmt='-',color=C,label=VarLL)
+			# plt.title('Serie anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
+			# plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
+			# plt.xlabel('Tiempo [Años]',fontsize=24)  # Colocamos la etiqueta en el eje y
+			# axes = plt.gca()
+			# axes.set_xlim([x[0]-timedelta(60),x[-1]+timedelta(30)])
+			# plt.legend(loc=0)
+			# plt.grid()
+			# plt.savefig(PathImg + 'Anual/' + 'SAnErr_' + NameArch+'.png' )
+			# plt.close('all')
 
-
-
+			# # Gráfica con desviación estándar
+			# F = plt.figure(figsize=(15,10))
+			# plt.rcParams.update({'font.size': 22})
+			# plt.errorbar(x,AnM,yerr=AnD,fmt='-',color=C,label=VarLL)
+			# plt.title('Serie anual de '+ VarLL +' de ' + Name,fontsize=26 )  # Colocamos el título del gráfico
+			# plt.ylabel(VarL,fontsize=24)  # Colocamos la etiqueta en el eje x
+			# plt.xlabel('Tiempo [Años]',fontsize=24)  # Colocamos la etiqueta en el eje y
+			# axes = plt.gca()
+			# axes.set_xlim([x[0]-timedelta(60),x[-1]+timedelta(30)])
+			# plt.legend(loc=0)
+			# plt.grid()
+			# plt.savefig(PathImg + 'Anual/' + 'SAnD_' + NameArch+'.png' )
+			# plt.close('all')
 
 		if flagA:
 			return MesM,MesD,MesE,AnM,AnD,AnE
