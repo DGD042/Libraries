@@ -250,3 +250,32 @@ class UtilitiesDGD:
 		else:
 			return tuple(i/inch for i in tupl)
 
+	def FP(self,Fecha):
+		''' 			
+			DESCRIPTION:
+		Esta función pretende cambiar los valores de fecha de Excel
+		a un vector de fechas de Python.
+		__________________________________________________________________
+			
+			INPUT:
+		+ Fecha: Vector de fechas de Excel.
+		__________________________________________________________________
+
+			OUTPUT:
+		- FechaP: vector de fechas de Python
+		- FechaStr: Vector de fechas en formato string. 
+		
+		'''
+
+		# Se arregla el vector de fechas
+		FechaP = []
+		FechaStr = []
+		for F in Fecha:
+			# Se convierte la fecha de Excel a Python
+			FF = xlrd.xldate_as_tuple(F,0) 
+			#Se genera el vector de Fechas de Python
+			FechaP.append(date(FF[0],FF[1],FF[2]))
+			FechaStr.append(FechaP[-1].strftime('%Y'+'/'+'%m'+'/'+'%d'))
+
+		return FechaP, FechaStr
+

@@ -44,15 +44,16 @@ class GeoF:
 
 		This is a build up function.
 		'''
-	def GEOTiffEx(self,Ar):
+	def GEOTiffEx(self,Ar,FlagGTD=False):
 		'''
 			DESCRIPTION:
 		
-		Esta función pretende extraer la información de una banda de un GEOTiff
+		Esta función pretende extraer la información de una banda de un GeoTiff
 		_________________________________________________________________________
 
 			INPUT:
-		+ Ar: Archivo GEOTiff.
+		+ Ar: Archivo GeoTiff.
+		+ FlagGTD: Bandera para obtener los valores de tamaño de celda del GeoTiff.
 		_________________________________________________________________________
 		
 			OUTPUT:
@@ -60,6 +61,7 @@ class GeoF:
 		- xllcorner: Coordenadas de la esquina occidental.
 		- yllcorner: Coordenadas de la esquina sur.
 		- cellsize: Tamaño de la celda.
+		- geoTrans: Información de las coordenadas y el tamaño de celda.
 		'''
 
 		# this allows GDAL to throw Python Exceptions
@@ -93,28 +95,41 @@ class GeoF:
 		a = data1.shape[0]
 		yllcorner = geoTrans[3]+(a*geoTrans[-1])
 
-		return data1,(geoTrans[0])-(geoTrans[1]/2),yllcorner+(geoTrans[-1]/2),geoTrans[1]
+		if FlagGTD:
+			return data1,(geoTrans[0])-(geoTrans[1]/2),yllcorner+(geoTrans[-1]/2),geoTrans[1],geoTrans
+		else:
+			return data1,(geoTrans[0])-(geoTrans[1]/2),yllcorner+(geoTrans[-1]/2),geoTrans[1]
 
-	def GEOTiffSave(self,T,Nameout,cellsize_x,cellsize_y,x_min,y_max,Projection=0):
+	def GEOTiffSave(self,T,cellsize_x,cellsize_y,x_min,y_max,Name,Pathout,Projection=0):
 		'''
 			DESCRIPTION:
 		
-		Esta función pretende guardar un archivo GEOTiff
+		Esta función pretende guardar un archivo GEOTiff con información en una
+		sola banda.
 		_________________________________________________________________________
 
 			INPUT:
 		+ T: Matriz con los valores que se quieren guardar.
-		+ Ar: Archivo GEOTiff.
+		+ cellsize_x: Tamaño de celda en la latitud.
+		+ cellsize_y: Tamaño de celda en la longitud.
+		+ x_min: Longitud en el punto occidental.
+		+ y_max: Latitud en el punto norte.
+		+ Name: Nombre del documento.
+		+ Pathout: Ruta de salida.
+		+ Projection: Proyección de la información 
+					  0: Magna Bogotá.
+					  1: WGS84.
 		_________________________________________________________________________
 		
 			OUTPUT:
-		- data1: Raster data
-		- xllcorner: Coordenadas de la esquina occidental.
-		- yllcorner: Coordenadas de la esquina sur.
-		- cellsize: Tamaño de la celda.
+		Se guarda un archivo GeoTiff.
 		'''
 
-		# You need to get those values like you did.
+		# Se crea la carpeta
+		utl.CrFolder(Pathout)
+
+		Nameout = Pathout + Name + '.tif'
+
 		x_pixels = T.shape[1]  # number of pixels in x
 		y_pixels = T.shape[0]  # number of pixels in y
 		

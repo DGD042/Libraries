@@ -26,10 +26,12 @@ import sys
 import warnings
 from scipy import stats as st
 
+
 # Se importan los paquetes para manejo de fechas
 from datetime import date, datetime, timedelta
 
 from UtilitiesDGD import UtilitiesDGD
+
 utl = UtilitiesDGD()
 
 
@@ -999,5 +1001,204 @@ class Hydro_Plotter:
 		plt.savefig(PathImg + Var +'Hidro_Por_Mens' + '.png',format='png',dpi=300 )
 		plt.close('all')
 
+	def EventPres(self,Date,Value,Datest,PCxi,PCxf,PCxfB,Dxi,Dxf,Name='',PathImg='',Nameout=''):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite hacer las gráficas de datos faltantes mensuales.
+
+		_________________________________________________________________________
+
+			INPUT:
+		+ Date: Vector de fechas en formato date.
+		+ Value: Vector de valores de lo que se quiere graficar.
+		+ Datest: Fecha de comienzan del evento de lluvia en string.
+		+ PCxi: Posición del mínimo de presión.
+		+ PCxf: Posición del máximo de presión durante el evento.
+		+ PCxfB: Posición del máximo de presión antes el evento.
+		+ Dxi: Posición del inicio del evento.
+		+ Dxf: Posición del final del evento.
+		+ Name: Nombre de la estación para el título.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ Nameout: Ruta y nombre del documento que se quiere guardar
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		# Precipitación
+		a11 = plt.plot(Date,Value,'-k', label = 'Presión')
+		plt.title(Name+r" Evento " + Datest,fontsize=16)
+		plt.xlabel("Tiempo",fontsize=16)
+		plt.ylabel('Presión [hPa]',fontsize=16)
+
+		if ~np.isnan(PCxi):
+			L1 = plt.plot([Date[PCxi],Date[PCxi]],[np.nanmin(Value),np.nanmax(Value)],'--b', label = 'Min Pres') # Punto mínimo
+			if ~np.isnan(PCxfB):
+				L2 = plt.plot([Date[PCxfB],Date[PCxfB]],[np.nanmin(Value),np.nanmax(Value)],'--r', label = 'Max Pres Antes') # Punto máximo B
+			L3 = plt.plot([Date[PCxf],Date[PCxf]],[np.nanmin(Value),np.nanmax(Value)],'--g', label = 'Max Pres Después') # Punto máximo A
+
+		# Líneas para la precipitación
+		L4 = plt.plot([Date[Dxi],Date[Dxi]],[np.nanmin(Value),np.nanmax(Value)],'-.b', label = 'Inicio Prec') # Inicio del aguacero
+		L5 = plt.plot([Date[Dxf],Date[Dxf]],[np.nanmin(Value),np.nanmax(Value)],'-.g', label = 'Fin Prec') # Fin del aguacero
+
+		# added these three lines
+		if ~np.isnan(PCxfB):
+			lns = a11+L1+L2+L3+L4+L5
+		else:
+			lns = a11+L1+L3+L4+L5
+		labs = [l.get_label() for l in lns]
+		plt.legend(lns, labs, loc=0,fontsize=12)
+		
+		# Axis
+		axes = plt.gca()
+		xTL = axes.xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+		minorLocatorx = MultipleLocator(MxL)
+		yTL = axes.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().xaxis.set_minor_locator(minorLocatorx)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+
+		plt.tight_layout()
+		plt.savefig(Nameout + '.png',format='png',dpi=300 )
+		plt.close('all')
+
+	def SPvDPPotAdj(self,DurPrec,PresRate,Name='',PathImg='',Nameout='',FlagA=True,FlagAn=False):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite hacer las gráficas de datos faltantes mensuales.
+
+		_________________________________________________________________________
+
+			INPUT:
+		+ DurPrec: Vector de duración de las tormentas en horas.
+		+ PresRate: Vector de valores tasa de cambio de presión.
+		+ Name: Nombre de la estación para el título.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ FlagA: Indicador si se quiere realizar el ajuste.
+		+ FlagAn: Indicador para anotar el número del punto.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+
+		# Se calcula el ajuste
+		if FlagA:
+			# Se importa el paquete de Fit
+			from CFitting import CFitting
+			CF = CFitting()
+
+			# Se realiza la regresión
+			Coef, perr,R2 = CF.FF(DurPrec,PresRate,2)
+
+			# Se toman los datos para ser comparados posteriormente
+			DD,PP = utl.NoNaN(DurPrec,PresRate,False)
+			N = len(DD)
+			a = Coef[0]
+			b = Coef[1]
+			desv_a = perr[0]
+			desv_b = perr[1]
+			# Se garda la variable
+			CC = np.array([N,a,b,desv_a,desv_b,R2])
+			
+			
+			# Se realiza el ajuste a ver que tal dió
+			x = np.linspace(np.nanmin(DurPrec),np.nanmax(DurPrec),100)
+			PresRateC = Coef[0]*x**Coef[1]
+
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		# Precipitación
+		plt.scatter(DurPrec,PresRate)
+		plt.title('Cambios en Presión Atmosférica en '+ Name,fontsize=16)
+		plt.xlabel(u'Duración de la Tormenta [h]',fontsize=16)
+		plt.ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=16)
+
+		if FlagAn:
+			# Número de cada punto
+			n = np.arange(0,len(DurPrec))
+			for i, txt in enumerate(n):
+				plt.annotate(txt, (DurPrec[i],PresRate[i]),fontsize=8)
+
+		# Axes
+		ax = plt.gca()
+		xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+		plt.xlim([0,np.nanmax(DurPrec)+2*MxL])
+
+		xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+		minorLocatorx = MultipleLocator(MxL)
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().xaxis.set_minor_locator(minorLocatorx)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+
+		# Se incluye el ajuste
+		if FlagA:
+			plt.plot(x,PresRateC,'k--')
+			# Se incluye la ecuación
+			if np.nanmin(PresRate) < 0:
+				plt.text(xTL[-4],yTL[2]+2*MyL, r'$\Delta = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+				plt.text(xTL[-4],yTL[2], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+			else:
+				plt.text(xTL[-4],yTL[-2], r'$\Delta = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+				plt.text(xTL[-4],yTL[-2]-2*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+
+		plt.tight_layout()
+		plt.savefig(Nameout+'.png',format='png',dpi=300 )
+		plt.close('all')
+
+		if FlagA:
+			return CC
 
 

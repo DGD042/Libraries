@@ -202,8 +202,10 @@ class ExtractD:
 			# Se abre el archivo que se llamó
 			f = open(Tot)
 
+
 			# Se inicializan las variables
 			ff = csv.reader(f, dialect='excel', delimiter= deli)
+			# ff = csv.reader(f, delimiter= deli)
 
 			r = 0 # Contador de filas
 			# Ciclo para todas las filas
@@ -671,7 +673,7 @@ class ExtractD:
 					for i in range(0,24): # Ciclo para las horas
 						for jj in range(0,60,dtm): # Ciclo para los minutos
 							if rr == 0:
-								FechaN[0] = result
+								FechaN[0] = datetime(int(yeari), 1, 1,0,0,0)
 								if i < 10:
 									if jj < 10:
 										FechaC[rr] = FR + '-0' +str(i)+'0'+str(jj)
@@ -683,7 +685,7 @@ class ExtractD:
 									else:
 										FechaC[rr] = FR + '-' +str(i)+str(jj)
 							else:
-								FechaN.append(result)
+								FechaN.append(datetime(result.year,result.month,result.day,i,jj))
 								if i < 10:
 									if jj < 10:
 										FechaC.append(FR + '-0' +str(i)+'0'+str(jj))
@@ -1054,11 +1056,10 @@ class ExtractD:
 									VEMin.append(float(np.nanmin(V1C[i:dtt])))
 								except ValueError:
 									VEMin.append(float('nan'))
-			elif escala == 2: # Agragamiento mensual
+			elif escala == 2: # promedio mensual
 				d = 0
 				for i in range(int(yeari),int(yearf)+1):
 					for j in range(1,13):
-						 
 						Fi = date(i,j,1)
 						if j == 12:
 							Ff = date(i+1,1,1)
@@ -1066,12 +1067,11 @@ class ExtractD:
 							Ff = date(i,j+1,1)
 						DF = Ff-Fi
 						dtt = dtt + DF.days # Delta de días
-
 						if i == int(yeari) and j == 1:
-							q = ~np.isnan(V1C[d:dtt])
+							q = np.isnan(V1C[d:dtt])
 							qq = sum(q)
-							NNF.append(qq/len(V1C[d:dtt]))
-							NF.append(1-NNF[-1])
+							NF.append(qq/len(V1C[d:dtt]))
+							NNF.append(1-NF[-1])	
 							if qq > DF.days/2:
 								VE[0] = float('nan')
 								if flagMa == True:
@@ -1092,10 +1092,10 @@ class ExtractD:
 									except ValueError:
 										VEMin[0] = float('nan')
 						else:
-							q = ~np.isnan(V1C[d:dtt])
+							q = np.isnan(V1C[d:dtt])
 							qq = sum(q)
-							NNF.append(qq/len(V1C[d:dtt]))
-							NF.append(1-NNF[-1])
+							NF.append(qq/len(V1C[d:dtt]))
+							NNF.append(1-NF[-1])
 							if qq > DF.days/2:
 								VE.append(float('nan'))
 								if flagMa == True:
@@ -1115,7 +1115,6 @@ class ExtractD:
 										VEMin.append(float(np.nanmin(V1C[d:dtt])))
 									except ValueError:
 										VEMin.append(float('nan'))
-						
 						d = dtt
 
 

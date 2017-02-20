@@ -100,13 +100,63 @@ class Thermo_An:
 		- e: Real Vapor Pressure if you have HR.
 		'''
 
-		e_s = 26.66082-0.0091379024*(T+273.15)-(6106.396/(T+273.15))
+		#e_s = np.exp(26.66082-0.0091379024*(T+273.15)-(6106.396/(T+273.15)))
+		e0 = 6.11 # hPa
+		Const = 5423 # L/Rv [K]
+		T0 = 273.15
+		e_s = e0*np.exp(Const*(1/T0-1/(T+273.15)))
 		try:
 			a = len(HR)
 			e = (HR/100)*e_s
 			return e_s,e
 		except:
 			return e_s
+
+	def Eeq(self,q,p):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the vapor pressure from the specific humidity
+		_________________________________________________________________________
+
+			INPUT:
+		+ q: Specific Humidity.
+		+ p: Pressure.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- e: Real Vapor Pressure.
+		'''
+
+		epsilon = 0.622
+
+		e = (q*p)/(q-(q*epsilon)+epsilon)
+
+		return e
+
+	def HReq(self,T,q,p):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the relative humidity from vapor pressure.
+		_________________________________________________________________________
+
+			INPUT:
+		+ T: Temperature
+		+ q: Specific Humidity.
+		+ p: Pressure.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- HR: Relative Humidity
+		'''
+
+		es = self.ESeq(T)
+		e = self.Eeq(q,p)
+
+		HR = (e/es)*100
+
+		return HR
 
 	def AHeq(self,T,h,e,LWCFlag=True,maxLWC=0.0002):
 		'''
@@ -137,7 +187,7 @@ class Thermo_An:
 		p = p_0 * np.exp(-h/H_0) # mb
 
 		# Air density
-		rho = (p*100)/((T+273.15)*287)
+		# rho = (p*100)/((T+273.15)*287)
 
 		# Absolute humidity
 		AH = (e*100)/((T+273.15)*461.5)
@@ -160,13 +210,18 @@ class Thermo_An:
 		_________________________________________________________________________
 		
 			OUTPUT:
-		- Td: Absolute Humidity.
+		- Td: Dew point temperature.
 		'''
 
-		bt = 26.66082-np.log(e)
-		Td = ((bt-np.sqrt((bt**2)-223.1986))/0.0182758048)-273.15
+		# Vaisala (2013)
+		# Constantes para el rango -20 a 50 °C
+		A = 6.116441 
+		Tn = 240.7263
+		m = 7.591386
 
-		return np.abs(Td)
+		Td = (Tn/((m/np.log10(e/A))-1))
+
+		return Td
 
 	def LCLeq(self,T,Td,h):
 		'''
@@ -182,7 +237,7 @@ class Thermo_An:
 		_________________________________________________________________________
 		
 			OUTPUT:
-		- LCL: Absolute Humidity.
+		- LCL: Lifitng Condensantion level.
 		'''
 
 		# Calculates the Pressure from the hydrostatic equation
@@ -525,7 +580,7 @@ class Thermo_An:
 
 		return R
 
-	def EqAlmorox(self,Method,Tmax,Tmin,Lat,J,Z=0,Tmin2=0,dTM=0):
+	def EqAlmorox(self,Method,Tmax,Tmin,Lat,J,Z=0,Tmin2=0,dTM=0,FlagRea=False):
 		'''
 			DESCRIPTION:
 		
@@ -559,11 +614,28 @@ class Thermo_An:
 			A = 0.1486 # For interior regions
 			Hc = H0 * (A * (P/1013)**(1/2)*(Tmax-Tmin)**(1/2)) 
 		elif Method == 4:
-			A = 0.7685
-			C = 1.15
-			dT = Tmax-0.5*(Tmin+Tmin2)
+			if FlagRea:
+				A = 1.5
+				C = 1.8
+			else:
+				A = 0.85
+				C = 1.2
+			if np.isnan(Tmin2):
+				dT = Tmax-Tmin
+			else:
+				dT = Tmax-0.5*(Tmin+Tmin2)
 			B = 0.036*np.exp(-0.154*dTM)
 			Hc = H0 * A * (1-np.exp(-B*dT**C))
+			# if np.isnan(Hc):
+			# 	print('Tmax',Tmax)
+			# 	print('Tmin',Tmin)
+			# 	print('Tmin2',Tmin2)
+			# 	print('dT',dT)
+			# 	print('dTM',dTM)
+			# 	print('B',B)
+			# 	print('Hc',Hc)
+			# 	print('----')
+				
 
 		return Hc
 
@@ -789,13 +861,21 @@ class Thermo_An:
 			OUTPUT:
 		- PET: Potential Evaportanspiration [mm/day].
 		'''
-		if ~np.isnan(PET):
+		try: 
+			len(P)
+			x = np.where(P <= 0.002)
 			AET = (PET*P*np.tanh(P/PET)*(1-np.cosh(PET/P)+np.sinh(PET/P)))**(1/2)
-			
-			if np.isnan(AET):
-				AET = PET*np.tanh(P/PET)
-		else:
-			AET = np.nan
+			if len(P) == 0:
+				AET = PET[x]*np.tanh(P[x]/PET[x])
+
+		except:
+			if ~np.isnan(PET):
+				AET = (PET*P*np.tanh(P/PET)*(1-np.cosh(PET/P)+np.sinh(PET/P)))**(1/2)
+				
+				if np.isnan(AET):
+					AET = PET*np.tanh(P/PET)
+			else:
+				AET = np.nan
 		
 		return AET
 
