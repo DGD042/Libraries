@@ -33,8 +33,6 @@ from mpl_toolkits.axes_grid1 import host_subplot
 import mpl_toolkits.axisartist as AA
 from mpl_toolkits.mplot3d import Axes3D
 import os
-from Hydro_Plotter import Hydro_Plotter
-
 import warnings
 
 # Se importan los paquetes para manejo de fechas
@@ -43,6 +41,7 @@ from datetime import date, datetime, timedelta
 from UtilitiesDGD import UtilitiesDGD
 from CorrSt import CorrSt
 from CFitting import CFitting
+from Hydro_Plotter import Hydro_Plotter
 
 utl = UtilitiesDGD()
 cr = CorrSt()
@@ -81,36 +80,63 @@ class BPumpL:
 		Esta función libera un subplot con todas las figuras de las diferentes 
 		variables.
 		'''
+		# Tamaño de la Figura
+		fH=30 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
 		# Se crea la ruta en donde se guardarán los archivos
 		utl.CrFolder(PathImg+ 'Manizales/Series/')
 		plt.close('all')
-		lfs = 16
-		fig, axs = plt.subplots(2,2, figsize=(15, 8), facecolor='w', edgecolor='k')
-		plt.rcParams.update({'font.size': lfs-6})
+		lfs = 15
+		#fig, axs = plt.subplots(2,2, figsize=utl.cm2inch(fH,fV), facecolor='w', edgecolor='k')
+		fig, axs = plt.subplots(2,2, figsize=utl.cm2inch(fH,fV))
+		plt.rcParams.update({'font.size': lfs,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial'\
+			,'xtick.labelsize': lfs-1,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': lfs-1,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
 		axs = axs.ravel() # Para hacer un loop con los subplots
 		#myFmt = mdates.DateFormatter('%d/%m/%y') # Para hacer el formato de fechas
 		#xlabels = ['Ticklabel %i' % i for i in range(10)] # Para rotar los ejes
 		for i in range(4):
 			if i == 0:
 				P1 = axs[i].plot(FechaN,PrecC,'b-', label = Var[i])
-				axs[i].set_ylabel(Var[i] + '[mm]',fontsize=lfs-4)
-				axs[i].legend(loc='best')
+				axs[i].set_ylabel(Var[i] + ' [mm]',fontsize=lfs)
+				
+				# Se arreglan los ejes
 			elif i == 1:
 				P1 = axs[i].plot(FechaN,TempC,'r-', label = Var[i])
-				axs[i].set_ylabel(Var[i] + '[°C]',fontsize=lfs-4)
-				axs[i].legend(loc='best')
+				axs[i].set_ylabel(Var[i] + ' [°C]',fontsize=lfs)
 			elif i == 2:
 				P1 = axs[i].plot(FechaN,HRC,'g-', label = Var[i])
-				axs[i].set_ylabel(Var[i] + '[%]',fontsize=lfs-4)
-				axs[i].legend(loc='best')
-				axs[i].set_xlabel(u'Fechas',fontsize=14)
+				axs[i].set_ylabel(Var[i] + ' [%]',fontsize=lfs)
+				axs[i].set_xlabel(u'Fechas',fontsize=lfs)
 			elif i == 3:
 				P1 = axs[i].plot(FechaN,PresBC,'k-', label = Var[i])
-				axs[i].set_ylabel(Var[i] + '[mmHg]',fontsize=lfs-4)
-				axs[i].legend(loc='best')
-				axs[i].set_xlabel(u'Fechas',fontsize=14)
+				axs[i].set_ylabel(Var[i] + ' [hPa]',fontsize=lfs)
+				axs[i].set_xlabel(u'Fechas',fontsize=lfs)
 			axs[i].set_title(Var[i],fontsize=lfs)
-		plt.savefig(PathImg + 'Manizales/Series/' + Tot[71:-4] + '_Series_'+ str(V) +'.png' )
+			# axs[i].legend(loc='best')
+			# Se organizan las fechas
+			axs[i].set_xlim([min(FechaN),max(FechaN)]) # Incluyen todas las fechas
+			# Se incluyen los valores de los minor ticks
+			yTL = axs[i].yaxis.get_ticklocs() # List of Ticks in y
+			MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+			minorLocatory = MultipleLocator(MyL)
+			axs[i].yaxis.set_minor_locator(minorLocatory)
+			# Se cambia el label de los ejes
+			xTL = axs[i].xaxis.get_ticklocs() # List of position in x
+			Labels2 = HyPl.monthlab(xTL)
+			plt.sca(axs[i])
+			plt.xticks(xTL, Labels2) # Se cambia el label de los ejes
+			# Se rotan los ejes
+			for tick in axs[i].get_xticklabels():
+				tick.set_rotation(45)
+		plt.tight_layout()
+		plt.savefig(PathImg + 'Manizales/Series/' + Tot[71:-4] + '_Series_'+ \
+			str(V) +'.png',format='png',dpi=300 )
 		plt.close('all')
 
 	def NaNEl(self,V):
@@ -143,7 +169,7 @@ class BPumpL:
 
 		return VV
 
-	def ExEv(self,Prec,V,Fecha,Ci=60,Cf=60,m=0.8):
+	def ExEv(self,Prec,V,Fecha,Ci=60,Cf=60,m=0.8,M=100):
 		'''
 			DESCRIPTION:
 		
@@ -169,15 +195,20 @@ class BPumpL:
 		maxPrec = np.nanmax(Prec2)
 		
 		x = 0
+		xx = 0
 		while maxPrec > m:
-			q = np.where(Prec2 == maxPrec)[0]
-			if x == 0:
-				PrecC = Prec[q[0]-Ci:q[0]+Cf]
-				VC = V[q[0]-Ci:q[0]+Cf]
+			if maxPrec <= M:
+				q = np.where(Prec2 == maxPrec)[0]
+				if xx == 0:
+					PrecC = Prec[q[0]-Ci:q[0]+Cf]
+					VC = V[q[0]-Ci:q[0]+Cf]
+				else:
+					PrecC = np.vstack((PrecC,Prec[q[0]-Ci:q[0]+Cf]))
+					VC = np.vstack((VC,V[q[0]-Ci:q[0]+Cf]))
+				FechaEv.append(Fecha[q[0]-Ci:q[0]+Cf])
+				xx += 1
 			else:
-				PrecC = np.vstack((PrecC,Prec[q[0]-Ci:q[0]+Cf]))
-				VC = np.vstack((VC,V[q[0]-Ci:q[0]+Cf]))
-			FechaEv.append(Fecha[q[0]-Ci:q[0]+Cf])
+				q = np.where(Prec2 == maxPrec)[0]
 
 			Prec2[q[0]-Ci:q[0]+Cf] = np.nan
 			maxPrec = np.nanmax(Prec2)
@@ -677,38 +708,64 @@ class BPumpL:
 		if V11 == 'Prec':
 			if FlagT==True:
 
-				
-
 				# Se obtienen las correlaciones
 				CCP,CCS,QQ = cr.CorrC(Pres_F_EvM,T_F_EvM,True,0)
 				CCP2,CCS,QQ2 = cr.CorrC(Pres_F_EvM,Prec_EvM,True,0)
+				# CCP,QQ = st.pearsonr(Pres_F_EvM,T_F_EvM)
+				# CCP2,QQ = st.pearsonr(Pres_F_EvM,Prec_EvM)
 				#print(CCP2)
 				QQMP = np.max(QQ[0],QQ[2])
 				QQMP2 = np.max(QQ2[0],QQ2[2])
+				# Tamaño de la Figura
+				fH=25 # Largo de la Figura
+				fV = fH*(2/3) # Ancho de la Figura
 
 				# Promedio de tres eventos
 				#f, ax11 = plt.subplots(111, axes_class=AA.Axes, figsize=(20,10))
-				f = plt.figure(figsize=(20,10))
+				f = plt.figure(figsize=utl.cm2inch(fH,fV))
 				ax11 = host_subplot(111, axes_class=AA.Axes)
-				plt.rcParams.update({'font.size': 18})
+				plt.rcParams.update({'font.size': 13,'font.family': 'sans-serif'\
+					,'font.sans-serif': 'Arial'\
+					,'xtick.labelsize': 13,'xtick.major.size': 6,'xtick.minor.size': 4\
+					,'xtick.major.width': 1,'xtick.minor.width': 1\
+					,'ytick.labelsize': 13,'ytick.major.size': 6,'ytick.minor.size': 4\
+					,'ytick.major.width': 1,'ytick.minor.width': 1\
+					,'axes.linewidth':1\
+					,'grid.alpha':0.1,'grid.linestyle':'-'})
+				ax11.tick_params(axis='x',which='both',bottom='on',top='on',\
+					labelbottom='on',direction='in')
+				ax11.tick_params(axis='x',which='major',direction='inout')
+				ax11.tick_params(axis='y',which='both',left='on',right='on',\
+					labelleft='on')
+				ax11.tick_params(axis='y',which='major',direction='inout') 
 				# Precipitación
-				a11 = ax11.errorbar(xx, Prec_EvM, yerr=Prec_EvE, fmt='o-', color=L11, label = V1)		
-				ax11.set_title(r'Promedio de Eventos',fontsize=24)
-				if DTT == '1 h':
-					ax11.set_xlabel("Tiempo [cada "+ DTT + "]",fontsize=20)
+				if DTT == '1':
+					# a11 = ax11.errorbar(xx, Prec_EvM, yerr=Prec_EvE, fmt='.-', color=L11, label = V1,markersize='1',capsize=1, elinewidth=1,lw=1)
+					a11 = ax11.plot(xx, Prec_EvM,'-', color=L11, label = V1)
 				else:
-					ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=20)
-				ax11.set_ylabel(Ax1,fontsize=20)
+					a11 = ax11.errorbar(xx, Prec_EvM, yerr=Prec_EvE, fmt='.-', color=L11, label = V1,markersize='5',capsize=2, elinewidth=1)
+
+				ax11.set_title(r'Promedio de Eventos',fontsize=16)
+				if DTT == '1 h':
+					ax11.set_xlabel("Tiempo [cada "+ DTT + "]",fontsize=15)
+				else:
+					ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=15)
+				ax11.set_ylabel(Ax1,fontsize=15)
 
 				# Presión barométrica
 				axx11 = ax11.twinx()
 				axxx11 = ax11.twinx()
+				if DTT == '1':
+					# a112 = axx11.errorbar(xx, Pres_F_EvM, yerr=Pres_F_EvE, fmt='.-', color=L22, label = V2,markersize='1',capsize=1, elinewidth=1,lw=1)
+					# a113 = axxx11.errorbar(xx,T_F_EvM,yerr=T_F_EvE,fmt='.-',color=L33, label = V3,markersize='1',capsize=1, elinewidth=1,lw=1)
+					a112 = axx11.plot(xx, Pres_F_EvM,'-', color=L22, label = V2)
+					a113 = axxx11.plot(xx,T_F_EvM,'-',color=L33, label = V3)
+				else:
+					a112 = axx11.errorbar(xx, Pres_F_EvM, yerr=Pres_F_EvE, fmt='.-', color=L22, label = V2,markersize='5',capsize=2, elinewidth=1)
+					a113 = axxx11.errorbar(xx,T_F_EvM,yerr=T_F_EvE,fmt='.-',color=L33, label = V3,markersize='5',capsize=2, elinewidth=1)
 
-				a112 = axx11.errorbar(xx, Pres_F_EvM, yerr=Pres_F_EvE, fmt='o-', color=L22, label = V2)
-				a113 = axxx11.errorbar(xx,T_F_EvM,yerr=T_F_EvE,fmt='o-',color=L33, label = V3)
-
-				axx11.set_ylabel(Ax2,fontsize=20)
-				axxx11.set_ylabel(Ax3,fontsize=20)
+				axx11.set_ylabel(Ax2,fontsize=15)
+				axxx11.set_ylabel(Ax3,fontsize=15)
 
 				offset = 80
 				new_fixed_axis = axxx11.get_grid_helper().new_fixed_axis
@@ -721,7 +778,7 @@ class BPumpL:
 				# lns = a11+a112+a113
 				# labs = [l.get_label() for l in lns]
 				# ax11.legend(lns, labs, loc=0)
-				ax11.legend(loc=0)
+				ax11.legend(loc=0,fontsize=12)
 
 				ax11.axis["left"].label.set_color(color=L11)
 				axx11.axis["right"].label.set_color(color=L22)
@@ -732,21 +789,33 @@ class BPumpL:
 				LM = np.max(Prec_EvM)
 				Lm= np.min(Prec_EvM)
 				#L = (LM+Lm)/2
+				if DTT =='1':
+					yTL = ax11.yaxis.get_ticklocs() # List of Ticks in y
+					LM = yTL[-3]
+				else:
+					yTL = ax11.yaxis.get_ticklocs() # List of Ticks in y
+					LM = yTL[-2]
 				
-				
+
+				if DTT == '1':
+					L = LM
+					SLP = 0.05
+					SLS = 0.0
+					Lx = -5*60+10
+					Sx = 31*5
 				if DTT == '5' or DTT == '15':
 					L = LM
 					SLP = 0.15
 					SLS = 0.0
-					Lx = -50
-					Sx = 21
-				elif DTT == '30':
+					Lx = -58
+					Sx = 31
+				if DTT == '30':
 					L = LM
 					SLP = 0.30
 					SLS = 0.15
 					Lx = -10
 					Sx = 4.5
-				elif DTT == '1 h':
+				if DTT == '1 h':
 					L = LM-1
 					SLP = 0.5
 					SLS = 0.0
@@ -754,7 +823,7 @@ class BPumpL:
 					Sx = 2
 
 				
-				FS = 20
+				FS = 13
 
 				ax11.text(Lx,L+SLP, r'$r_{Pearson}(%s,%s)=$' %(V22,V33), fontsize=FS)
 				ax11.text(Lx,L+SLS, r'$r_{Pearson}(%s,%s)=$' %(V11,V22), fontsize=FS)
@@ -793,54 +862,69 @@ class BPumpL:
 
 				ax11.set_xlim([min(xx)-1,max(xx)+1])
 
-				#plt.tight_layout()
-				plt.savefig(PathImg+'Average/' + ix + '_' + 'PE_' + V11 + 'V' + V22+'V' + V33 +'_' + str(ii) + '.png')
+				plt.tight_layout()
+				plt.savefig(PathImg+'Average/' + ix + '_' + 'PE_' + \
+					V11 + 'V' + V22+'V' + V33 +'_' + str(ii) + '.png', format='png', dpi=300)
 				plt.close('all')
 
-				f = plt.figure(figsize=(20,10))
-				ax11 = host_subplot(111, axes_class=AA.Axes)
-				plt.rcParams.update({'font.size': 18})
-				# Precipitación
-				a11 = ax11.errorbar(xx, Prec_EvM, yerr=Prec_EvD, fmt='o-', color=L11, label = V1)
-				ax11.set_title(r'Promedio de Eventos',fontsize=24)
-				if DTT == '1 h':
-					ax11.set_xlabel("Tiempo [cada "+ DTT + "]",fontsize=20)
-				else:
-					ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=20)
-				ax11.set_ylabel(Ax1,fontsize=20)
+				# f = plt.figure(figsize=utl.cm2inch(fH,fV))
+				# ax11 = host_subplot(111, axes_class=AA.Axes)
+				# plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+				# 	,'font.sans-serif': 'Arial Narrow'\
+				# 	,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+				# 	,'xtick.major.width': 1,'xtick.minor.width': 1\
+				# 	,'ytick.labelsize': 15,'ytick.major.size': 6,'ytick.minor.size': 4\
+				# 	,'ytick.major.width': 1,'ytick.minor.width': 1\
+				# 	,'axes.linewidth':1\
+				# 	,'grid.alpha':0.1,'grid.linestyle':'-'})
+				# plt.tick_params(axis='x',which='both',bottom='on',top='on',\
+				# 	labelbottom='on',direction='in')
+				# plt.tick_params(axis='x',which='major',direction='inout')
+				# plt.tick_params(axis='y',which='both',left='on',right='on',\
+				# 	labelleft='on')
+				# plt.tick_params(axis='y',which='major',direction='inout')
+				# # Precipitación
+				# a11 = ax11.errorbar(xx, Prec_EvM, yerr=Prec_EvD, fmt='o-', color=L11, label = V1)
+				# ax11.set_title(r'Promedio de Eventos',fontsize=16)
+				# if DTT == '1 h':
+				# 	ax11.set_xlabel("Tiempo [cada "+ DTT + "]",fontsize=15)
+				# else:
+				# 	ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=15)
+				# ax11.set_ylabel(Ax1,fontsize=15)
 
-				# Presión barométrica
-				axx11 = ax11.twinx()
-				axxx11 = ax11.twinx()
+				# # Presión barométrica
+				# axx11 = ax11.twinx()
+				# axxx11 = ax11.twinx()
 
-				a112 = axx11.errorbar(xx, Pres_F_EvM, yerr=Pres_F_EvD, fmt='o-', color=L22, label = V2)
-				a113 = axxx11.errorbar(xx,T_F_EvM,yerr=T_F_EvD,fmt='o-',color=L33, label = V3)
+				# a112 = axx11.errorbar(xx, Pres_F_EvM, yerr=Pres_F_EvD, fmt='o-', color=L22, label = V2)
+				# a113 = axxx11.errorbar(xx,T_F_EvM,yerr=T_F_EvD,fmt='o-',color=L33, label = V3)
 
-				axx11.set_ylabel(Ax2,fontsize=20)
-				axxx11.set_ylabel(Ax3,fontsize=20)
+				# axx11.set_ylabel(Ax2,fontsize=15)
+				# axxx11.set_ylabel(Ax3,fontsize=15)
 
-				offset = 80
-				new_fixed_axis = axxx11.get_grid_helper().new_fixed_axis
-				axxx11.axis["right"] = new_fixed_axis(loc="right",
-												axes=axxx11,
-												offset=(offset, 0))
+				# offset = 80
+				# new_fixed_axis = axxx11.get_grid_helper().new_fixed_axis
+				# axxx11.axis["right"] = new_fixed_axis(loc="right",
+				# 								axes=axxx11,
+				# 								offset=(offset, 0))
 
-				axxx11.axis["right"].toggle(all=True)
-				# added these three lines
-				# lns = a11+a112+a113
-				# labs = [l.get_label() for l in lns]
-				# ax11.legend(lns, labs, loc=0)
-				ax11.legend(loc=0)
+				# axxx11.axis["right"].toggle(all=True)
+				# # added these three lines
+				# # lns = a11+a112+a113
+				# # labs = [l.get_label() for l in lns]
+				# # ax11.legend(lns, labs, loc=0)
+				# ax11.legend(loc=0)
 
-				ax11.axis["left"].label.set_color(color=L11)
-				axx11.axis["right"].label.set_color(color=L22)
-				axxx11.axis["right"].label.set_color(color=L33)
+				# ax11.axis["left"].label.set_color(color=L11)
+				# axx11.axis["right"].label.set_color(color=L22)
+				# axxx11.axis["right"].label.set_color(color=L33)
 
-				ax11.set_xlim([min(xx)-1,max(xx)+1])
+				# ax11.set_xlim([min(xx)-1,max(xx)+1])
 
-				#plt.tight_layout()
-				plt.savefig(PathImg +'Average/' + ix + '_' + 'PD_' + V11 + 'V' + V22+'V' + V33 +'_' + str(ii) + '.png')
-				plt.close('all')
+				# #plt.tight_layout()
+				# plt.savefig(PathImg +'Average/' + ix + '_' + 'PD_'\
+				# 	+ V11 + 'V' + V22+'V' + V33 +'_' + str(ii) + '.png', format='png', dpi=300)
+				# plt.close('all')
 
 
 
@@ -1602,7 +1686,6 @@ class BPumpL:
 
 		return DurPrec, MaxPrec, PresRateB,PresRateA,PresChangeB,PresChangeA,xx
 
-
 	def PRvDP_T(self,PrecC,PresC,dt=1,M=60*4,flagEv=False,PathImg='',Name=''):
 		'''
 		DESCRIPTION:
@@ -1972,7 +2055,7 @@ class BPumpL:
 
 		return DurPrec, MaxPrec, PresRateB,PresRateA,PresChangeB,PresChangeA,xx
 
-	def PRvDP_C(self,PrecC,PresC,FechaEv,FechaEvst_Aft=0,FechaEvend_Aft=0,Mar=0.8,dt=1,M=60*4,flagEv=False,PathImg='',Name=''):
+	def PRvDP_C(self,PrecC,PresC,FechaEv,FechaEvst_Aft=0,FechaEvend_Aft=0,Mar=0.8,flagAf=False,dt=1,M=60*4,flagEv=False,PathImg='',Name=''):
 		'''
 		DESCRIPTION:
 	
@@ -2005,18 +2088,9 @@ class BPumpL:
 		# --------------------------------------
 		# Se arreglan las fechas de los eventos
 		# --------------------------------------
-
-		FechaEvv = []
-		for k in range(len(FechaEv)):
-			FechaEvv.append([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEv[k]])
-		FechaEvv = np.array(FechaEvv)
-		FechaEvst = np.array([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEvst_Aft])
-		FechaEvend = np.array([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEvend_Aft])
-
-		if FechaEvst_Aft == 0:
-			print('Generar el cálculo para el inicio de las tormentas')
-
+		
 		# Se inicializan las variables
+		FechaEvv = []
 		DurPrec = []
 		PresRateA = []
 		PresRateB = []
@@ -2028,9 +2102,119 @@ class BPumpL:
 		Dxff = []
 		G = 0
 
+		for k in range(len(FechaEv)):
+			FechaEvv.append([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEv[k]])
+		FechaEvv = np.array(FechaEvv)
+
+		if FechaEvst_Aft == 0:
+			FechaEvst_Aft = []
+			FechaEvend_Aft = []
+			for i in range(len(FechaEv)):
+				x = [M]
+				if dt == 1:
+					MinPrec = 0.001
+				else:
+					MinPrec = 0.10
+				# Se encuentra el mínimo de precipitación antes de ese punto
+				xm = np.where(PrecC[i,:M]<=MinPrec)[0]
+				#print(xm)
+
+				# Se mira si es mínimo de antes por 10 minutos consecutivos de mínimos
+				k = 1
+				a = len(xm)-1
+				while k == 1:					
+					if dt == 1:
+						if a == -1:
+							xmm = 0
+							k = 2
+							break
+						if xm[a] == xm[a-10]+10:
+							xmm = xm[a]
+							k = 2
+						else:
+							a = a-1
+							if a == 0:
+								xmm = xm[0]
+								k = 2
+					elif dt == 5:
+						if a == -1:
+							xmm = 0
+							k = 2
+							break
+						if xm[a] == xm[a-1]+1:
+							xmm = xm[a]
+							k = 2
+						else:
+							a = a-1
+							if a == 0:
+								xmm = xm[0]
+								k = 2
+						
+				
+				# Se encuentra el máximo de precipitación antes de ese punto
+				xM = np.where(PrecC[i,x[0]+1:]<=MinPrec)[0]+x[0]+1
+				# print(len(xM))
+				# print(i)
+
+				# Se busca el mínimo después del máximo
+				k = 1
+				a = 0
+				while k == 1:
+					aa = len(xM)
+					if aa == 1 or aa == 0:
+						xMM = len(PrecC[i,:])-1
+						k = 2
+						break
+					if dt == 1:
+						# print('a',a)
+						try:
+							if xM[a] == xM[a+10]-10:
+								xMM = xM[a]
+								k = 2
+							else:
+								a = a+1
+								if a == len(xM)-1:
+									xMM = xM[len(xM)-1]
+									k = 2
+						except:
+							try:
+								if xM[a] == xM[a+5]-5:
+									xMM = xM[a]
+									k = 2
+								else:
+									a = a+1
+									if a == len(xM)-1:
+										xMM = xM[len(xM)-1]
+										k = 2
+							except:
+								xMM = xM[a]
+								k = 2
+								
+					elif dt == 5:
+						if xM[a] == xM[a+1]-1:
+							xMM = xM[a]
+							k = 2
+						else:
+							a = a+1
+							if a == len(xM)-1:
+								xMM = xM[len(xM)-1]
+								k = 2
+					else:
+						xMM = xM[a]
+						k = 2
+
+				FechaEvst_Aft.append(FechaEv[i][xmm])
+				FechaEvend_Aft.append(FechaEv[i][xMM])
+
+				# DurPrec.append((xMM-xmm+1)*dt/60)
+		
+		FechaEvst = np.array([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEvst_Aft])
+		FechaEvend = np.array([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEvend_Aft])
+
 		for i in range(len(FechaEv)):
 			# Se verifica que haya información
 			q = sum(~np.isnan(PresC[i]))
+			# print('q',q)
 			if q <= len(PresC[i])*.60:
 				DurPrec.append(np.nan)
 				PresRateA.append(np.nan)
@@ -2067,11 +2251,14 @@ class BPumpL:
 					# --------------------------
 
 					# Mínimo
-					if dt <= 10:
+					if dt <= 10 and dt > 1:
 						# Valores para posiciones antes y después
 						# basados en el tiempo.
 						ValBef = int(10/dt) # 10 min 
 						ValAft = int(20/dt) # 20 min
+					else:
+						ValBef = int(60) # 60 min 
+						ValAft = int(40) # 30 min
 
 					PCAi1 = np.nanmin(PresC[i,Dxi[0]-ValBef:Dxi[0]])
 					PCxi1 = np.where(PresC[i] == PCAi1)[0]
@@ -2129,6 +2316,11 @@ class BPumpL:
 						DPB = (PCxf - PCxi[0])*dt/60
 						PRAA = (PCAf-PCAi)/DPB
 						PCA = PCAf-PCAi
+						if flagAf:
+							if PCA <= Mar:
+								PRAA = np.nan
+						if PRAA < 0:
+							PRAA = np.nan
 						# ---------------------
 
 						# if PCA <= Mar:
@@ -2233,14 +2425,29 @@ class BPumpL:
 						PRB = []
 
 						BE = ValBef # Valor de posición antes.
+						# print('PCxi',PCxi[0])
+						# print('Dxf',Dxf[0])
+						# print('Dxi',Dxi[0])
+						# print('BE',BE)
+						# print('Dur',Dxf[0]-Dxi[0])
+						# print('Dif',PCxi[0]-(Dxf[0]-Dxi[0])-BE)
+						# print(PresC[i,PCxi[0]-(Dxf[0]-Dxi[0])-BE:PCxi[0]])
+						Dif = PCxi[0]-(Dxf[0]-Dxi[0])-BE
+						if Dif < 0:
+							MaxBP = np.nan
+						else:
+							MaxBP = np.nanmax(PresC[i,PCxi[0]-(Dxf[0]-Dxi[0])-BE:PCxi[0]])
+						# MaxBP = np.nanmax(PresC[i,PCxi[0]-Dxi[0]-BE:PCxi[0]])
 
-						MaxBP = np.nanmax(PresC[i,PCxi[0]-Dxf[0]-Dxi[0]-BE:PCxi[0]])
 						if np.isnan(MaxBP):
 							PRBM = np.nan
 							PCxfB = np.nan
 						else:
-							MaxBPx = np.where(PresC[i,PCxi[0]-Dxf[0]-Dxi[0]-BE:PCxi[0]] == MaxBP)[0][-1]
-							MaxBPx += len(PresC[i,:PCxi[0]-Dxf[0]-Dxi[0]-BE])
+							try:
+								MaxBPx = np.where(PresC[i,PCxi[0]-(Dxf[0]-Dxi[0])-BE:PCxi[0]] == MaxBP)[0][-1]
+							except IndexError:
+								MaxBPx = np.where(PresC[i,PCxi[0]-(Dxf[0]-Dxi[0])-BE:PCxi[0]] == MaxBP)[0]
+							MaxBPx += len(PresC[i,:PCxi[0]-(Dxf[0]-Dxi[0])-BE])
 							
 							for j in range(1,(Dxi[0]-MaxBPx+1)):
 							# for j in range(1,(Dxf[0]-Dxi[0]+4)):
@@ -2253,21 +2460,47 @@ class BPumpL:
 							PCBxf = np.array(PCBxf)
 							DPB = np.array(DPB)
 							PRB = np.array(PRB)
-
+							# print('PRB',PRB)
+							# print('PresRateA[-1]',PresRateA[-1])
 							qq = sum(~np.isnan(PRB))
-							if qq <= len(PRB)*.70:
+							if qq <= len(PRB)*.70 or np.isnan(PresRateA[-1]):
 								PCxfB = np.nan
 								PRBM = np.nan
 							else:
 								DifPRB = np.abs(PresRateA[-1]+PRB)
+								# print('DifPRB',DifPRB)
 								DifPRmxB = np.where(DifPRB == np.nanmin(DifPRB))[0]
 								PCxfB = PCBxf[DifPRmxB[0]]
 								PRBM = PRB[DifPRmxB[0]]
 								PCB = np.abs(PCAi-PCBf[DifPRmxB[0]])
+
+								# Se verifica el último máximo
+								MaxBP2 = np.nanmax(PCBf[:DifPRmxB[0]+1])
+								MaxBPx2 = np.where(PCBf[:DifPRmxB[0]+1] == MaxBP2)[0][0]
+								# print('i',i)
+								# print('MaxBP2',MaxBP2)
+								# print('PCxfB',PCxfB)
+								# print('DifPRmxB[0]',DifPRmxB[0])
+								# print('MaxBPx2',MaxBPx2)
+								# print('PCBf',PCBf)
+								# print('PCBf1',PCBf[MaxBPx2])
+								# print('PCBf2',PCBf[DifPRmxB[0]])
+								
+								# if i == 84:
+								# 	aaa
+
+								if PCBf[MaxBPx2] > PCBf[DifPRmxB[0]]:
+									PCxfB = PCBxf[MaxBPx2]
+									PRBM = PRB[MaxBPx2]
+									PCB = np.abs(PCAi-PCBf[MaxBPx2])									
+
 								if PCB <= Mar:
 									PRBM = np.nan
 								else:
 									Pii.append(i)
+								if PRBM > 0:
+									PRBM = np.nan
+									Pii.remove
 									# if G <= 10:
 									# 	
 									# 	Nameout = PathImg + '/US_MesoWest/Scatter/Pos/Adjusted/Events/' + Name + '/' + Name + '_' + 'Ev_' + str(i)
@@ -2292,9 +2525,11 @@ class BPumpL:
 		DurPrec = np.array(DurPrec)
 		PresRateA = np.array(PresRateA)
 		PresRateB = np.array(PresRateB)
-
+		PresRateB = PresRateB*-1
 		if flagEv:
 			for i in Pii:
+
+				 
 
 				Nameout = PathImg + Name + '/' + Name + '_Ev_'+str(i)
 
@@ -2304,6 +2539,15 @@ class BPumpL:
 
 				# Se crea la carpeta para guardar la imágen
 				utl.CrFolder(PathImg + Name + '/')
+
+				plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+					,'font.sans-serif': 'Arial Narrow'\
+					,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+					,'xtick.major.width': 1,'xtick.minor.width': 1\
+					,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+					,'ytick.major.width': 1,'ytick.minor.width': 1\
+					,'axes.linewidth':1\
+					,'grid.alpha':0.1,'grid.linestyle':'-'})
 
 				f, ((ax12,ax13), (ax22,ax23)) = plt.subplots(2, 2, figsize=utl.cm2inch(fH,fV))
 				plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
@@ -2322,9 +2566,14 @@ class BPumpL:
 				# Precipitación 
 				ax12.scatter(DurPrec,PresRateB)
 				ax12.scatter(DurPrec[i],PresRateB[i],color='red')
-				ax12.set_title('Cambios en Presión Atmosférica en '+ Name,fontsize=16)
-				ax12.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
-				ax12.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
+				# Inglés
+				ax12.set_title('Surface Pressure Changes Before the Event in '+ Name,fontsize=16)
+				ax12.set_xlabel(u'Duration [h]',fontsize=15)
+				ax12.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
+				# Español
+				# ax12.set_title('Cambios en Presión Atmosférica en '+ Name,fontsize=16)
+				# ax12.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
+				# ax12.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
 				ax12.grid()
 
 				
@@ -2332,17 +2581,13 @@ class BPumpL:
 				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
 				plt.xlim([0,np.nanmax(DurPrec)+2*MxL])
 
-				xTL = ax12.xaxis.get_ticklocs() # List of Ticks in x
-				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-				minorLocatorx = MultipleLocator(MxL)
-				yTL = ax12.yaxis.get_ticklocs() # List of Ticks in y
-				MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
-				minorLocatory = MultipleLocator(MyL)
-				ax12.xaxis.set_minor_locator(minorLocatorx)
-				ax12.yaxis.set_minor_locator(minorLocatory)
-
 				# Se realiza la regresión
-				Coef, perr,R2 = CF.FF(DurPrec,PresRateB,2)
+				try:
+					Coef, perr,R2 = CF.FF(DurPrec,PresRateB,2)
+				except TypeError:
+					plt.close('all')
+					return DurPrec, PresRateA, PresRateB
+
 
 				# Se toman los datos para ser comparados posteriormente
 				DD,PP = utl.NoNaN(DurPrec,PresRateB,False)
@@ -2356,16 +2601,28 @@ class BPumpL:
 				# Se realiza el ajuste a ver que tal dió
 				x = np.linspace(np.nanmin(DurPrec),np.nanmax(DurPrec),100)
 				PresRateC = Coef[0]*x**Coef[1]
-
-
 				ax12.plot(x,PresRateC,'k--')
+
+
+
+				xTL = ax12.xaxis.get_ticklocs() # List of Ticks in x
+				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+				minorLocatorx = MultipleLocator(MxL)
+				yTL = ax12.yaxis.get_ticklocs() # List of Ticks in y
+				MyL = np.abs(np.abs(yTL[0])-np.abs(yTL[1]))/5 # minorLocatory value
+				minorLocatory = MultipleLocator(MyL)
+				ax12.xaxis.set_minor_locator(minorLocatorx)
+				ax12.yaxis.set_minor_locator(minorLocatory)
+
+
+				
 				# Se incluye la ecuación
 				if np.nanmin(PresRateB) < 0:
-					ax12.text(xTL[-4],yTL[3]+3*MyL, r'$\Delta = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+					ax12.text(xTL[-4],yTL[3]+3*MyL, r'$\Delta_b = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
 					ax12.text(xTL[-4],yTL[3], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
 				else:
-					ax12.text(xTL[-4],yTL[32], r'$\Delta = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
-					ax12.text(xTL[-4],yTL[32]-3*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+					ax12.text(xTL[-3],yTL[-2], r'$\Delta_b = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+					ax12.text(xTL[-3],yTL[-2]-3*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
 
 				# -----------
 				ax13.tick_params(axis='x',which='both',bottom='on',top='off',\
@@ -2375,9 +2632,16 @@ class BPumpL:
 				ax13.tick_params(axis='y',which='major',direction='inout') 
 				ax13.scatter(DurPrec,PresRateA)
 				ax13.scatter(DurPrec[i],PresRateA[i],color='red')
-				ax13.set_title('Cambios en Presión Atmosférica en '+ Name,fontsize=16)
-				ax13.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
-				#ax13.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
+
+				# Inglés
+				ax13.set_title('Surface Pressure Changes After the Event in '+ Name,fontsize=16)
+				ax13.set_xlabel(u'Duration [h]',fontsize=15)
+				# ax13.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
+
+				# Español
+				# ax13.set_title('Cambios en Presión Atmosférica en '+ Name,fontsize=16)
+				# ax13.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
+				# ax13.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
 				ax13.grid()
 
 				xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
@@ -2412,33 +2676,53 @@ class BPumpL:
 				ax13.plot(x,PresRateC,'k--')
 				# Se incluye la ecuación
 				if np.nanmin(PresRateA) < 0:
-					ax13.text(xTL[-3],yTL[2]+3*MyL, r'$\Delta = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+					ax13.text(xTL[-3],yTL[2]+3*MyL, r'$\Delta_d = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
 					ax13.text(xTL[-3],yTL[2], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
 				else:
-					ax13.text(xTL[-3],yTL[-2], r'$\Delta = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+					ax13.text(xTL[-3],yTL[-2], r'$\Delta_d = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
 					ax13.text(xTL[-3],yTL[-2]-3*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
 
-				plt.subplot(212)
-				plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+				ax21 = plt.subplot(212)
+				ax21.tick_params(axis='x',which='both',bottom='on',top='off',\
 					labelbottom='on',direction='out')
-				plt.tick_params(axis='y',which='both',left='on',right='off',\
+				ax21.tick_params(axis='y',which='both',left='on',right='off',\
 					labelleft='on')
-				plt.tick_params(axis='y',which='major',direction='inout') 
-				#plt.bar(x[q],C[q],lw=2, label = u'Correlación')
-				a11 = plt.plot(FechaEvv[i],PresC[i],'-k', label = 'Presión')
-				plt.title(Name+r" Evento "+FechaEvst_Aft[i],fontsize=16)
-				plt.xlabel("Tiempo",fontsize=15)
-				plt.ylabel('Presión [hPa]',fontsize=15)
+				ax21.tick_params(axis='y',which='major',direction='inout') 
+				
+				# Inglés
+				a11 = ax21.plot(FechaEvv[i],PresC[i],'-k', label = 'Pressure')
+				ax21.set_title(Name+r" Event "+FechaEvst_Aft[i],fontsize=16)
+				ax21.set_xlabel("Time [LT]",fontsize=15)
+				ax21.set_ylabel('Pressure [hPa]',fontsize=15)
+				# Español
+				# a11 = ax21.plot(FechaEvv[i],PresC[i],'-k', label = 'Presión')
+				# ax21.set_title(Name+r" Evento "+FechaEvst_Aft[i],fontsize=16)
+				# ax21.set_xlabel("Tiempo",fontsize=15)
+				# ax21.set_ylabel('Presión [hPa]',fontsize=15)
+				try:
+					p = len(PrecC)
+					axx11 = ax21.twinx()
+					# Inglés
+					a12 = axx11.plot(FechaEvv[i],PrecC[i],'-b', label = 'Precipitation')
+					axx11.set_ylabel('Precipitation [mm]',fontsize=15)
+					# Español
+					# a12 = axx11.plot(FechaEvv[i],PrecC[i],'-b', label = 'Precipitación')
+					# axx11.set_ylabel('Precipitación [mm]',fontsize=15)
+				except:
+					a12 = 0
+
+
+				
 
 				if ~np.isnan(PCxii[i]):
-					L1 = plt.plot([FechaEvv[i,PCxii[i]],FechaEvv[i,PCxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--b', label = 'Min Pres') # Punto mínimo
+					L1 = ax21.plot([FechaEvv[i,PCxii[i]],FechaEvv[i,PCxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--b', label = 'Minimum Pressure') # Punto mínimo
 					if ~np.isnan(PCxfBf[i]):
-						L2 = plt.plot([FechaEvv[i,PCxfBf[i]],FechaEvv[i,PCxfBf[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--r', label = 'Max Pres Antes') # Punto máximo B
-					L3 = plt.plot([FechaEvv[i,PCxff[i]],FechaEvv[i,PCxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--g', label = 'Max Pres Después') # Punto máximo A
+						L2 = ax21.plot([FechaEvv[i,PCxfBf[i]],FechaEvv[i,PCxfBf[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--r', label = 'Maximum Pressure Before') # Punto máximo B
+					L3 = ax21.plot([FechaEvv[i,PCxff[i]],FechaEvv[i,PCxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--g', label = 'Maximum Pressure After') # Punto máximo A
 
 				# Líneas para la precipitación
-				L4 = plt.plot([FechaEvv[i,Dxii[i]],FechaEvv[i,Dxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.b', label = 'Inicio Prec') # Inicio del aguacero
-				L5 = plt.plot([FechaEvv[i,Dxff[i]],FechaEvv[i,Dxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.g', label = 'Fin Prec') # Fin del aguacero
+				L4 = ax21.plot([FechaEvv[i,Dxii[i]],FechaEvv[i,Dxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.b', label = 'Beginning Precipitation Event') # Inicio del aguacero
+				L5 = ax21.plot([FechaEvv[i,Dxff[i]],FechaEvv[i,Dxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.g', label = 'Ending Precipitation Event') # Fin del aguacero
 
 				xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
 				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
@@ -2449,10 +2733,17 @@ class BPumpL:
 				ax13.yaxis.set_minor_locator(minorLocatory)
 
 				# added these three lines
-				if ~np.isnan(PCxfB):
-					lns = a11+L1+L2+L3+L4+L5
-				else:
-					lns = a11+L1+L3+L4+L5
+				try:
+					p = len(PrecC)
+					if ~np.isnan(PCxfB):
+						lns = a11+a12+L1+L2+L3+L4+L5
+					else:
+						lns = a11+a12+L1+L3+L4+L5
+				except:
+					if ~np.isnan(PCxfB):
+						lns = a11+L1+L2+L3+L4+L5
+					else:
+						lns = a11+L1+L3+L4+L5
 				labs = [l.get_label() for l in lns]
 				plt.legend(lns, labs, loc=3,fontsize=13)
 				

@@ -68,16 +68,14 @@ class CFitting:
 
 		# Se remueven los valores NaN
 		X,Y = utl.NoNaN(xdata,ydata,False)
-
+		if F == 1:
+			Coef, pcov = curve_fit(LR,X,Y)
+			ss_res = np.dot((Y - LR(X, *Coef)),(Y - LR(X, *Coef)))
 		if F == 2:
-			Coef, pcov = curve_fit(PL,X,Y)
+			Coef, pcov = curve_fit(PL,X,Y,method='trf')
 			ss_res = np.dot((Y - PL(X, *Coef)),(Y - PL(X, *Coef)))
 
 		perr = np.sqrt(np.diag(pcov))
-
-
-
-		
 		ymean = np.mean(Y)
 		ss_tot = np.dot((Y-ymean),(Y-ymean))
 		R2 = 1-(ss_res/ss_tot)

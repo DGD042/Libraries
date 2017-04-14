@@ -620,10 +620,23 @@ class Thermo_An:
 			else:
 				A = 0.85
 				C = 1.2
-			if np.isnan(Tmin2):
-				dT = Tmax-Tmin
-			else:
-				dT = Tmax-0.5*(Tmin+Tmin2)
+			try:
+				q = len(Tmin2)
+				qq = sum(sum(~np.isnan(Tmin2)))
+				if qq == 0:
+					dT = Tmax-Tmin
+				else:
+					dT = Tmax-0.5*(Tmin+Tmin2)
+				x = np.where(dT < 0)
+				if len(x) != 0:
+					dT = Tmax-Tmin
+			except TypeError:
+				if np.isnan(Tmin2):
+					dT = Tmax-Tmin
+				else:
+					dT = Tmax-0.5*(Tmin+Tmin2)
+				if dT < 0:
+					dT = Tmax-Tmin
 			B = 0.036*np.exp(-0.154*dTM)
 			Hc = H0 * A * (1-np.exp(-B*dT**C))
 			# if np.isnan(Hc):
@@ -707,13 +720,13 @@ class Thermo_An:
 		'''
 			DESCRIPTION:
 		
-		This function calculates the PET with the García y López equation.
+		This function calculates the PET with the Turc Modified equation.
 		_________________________________________________________________________
 
 			INPUT:
-		+ T: Daily temperature.
-		+ HR: Daily Relative Humidity.
-		+ Rs: Mean daily solar radiation.
+		+ T: Daily or Monthly Temperature.
+		+ HR: Daily or Monthly Relative Humidity.
+		+ Rs: Mean daily or Monthly Solar Radiation.
 		+ Timescale: Time scale of the equaton. 0: Daily, 1: Monthly
 		+ Map: True: For several values of HR and T. False: For 1 value of HR and T.
 		_________________________________________________________________________
@@ -747,7 +760,7 @@ class Thermo_An:
 		'''
 			DESCRIPTION:
 		
-		This function calculates the PET with the García y López equation.
+		This function calculates the PET with the FAO Penman-Monteith equation.
 		_________________________________________________________________________
 
 			INPUT:
@@ -859,7 +872,7 @@ class Thermo_An:
 		_________________________________________________________________________
 		
 			OUTPUT:
-		- PET: Potential Evaportanspiration [mm/day].
+		- AET: Actual Evaportanspiration [mm/day].
 		'''
 		try: 
 			len(P)

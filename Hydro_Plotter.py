@@ -720,6 +720,80 @@ class Hydro_Plotter:
 		plt.savefig(PathImg + 'Correlaciones_'+ NameA +'.png',format='png',dpi=300 )
 		plt.close('all')
 
+	def AnnualCycleCompS(self,V1,V2,Lab1,Lab2,VarLL,Var_LUn,Var='',PathImg=''):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite comparar dos ciclos anuales.
+		________________________________________________________________________
+
+			INPUT:
+		+ V1: Valores 1.
+		+ V2: Valores 2.
+		+ Lab1: Nombre de la serie 1 que se está comparando.
+		+ Lab2: Nombre de la serie 2 que se está comparando.
+		+ VarLL: Variable sin unidades
+		+ Var_LUn: Label de la variable con unidades, por ejemplo Precipitación (mm).
+		+ Var: Nombre de la imagen.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+
+		# Se calcula el ciclo anual de cada variable
+		V1M = np.reshape(V1,(-1,12))
+		V1MM = np.nanmean(V1M,axis=0)
+		V2M = np.reshape(V2,(-1,12))
+		V2MM = np.nanmean(V2M,axis=0)
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+		# Vector de meses
+		Months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dec']
+		Months2 = Months
+
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='in')
+		plt.tick_params(axis='x',which='major',direction='inout')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		# Argumentos que se deben incluir color=C,label=VarLL,lw=1.5
+		plt.plot(np.arange(1,13),V1MM, 'r-', lw = 1,label=Lab1)
+		plt.plot(np.arange(1,13),V2MM, 'b-', lw = 1,label=Lab2)
+		plt.legend(loc=0)
+		plt.title('Comparación del ciclo anual de '+ VarLL,fontsize=16 )  # Colocamos el título del gráfico
+		plt.ylabel(Var_LUn,fontsize=16)  # Colocamos la etiqueta en el eje x
+		plt.xlabel('Meses',fontsize=16)  # Colocamos la etiqueta en el eje y
+		# The minor ticks are included
+		ax = plt.gca()
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+		ax.set_xlim([0.5,12.5])
+		plt.xticks(np.arange(1,13), Months2) # Se cambia el valor de los ejes
+		plt.tight_layout()
+		plt.savefig(PathImg + Var+'.png',format='png',dpi=300 )
+		plt.close('all')
+
 	def CompS(self,Date,V1,V2,Lab1,Lab2,Var_LUn,Var='',flagT=True,v='',PathImg=''):
 		'''
 			DESCRIPTION:
@@ -1200,5 +1274,229 @@ class Hydro_Plotter:
 
 		if FlagA:
 			return CC
+
+	def SPAvPD(self,PresRateB,PresRateA,Name='',PathImg='',Nameout='',FlagA=False,FEn=False):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite hacer las gráficas de datos faltantes mensuales.
+
+		_________________________________________________________________________
+
+			INPUT:
+		+ PresRateB: Vector de valores tasa de cambio de presión antes.
+		+ PresRateA: Vector de valores tasa de cambio de presión durante.
+		+ Name: Nombre de la estación para el título.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ FlagA: Bandera para generar el ajuste.
+		+ FEn: Bandera para tener el gráfico en inglés.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+
+		# Se calcula el ajuste
+		if FlagA:
+			# Se importa el paquete de Fit
+			from CFitting import CFitting
+			CF = CFitting()
+
+			# Se realiza la regresión
+			Coef, perr,R2 = CF.FF(PresRateB,PresRateA,1)
+
+			# Se toman los datos para ser comparados posteriormente
+			DD,PP = utl.NoNaN(PresRateB,PresRateA,False)
+			N = len(DD)
+			a = Coef[0]
+			b = Coef[1]
+			desv_a = perr[0]
+			desv_b = perr[1]
+			# Se garda la variable
+			CC = np.array([N,a,b,desv_a,desv_b,R2])
+			
+			
+			# Se realiza el ajuste a ver que tal dió
+			x = np.linspace(np.nanmin(PresRateB),np.nanmax(PresRateB),100)
+			PresRateC = Coef[0]*x+Coef[1]
+
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		# Scatter
+		plt.scatter(PresRateB,PresRateA)
+		if FEn:
+			plt.title('Surface Pressure Rate Comparison in '+ Name,fontsize=16)
+			plt.xlabel(u'Pressure Rate (Before the Event) [hPa/h]',fontsize=16)
+			plt.ylabel('Pressure Rate (During the Event) [hPa/h]',fontsize=16)
+		else:
+			plt.title('Comparación de cambios en Presión Atmosférica en '+ Name,fontsize=16)
+			plt.xlabel(u'Tasa de Cambio de Presión Antes [hPa/h]',fontsize=16)
+			plt.ylabel('Tasa de Cambio de Presión Durante [hPa/h]',fontsize=16)
+
+		# if FlagAn:
+		# 	# Número de cada punto
+		# 	n = np.arange(0,len(DurPrec))
+		# 	for i, txt in enumerate(n):
+		# 		plt.annotate(txt, (DurPrec[i],PresRate[i]),fontsize=8)
+
+		# Se incluye el ajuste
+		if FlagA:
+			plt.plot(x,PresRateC,'k--')
+
+		# Axes
+		ax = plt.gca()
+		xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+		
+		xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+		minorLocatorx = MultipleLocator(MxL)
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().xaxis.set_minor_locator(minorLocatorx)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+
+		if FlagA:
+			plt.text(xTL[-4],yTL[-2], r'$\Delta_d = %s\Delta_b+%s$' %(round(a,3),round(b,3)), fontsize=15)
+			plt.text(xTL[-4],yTL[-2]-2*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+
+		plt.tight_layout()
+		plt.savefig(Nameout+'.png',format='png',dpi=300 )
+		plt.close('all')
+
+		if FlagA:
+			return CC
+
+	def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite hacer un histograma a partir de unos datos y graficarlo.
+
+		_________________________________________________________________________
+
+			INPUT:
+		+ Data: Vector de valores con los que se quiere realizar el histograma.
+		+ Bins: Cantidad de intervalos de clase.
+		+ Title: Título de la imágen.
+		+ Var: Variable.
+		+ Names: Nombre de la imágen.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ M: Metodo para hacer el histograma.
+		+ FEn: Flag para saber si quiere tener el histograma en inglés.
+		+ Left: flag para poner los estadísticos a la izquierda.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+		warnings.filterwarnings('ignore')
+		# Se encuentra el histograma
+		q = ~np.isnan(Data)
+		# Se encuentra el histograma
+		DH,DBin = np.histogram(Data[q],bins=Bins); [float(i) for i in DH]
+
+		if M == 'porcen':
+			# Se encuentra la frecuencia relativa del histograma
+			DH = DH/float(DH.sum())*100;
+
+		# Se organizan los valores del histograma
+		widthD = 1 * (DBin[1] - DBin[0])
+		centerD = (DBin[:-1] + DBin[1:]) / 2
+
+		# Se encuentran los diferentes momentos estadísticos
+		A = np.nanmean(Data)
+		B = np.nanstd(Data)
+		C = st.skew(Data[q])
+		D = st.kurtosis(Data[q])
+
+		# Tamaño de la Figura
+		fH=20 # Largo de la Figura
+		fV = fH*(2/3) # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		# Parámetros de la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial Narrow'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='out') 
+		# Se realiza la figura 
+		p1 = plt.bar(DBin[:-1],DH,color='dodgerblue',width=widthD)#,edgecolor='none')
+		# Se cambia el valor de los ejes.
+		plt.xticks(centerD) # Se cambia el valor de los ejes
+		# Se arreglan los ejes
+		ax = plt.gca()
+		# Se cambia el label de los eje
+		xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+
+		plt.plot([A,A],[0,yTL[-1]],'k-')
+		plt.plot([A+B,A+B],[0,yTL[-1]],'k--')
+		plt.plot([A-B,A-B],[0,yTL[-1]],'k--')
+		# print('DBin',DBin)
+		# print('len(DBin)',len(DBin))
+		# print('xTL',xTL)
+		# print('len',len(xTL))
+		# incluyen los valores
+		if Left:
+			plt.text(xTL[1]-2*MxL,yTL[-2], r'$\mu = %s$' %(round(A,3)), fontsize=14)
+			plt.text(xTL[1]-2*MxL,yTL[-2]-2*MyL, r'$\sigma = %s$' %(round(B,3)), fontsize=14)
+			plt.text(xTL[1]-2*MxL,yTL[-2]-4*MyL, r'$\gamma = %s$' %(round(C,3)), fontsize=14)
+			plt.text(xTL[1]-2*MxL,yTL[-2]-6*MyL, r'$\kappa = %s$' %(round(D,3)), fontsize=14)
+		else:
+			plt.text(xTL[-2]-2*MxL,yTL[-2], r'$\mu = %s$' %(round(A,3)), fontsize=14)
+			plt.text(xTL[-2]-2*MxL,yTL[-2]-2*MyL, r'$\sigma = %s$' %(round(B,3)), fontsize=14)
+			plt.text(xTL[-2]-2*MxL,yTL[-2]-4*MyL, r'$\gamma = %s$' %(round(C,3)), fontsize=14)
+			plt.text(xTL[-2]-2*MxL,yTL[-2]-6*MyL, r'$\kappa = %s$' %(round(D,3)), fontsize=14)
+		# Labels
+		# Título
+		if FEn:
+			plt.title('Histogram of '+Title,fontsize=15 )
+		else:
+			plt.title('Histograma de '+Title,fontsize=15 )
+		plt.xlabel(Var,fontsize=16)  # Colocamos la etiqueta en el eje x
+		if M == 'porcen':
+			plt.ylabel('Porcentaje [%]',fontsize=16)  # Colocamos la etiqueta en el eje y
+		plt.tight_layout()
+		plt.savefig(PathImg + Name +'_Hist' + '.png',format='png',dpi=300 )
+		plt.close('all')
 
 
