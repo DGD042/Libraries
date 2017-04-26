@@ -112,6 +112,37 @@ class Thermo_An:
 		except:
 			return e_s
 
+	def qeq(self,p,HR,T):
+		'''
+			DESCRIPTION:
+		
+		This function calculates the specific humidity from the pressure, 
+		temperature and relative humidity.
+		_________________________________________________________________________
+
+			INPUT:
+		
+		+ p: Pressure.
+		+ HR: Relative Humidity.
+		+ T: Temperature
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- q: Specific Humidity.
+		'''
+
+		epsilon = 0.622 # Constante del planeta
+
+		# Se calcula la presión de vapor a partir de la humedad relativa
+		# y la temperatura
+		e_s,e = self.ESeq(T,HR)
+
+		# We calculate the specific humidity
+		q = (epsilon*e)/(p-(1-epsilon)*e)
+
+		return q
+
+
 	def Eeq(self,q,p):
 		'''
 			DESCRIPTION:
@@ -259,7 +290,8 @@ class Thermo_An:
 		'''
 			DESCRIPTION:
 		
-		This function calculates the Lifitng Condensantion level.
+		This function calculates the altitude from the pressure level or
+		viceversa.
 		_________________________________________________________________________
 
 			INPUT:

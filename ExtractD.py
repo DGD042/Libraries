@@ -96,9 +96,9 @@ class ExtractD:
 			Head2 = ["" for k in range(1)] # Variable para los encabezados
 			Head3 = ["" for k in range(1)] # Variable para los encabezados
 			Head4 = ["" for k in range(1)] # Variable para los encabezados
-		else:
-			rr = 0
-			rrr = 0
+		# else:
+		# 	rr = 0
+		# 	rrr = 0
 
 		# Se inicializa la variable de tiempo
 		if mi >= 1 and mi <= 2:
@@ -190,113 +190,193 @@ class ExtractD:
 			# Se inicializan las variables dependiendo del número de filas 
 			# que se tengan
 
-			if m >= 1 and m<=4:
-				V1 = ["" for k in range(1)]
-				V2 = ["" for k in range(1)]
-				V3 = ["" for k in range(1)]
-				V4 = ["" for k in range(1)]
+			if m>= 1 and m<=4:
+				V1 = []
+				V2 = []
+				V3 = []
+				V4 = []
 			else:
 				utl.ExitError('ED','ExtractD',\
 					'No se pueden extraer tantas variables, por favor reduzca el número de variables')
 
-			# Se abre el archivo que se llamó
-			f = open(Tot)
+			if isinstance(ni,list):
+				nii = tuple(ni)
+			else:
+				ni = [ni]
+				nii = (ni)
 
+			if isinstance(ni,list):
+				nn = tuple(n)
+			else:
+				n = [n]
+				nn = (n)
 
-			# Se inicializan las variables
-			ff = csv.reader(f, dialect='excel', delimiter= deli)
-			# ff = csv.reader(f, delimiter= deli)
-
-			r = 0 # Contador de filas
-			# Ciclo para todas las filas
-			for row in ff:
-				if Header == True:
-					if (rr == rrr-1 and r == rrr-1):
-						if mi ==1:
-							Head0 = row[ni] # Se toman los encabezados
-						else:
-							Head0 = row[ni[0]] # Se toman los encabezados
-							Head01 = row[ni[1]] # Se toman los encabezados
-						if m == 1:
-							Head1 = row[n] # Se toman los encabezados
-						else:
-							Head1 = row[n[0]] # Se toman los encabezados
-							try:
-								Head2 = row[n[1]] # Se toman los encabezados
-							except:
-								Head2 = float('nan')
-							try:
-								Head3 = row[n[2]] # Se toman los encabezados
-							except:
-								Head3 = float('nan')
-							try:
-								Head4 = row[n[3]] # Se toman los encabezados
-							except:
-								Head4 = float('nan')
-
-				if r == rrr:
-					if mi ==1:
-						Tiempo[0] = row[ni]
-					else:
-						Tiempo[0] = row[ni[0]]
-						Hora[0] = row[ni[1]]
-
-					if m == 1:
-						try:
-							V1[0] = float(row[n])
-						except:
-							V1[0] = float('nan')
-					else:
-						try:
-							V1[0] = float(row[n[0]])
-						except:
-							V1[0] = float('nan')
-						try:
-							V2[0] = float(row[n[1]])
-						except:
-							V2[0] = float('nan')
-						try:
-							V3[0] = float(row[n[2]])
-						except:
-							V3[0] = float('nan')
-						try:
-							V4[0] = float(row[n[3]])
-						except:
-							V4[0] = float('nan')
+			# Se extraen los encabezados
+			if Header == True:
+				Headni = np.char.decode(np.genfromtxt(Tot,delimiter=deli,usecols=nii,skip_header=rrr-1,dtype='S20',max_rows=1))
+				if mi == 1:
+					Head0 = Headni
+				else:
+					Head0 = Headni[0]
+					Head01 = Headni[1]
 				
-				elif r > rr:
-					
-					if mi ==1:
-						Tiempo.append(row[ni])
-					else:
-						Tiempo.append(row[ni[0]])
-						Hora.append(row[ni[1]])
+				Headn = np.char.decode(np.genfromtxt(Tot,delimiter=deli,usecols=nn,skip_header=rrr-1,dtype='S20',max_rows=1))
+				if m == 1:
+					Head1 = Headn # Se toman los encabezados
+				else:
+					Head1 = Headn[0] # Se toman los encabezados
+					try:
+						Head2 = Headn[1] # Se toman los encabezados
+					except:
+						Head2 = float('nan')
+					try:
+						Head3 = Headn[2] # Se toman los encabezados
+					except:
+						Head3 = float('nan')
+					try:
+						Head4 = Headn[3] # Se toman los encabezados
+					except:
+						Head4 = float('nan')
+			
+			# Se extraen los datos string
+			if mi == 1:
+				Tiempo = np.char.decode(np.genfromtxt(Tot,delimiter=deli,usecols=nii,skip_header=rrr,dtype='S20'))
+			else:
+				Fecha = np.char.decode(np.genfromtxt(Tot,delimiter=deli,usecols=nii,skip_header=rrr,dtype='S20'))
+				Tiempo = Fecha[:,0]
+				Hora = Fecha[:,1]
+			# Se extraen las variables
+			# print(rrr)
+			Data = np.genfromtxt(Tot,delimiter=deli,usecols=nn,skip_header=rrr,dtype=float)
+			if m == 1:
+				V1 = Data
+			else:
+				try:
+					V1 = Data[:,0]
+				except:
+					V1 = float('nan')
+				try:
+					V2 = Data[:,1]
+				except:
+					V2 = float('nan')
+				try:
+					V3 = Data[:,2]
+				except:
+					V3 = float('nan')
+				try:
+					V4 = Data[:,3]
+				except:
+					V4 = float('nan')
 
-					if m == 1:
-						try:
+
+			# Se extrae la información
+
+			# if m >= 1 and m<=4:
+			# 	V1 = ["" for k in range(1)]
+			# 	V2 = ["" for k in range(1)]
+			# 	V3 = ["" for k in range(1)]
+			# 	V4 = ["" for k in range(1)]
+			# else:
+			# 	utl.ExitError('ED','ExtractD',\
+			# 		'No se pueden extraer tantas variables, por favor reduzca el número de variables')
+
+			# # Se abre el archivo que se llamó
+			# f = open(Tot)
+
+			# # Se inicializan las variables
+			# ff = csv.reader(f, dialect='excel', delimiter= deli)
+			# # ff = csv.reader(f, delimiter= deli)
+
+			# r = 0 # Contador de filas
+			# # Ciclo para todas las filas
+			# for row in ff:
+			# 	if Header == True:
+			# 		if (rr == rrr-1 and r == rrr-1):
+			# 			if mi ==1:
+			# 				Head0 = row[ni] # Se toman los encabezados
+			# 			else:
+			# 				Head0 = row[ni[0]] # Se toman los encabezados
+			# 				Head01 = row[ni[1]] # Se toman los encabezados
+			# 			if m == 1:
+			# 				Head1 = row[n] # Se toman los encabezados
+			# 			else:
+			# 				Head1 = row[n[0]] # Se toman los encabezados
+			# 				try:
+			# 					Head2 = row[n[1]] # Se toman los encabezados
+			# 				except:
+			# 					Head2 = float('nan')
+			# 				try:
+			# 					Head3 = row[n[2]] # Se toman los encabezados
+			# 				except:
+			# 					Head3 = float('nan')
+			# 				try:
+			# 					Head4 = row[n[3]] # Se toman los encabezados
+			# 				except:
+			# 					Head4 = float('nan')
+
+			# 	if r == rrr:
+			# 		if mi ==1:
+			# 			Tiempo[0] = row[ni]
+			# 		else:
+			# 			Tiempo[0] = row[ni[0]]
+			# 			Hora[0] = row[ni[1]]
+
+			# 		if m == 1:
+			# 			try:
+			# 				V1[0] = float(row[n])
+			# 			except:
+			# 				V1[0] = float('nan')
+			# 		else:
+			# 			try:
+			# 				V1[0] = float(row[n[0]])
+			# 			except:
+			# 				V1[0] = float('nan')
+			# 			try:
+			# 				V2[0] = float(row[n[1]])
+			# 			except:
+			# 				V2[0] = float('nan')
+			# 			try:
+			# 				V3[0] = float(row[n[2]])
+			# 			except:
+			# 				V3[0] = float('nan')
+			# 			try:
+			# 				V4[0] = float(row[n[3]])
+			# 			except:
+			# 				V4[0] = float('nan')
+				
+			# 	elif r > rr:
+					
+			# 		if mi ==1:
+			# 			Tiempo.append(row[ni])
+			# 		else:
+			# 			Tiempo.append(row[ni[0]])
+			# 			Hora.append(row[ni[1]])
+
+			# 		if m == 1:
+			# 			try:
 							
-							V1.append(float(row[n]))
-						except:
-							V1.append(float('nan'))
-					else:
-						try:
-							V1.append(float(row[n[0]]))
-						except:
-							V1.append(float('nan'))
-						try:
-							V2.append(float(row[n[1]]))
-						except:
-							V2.append(float('nan'))
-						try:
-							V3.append(float(row[n[2]]))
-						except:
-							V3.append(float('nan'))
-						try:
-							V4.append(float(row[n[3]]))
-						except:
-							V4.append(float('nan'))
-				r += 1
-			f.close()
+			# 				V1.append(float(row[n]))
+			# 			except:
+			# 				V1.append(float('nan'))
+			# 		else:
+			# 			try:
+			# 				V1.append(float(row[n[0]]))
+			# 			except:
+			# 				V1.append(float('nan'))
+			# 			try:
+			# 				V2.append(float(row[n[1]]))
+			# 			except:
+			# 				V2.append(float('nan'))
+			# 			try:
+			# 				V3.append(float(row[n[2]]))
+			# 			except:
+			# 				V3.append(float('nan'))
+			# 			try:
+			# 				V4.append(float(row[n[3]]))
+			# 			except:
+			# 				V4.append(float('nan'))
+			# 	r += 1
+			# f.close()
 			if Header == True:
 				if mi == 1:
 					if m == 1: 

@@ -60,7 +60,7 @@ class UtilitiesDGD:
 		This function create all the given path.
 		'''
 
-		# Se mira si la ruta existe o se crea
+		# Verify if the path already exists
 		if not os.path.exists(Path):
 			os.makedirs(Path)
 
@@ -90,7 +90,6 @@ class UtilitiesDGD:
 		TT = np.copy(T[c])
 
 		return TT
-
 
 	def BTSS(self,T1,T2):
 		'''
@@ -123,7 +122,6 @@ class UtilitiesDGD:
 		TT2 = np.copy(T2[c])
 
 		return TT1,TT2
-
 
 	def perdelta(self,start, end, delta):
 		'''

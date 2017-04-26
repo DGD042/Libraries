@@ -2055,7 +2055,7 @@ class BPumpL:
 
 		return DurPrec, MaxPrec, PresRateB,PresRateA,PresChangeB,PresChangeA,xx
 
-	def PRvDP_C(self,PrecC,PresC,FechaEv,FechaEvst_Aft=0,FechaEvend_Aft=0,Mar=0.8,flagAf=False,dt=1,M=60*4,flagEv=False,PathImg='',Name=''):
+	def PRvDP_C(self,PrecC,PresC,FechaEv,FechaEvst_Aft=0,FechaEvend_Aft=0,Mar=0.8,flagAf=False,dt=1,M=60*4,flagEv=False,PathImg='',Name='',flagIng=False):
 		'''
 		DESCRIPTION:
 	
@@ -2070,11 +2070,15 @@ class BPumpL:
 		+ FechaEv: Matriz con las fechas de los eventos en formato yyyy/mm/dd-HHMM.
 		+ FechaEvst_Aft: Fecha de comienzo del evento, en el mismo formato que FechaEv.
 		+ FechaEvend_Aft: Fecha de finalización del evento, en el mismo formato que FechaEv.
+		+ flagAf: Bandera para ver si se incluye un treshold durante el evento.
 		+ Mar: Valor del cambio de presión mínimo para calcular las tasas antes
 			   del evento de precipitación.
 		+ dt: delta de tiempo que se tienen en los diagramas de compuestos.
 		+ M: Mitad en donde se encuentran los datos.
 		+ flagEV: Bandera para graficar los eventos.
+		+ PathImg: Ruta donde se guardará el documento.
+		+ Name: Nombre de la imagen.
+		+ flagIng: Bander para saber si se lleva a inglés los ejes.
 		_________________________________________________________________________
 
 			OUTPUT:
@@ -2519,7 +2523,7 @@ class BPumpL:
 						
 
 		# -------------------------
-		# Se verifican los eventos
+		# Se grafican los eventos
 		# -------------------------
 						
 		DurPrec = np.array(DurPrec)
@@ -2528,8 +2532,6 @@ class BPumpL:
 		PresRateB = PresRateB*-1
 		if flagEv:
 			for i in Pii:
-
-				 
 
 				Nameout = PathImg + Name + '/' + Name + '_Ev_'+str(i)
 
@@ -2566,14 +2568,18 @@ class BPumpL:
 				# Precipitación 
 				ax12.scatter(DurPrec,PresRateB)
 				ax12.scatter(DurPrec[i],PresRateB[i],color='red')
-				# Inglés
-				ax12.set_title('Surface Pressure Changes Before the Event in '+ Name,fontsize=16)
-				ax12.set_xlabel(u'Duration [h]',fontsize=15)
-				ax12.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
-				# Español
-				# ax12.set_title('Cambios en Presión Atmosférica en '+ Name,fontsize=16)
-				# ax12.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
-				# ax12.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
+
+				
+				if flagIng:
+					# Inglés
+					ax12.set_title('Surface Pressure Changes Before the Event in '+ Name,fontsize=16)
+					ax12.set_xlabel(u'Duration [h]',fontsize=15)
+					ax12.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
+				else:
+					# Español
+					ax12.set_title('Cambios en Presión Atmosférica Antes del Evento',fontsize=16)
+					ax12.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
+					ax12.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
 				ax12.grid()
 
 				
@@ -2633,15 +2639,16 @@ class BPumpL:
 				ax13.scatter(DurPrec,PresRateA)
 				ax13.scatter(DurPrec[i],PresRateA[i],color='red')
 
-				# Inglés
-				ax13.set_title('Surface Pressure Changes After the Event in '+ Name,fontsize=16)
-				ax13.set_xlabel(u'Duration [h]',fontsize=15)
-				# ax13.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
-
-				# Español
-				# ax13.set_title('Cambios en Presión Atmosférica en '+ Name,fontsize=16)
-				# ax13.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
-				# ax13.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
+				if flagIng:
+					# Inglés
+					ax13.set_title('Surface Pressure Changes After the Event in '+ Name,fontsize=16)
+					ax13.set_xlabel(u'Duration [h]',fontsize=15)
+					# ax13.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
+				else:
+					# Español
+					ax13.set_title('Cambios en Presión Atmosférica Durante el Evento',fontsize=16)
+					ax13.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
+					# ax13.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
 				ax13.grid()
 
 				xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
@@ -2689,40 +2696,51 @@ class BPumpL:
 					labelleft='on')
 				ax21.tick_params(axis='y',which='major',direction='inout') 
 				
-				# Inglés
-				a11 = ax21.plot(FechaEvv[i],PresC[i],'-k', label = 'Pressure')
-				ax21.set_title(Name+r" Event "+FechaEvst_Aft[i],fontsize=16)
-				ax21.set_xlabel("Time [LT]",fontsize=15)
-				ax21.set_ylabel('Pressure [hPa]',fontsize=15)
-				# Español
-				# a11 = ax21.plot(FechaEvv[i],PresC[i],'-k', label = 'Presión')
-				# ax21.set_title(Name+r" Evento "+FechaEvst_Aft[i],fontsize=16)
-				# ax21.set_xlabel("Tiempo",fontsize=15)
-				# ax21.set_ylabel('Presión [hPa]',fontsize=15)
+				if flagIng:
+					# Inglés
+					a11 = ax21.plot(FechaEvv[i],PresC[i],'-k', label = 'Pressure')
+					ax21.set_title(Name+r" Event "+FechaEvst_Aft[i],fontsize=16)
+					ax21.set_xlabel("Time [LT]",fontsize=15)
+					ax21.set_ylabel('Pressure [hPa]',fontsize=15)
+				else:
+					# Español
+					a11 = ax21.plot(FechaEvv[i],PresC[i],'-k', label = 'Presión')
+					ax21.set_title(Name+r" Evento "+FechaEvst_Aft[i],fontsize=16)
+					ax21.set_xlabel("Tiempo",fontsize=15)
+					ax21.set_ylabel('Presión [hPa]',fontsize=15)
 				try:
 					p = len(PrecC)
 					axx11 = ax21.twinx()
-					# Inglés
-					a12 = axx11.plot(FechaEvv[i],PrecC[i],'-b', label = 'Precipitation')
-					axx11.set_ylabel('Precipitation [mm]',fontsize=15)
-					# Español
-					# a12 = axx11.plot(FechaEvv[i],PrecC[i],'-b', label = 'Precipitación')
-					# axx11.set_ylabel('Precipitación [mm]',fontsize=15)
+					if flagIng:
+						# Inglés
+						a12 = axx11.plot(FechaEvv[i],PrecC[i],'-b', label = 'Precipitation')
+						axx11.set_ylabel('Precipitation [mm]',fontsize=15)
+					else:
+						# Español
+						a12 = axx11.plot(FechaEvv[i],PrecC[i],'-b', label = 'Precipitación')
+						axx11.set_ylabel('Precipitación [mm]',fontsize=15)
 				except:
-					a12 = 0
-
-
-				
+					a12 = 0				
 
 				if ~np.isnan(PCxii[i]):
-					L1 = ax21.plot([FechaEvv[i,PCxii[i]],FechaEvv[i,PCxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--b', label = 'Minimum Pressure') # Punto mínimo
-					if ~np.isnan(PCxfBf[i]):
-						L2 = ax21.plot([FechaEvv[i,PCxfBf[i]],FechaEvv[i,PCxfBf[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--r', label = 'Maximum Pressure Before') # Punto máximo B
-					L3 = ax21.plot([FechaEvv[i,PCxff[i]],FechaEvv[i,PCxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--g', label = 'Maximum Pressure After') # Punto máximo A
+					if flagIng:
+						L1 = ax21.plot([FechaEvv[i,PCxii[i]],FechaEvv[i,PCxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--b', label = 'Minimum Pressure') # Punto mínimo
+						if ~np.isnan(PCxfBf[i]):
+							L2 = ax21.plot([FechaEvv[i,PCxfBf[i]],FechaEvv[i,PCxfBf[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--r', label = 'Maximum Pressure Before') # Punto máximo B
+						L3 = ax21.plot([FechaEvv[i,PCxff[i]],FechaEvv[i,PCxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--g', label = 'Maximum Pressure After') # Punto máximo A
+					else:
+						L1 = ax21.plot([FechaEvv[i,PCxii[i]],FechaEvv[i,PCxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--b', label = 'Mínimo de Presión') # Punto mínimo
+						if ~np.isnan(PCxfBf[i]):
+							L2 = ax21.plot([FechaEvv[i,PCxfBf[i]],FechaEvv[i,PCxfBf[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--r', label = 'Máximo de Presión Antes') # Punto máximo B
+						L3 = ax21.plot([FechaEvv[i,PCxff[i]],FechaEvv[i,PCxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--g', label = 'Máximo de presión Durante') # Punto máximo A
 
 				# Líneas para la precipitación
-				L4 = ax21.plot([FechaEvv[i,Dxii[i]],FechaEvv[i,Dxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.b', label = 'Beginning Precipitation Event') # Inicio del aguacero
-				L5 = ax21.plot([FechaEvv[i,Dxff[i]],FechaEvv[i,Dxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.g', label = 'Ending Precipitation Event') # Fin del aguacero
+				if flagIng:
+					L4 = ax21.plot([FechaEvv[i,Dxii[i]],FechaEvv[i,Dxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.b', label = 'Beginning Precipitation Event') # Inicio del aguacero
+					L5 = ax21.plot([FechaEvv[i,Dxff[i]],FechaEvv[i,Dxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.g', label = 'Ending Precipitation Event') # Fin del aguacero
+				else:
+					L4 = ax21.plot([FechaEvv[i,Dxii[i]],FechaEvv[i,Dxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.b', label = 'Comienzo del Evento') # Inicio del aguacero
+					L5 = ax21.plot([FechaEvv[i,Dxff[i]],FechaEvv[i,Dxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.g', label = 'Finalización del Evento') # Fin del aguacero
 
 				xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
 				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
@@ -2754,6 +2772,650 @@ class BPumpL:
 
 		return DurPrec, PresRateA, PresRateB
 
+	def TvDP_C(self,PrecC,TC,FechaEv,FechaEvst_Aft=0,FechaEvend_Aft=0,Mar=0.8,flagAf=False,dt=1,M=60*4,flagEv=False,PathImg='',Name='',flagIng=False):
+		'''
+		DESCRIPTION:
+	
+		Con esta función se pretende encontrar la tasa de cambio de temperatura junto
+		con la duración de las diferentes tormentas para luego ser gráficada por
+		aparte.
+		_________________________________________________________________________
+
+			INPUT:
+		+ PrecC: Diagrama de compuestos de precipitación.
+		+ TC: Diagrama de compuestos de temperatura.
+		+ FechaEv: Matriz con las fechas de los eventos en formato yyyy/mm/dd-HHMM.
+		+ FechaEvst_Aft: Fecha de comienzo del evento, en el mismo formato que FechaEv.
+		+ FechaEvend_Aft: Fecha de finalización del evento, en el mismo formato que FechaEv.
+		+ Mar: Valor del cambio de presión mínimo para calcular las tasas antes
+			   del evento de precipitación.
+		+ flagAf: Bandera para ver si se incluye un treshold durante el evento.
+		+ dt: delta de tiempo que se tienen en los diagramas de compuestos.
+		+ M: Mitad en donde se encuentran los datos.
+		+ flagEV: Bandera para graficar los eventos.
+		+ PathImg: Ruta donde se guardará el documento.
+		+ Name: Nombre de la imagen.
+		+ flagIng: Bander para saber si se lleva a inglés los ejes.
+		_________________________________________________________________________
+
+			OUTPUT:
+		- DurPrec: Duración del evento de precipitación.
+		- TempChangeB: Cambio de temperatura antes.
+		- TempRateB: Tasa de cambio de presión antes.
+		- TempChangeA: Cambio de temperatura durante.
+		- TempRateA: Tasa de cambio de presión durante.
+		'''
+		
+		# Se filtran las alertas
+		warnings.filterwarnings('ignore')
+		# --------------------------------------
+		# Se arreglan las fechas de los eventos
+		# --------------------------------------
+		
+		# Se inicializan las variables
+		FechaEvv = []
+		DurPrec = []
+		TempChangeA = []
+		TempChangeB = []
+		TempRateA = []
+		TempRateB = []
+		PCxii = []
+		PCxff = []
+		PCxfBf = []
+		Pii = [] # Position of the eventos
+		Dxii = []
+		Dxff = []
+		G = 0
+
+		for k in range(len(FechaEv)):
+			FechaEvv.append([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEv[k]])
+		FechaEvv = np.array(FechaEvv)
+		# Se encuentra los inicios y finales de los eventos
+		if FechaEvst_Aft == 0:
+			FechaEvst_Aft = []
+			FechaEvend_Aft = []
+			for i in range(len(FechaEv)):
+				x = [M]
+				if dt == 1:
+					MinPrec = 0.001
+				else:
+					MinPrec = 0.10
+				# Se encuentra el mínimo de precipitación antes de ese punto
+				xm = np.where(PrecC[i,:M]<=MinPrec)[0]
+				#print(xm)
+
+				# Se mira si es mínimo de antes por 10 minutos consecutivos de mínimos
+				k = 1
+				a = len(xm)-1
+				while k == 1:					
+					if dt == 1:
+						if a == -1:
+							xmm = 0
+							k = 2
+							break
+						if xm[a] == xm[a-10]+10:
+							xmm = xm[a]
+							k = 2
+						else:
+							a = a-1
+							if a == 0:
+								xmm = xm[0]
+								k = 2
+					elif dt == 5:
+						if a == -1:
+							xmm = 0
+							k = 2
+							break
+						if xm[a] == xm[a-1]+1:
+							xmm = xm[a]
+							k = 2
+						else:
+							a = a-1
+							if a == 0:
+								xmm = xm[0]
+								k = 2
+						
+				
+				# Se encuentra el máximo de precipitación antes de ese punto
+				xM = np.where(PrecC[i,x[0]+1:]<=MinPrec)[0]+x[0]+1
+				# print(len(xM))
+				# print(i)
+
+				# Se busca el mínimo después del máximo
+				k = 1
+				a = 0
+				while k == 1:
+					aa = len(xM)
+					if aa == 1 or aa == 0:
+						xMM = len(PrecC[i,:])-1
+						k = 2
+						break
+					if dt == 1:
+						# print('a',a)
+						try:
+							if xM[a] == xM[a+10]-10:
+								xMM = xM[a]
+								k = 2
+							else:
+								a = a+1
+								if a == len(xM)-1:
+									xMM = xM[len(xM)-1]
+									k = 2
+						except:
+							try:
+								if xM[a] == xM[a+5]-5:
+									xMM = xM[a]
+									k = 2
+								else:
+									a = a+1
+									if a == len(xM)-1:
+										xMM = xM[len(xM)-1]
+										k = 2
+							except:
+								xMM = xM[a]
+								k = 2
+								
+					elif dt == 5:
+						if xM[a] == xM[a+1]-1:
+							xMM = xM[a]
+							k = 2
+						else:
+							a = a+1
+							if a == len(xM)-1:
+								xMM = xM[len(xM)-1]
+								k = 2
+					else:
+						xMM = xM[a]
+						k = 2
+
+				FechaEvst_Aft.append(FechaEv[i][xmm])
+				FechaEvend_Aft.append(FechaEv[i][xMM])
+
+				# DurPrec.append((xMM-xmm+1)*dt/60)
+		
+		FechaEvst = np.array([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEvst_Aft])
+		FechaEvend = np.array([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEvend_Aft])
+
+		for i in range(len(FechaEv)):
+			# Se verifica que haya información
+			q = sum(~np.isnan(TC[i]))
+			# print('q',q)
+			if q <= len(TC[i])*.60:
+				DurPrec.append(np.nan)
+				TempRateA.append(np.nan)
+				TempRateB.append(np.nan)
+
+				PCxii.append(np.nan)
+				PCxff.append(np.nan)
+				PCxfBf.append(np.nan)
+				Dxii.append(np.nan)
+				Dxff.append(np.nan)
+			else:
+				# ------------------------
+				# Duración de la tormenta
+				# ------------------------
+				Dxi = np.where(FechaEvv[i] ==FechaEvst[i])[0]
+				Dxf = np.where(FechaEvv[i] ==FechaEvend[i])[0]
+				DurPrec.append((Dxf[0]-Dxi[0]+1)*dt/60) # Duración en horas
+				# Se verifica que haya información
+				q = sum(~np.isnan(TC[i,Dxi[0]:Dxf[0]+1]))
+				if q <= len(TC[i,Dxi[0]:Dxf[0]+1])*.50:
+					DurPrec[-1] = np.nan
+					TempRateA.append(np.nan)
+					TempRateB.append(np.nan)
+
+					PCxii.append(np.nan)
+					PCxff.append(np.nan)
+					PCxfBf.append(np.nan)
+					Dxii.append(np.nan)
+					Dxff.append(np.nan)
+				else:
+
+					# ------------------------------
+					# Tasa de cambio de temperatura
+					# ------------------------------
+
+					# Máximo
+					if dt <= 10 and dt > 1:
+						# Valores para posiciones antes y después
+						# basados en el tiempo.
+						ValBef = int(10/dt) # 10 min 
+						ValAft = int(20/dt) # 20 min
+					else:
+						ValBef = int(60) # 60 min 
+						ValAft = int(40) # 30 min
+
+					PCAi1 = np.nanmax(TC[i,Dxi[0]-ValBef:Dxi[0]])
+					PCxi1 = np.where(TC[i] == PCAi1)[0]
+					PCAi2 = np.nanmax(TC[i,Dxi[0]:Dxi[0]+ValAft])
+					PCxi2 = np.where(TC[i] == PCAi2)[0]
+
+					PMax = np.nanmin(TC[i,Dxi[0]-ValBef:Dxi[0]+1])
+					xMax = np.where(TC[i] == PMax)[0]
+
+					if ((PCAi1 < PCAi2) and (PMax < PCAi1)) or np.isnan(PCAi1):
+						PCAi = PCAi2
+						PCxi = PCxi2
+					else:
+						PCAi = PCAi1
+						PCxi = PCxi1
+					if len(PCxi) == 0:
+						DurPrec[-1] = np.nan
+						TempRateA.append(np.nan)
+						TempRateB.append(np.nan)
+
+						PCxii.append(np.nan)
+						PCxff.append(np.nan)
+						PCxfBf.append(np.nan)
+						Dxii.append(np.nan)
+						Dxff.append(np.nan)
+					else:
+						# Mínimo After
+						# Mar = 0.8
+						# Método de Validación
+						# PCAf = []
+						# PCAxf = []
+						# DPA = []
+						# PRA = []
+						
+						# for j in range(1,len(FechaEvv[i])-PCxi[0]):
+						# 	PCAf.append(TC[i,PCxi[0]+j])
+						# 	PCAxf.append(PCxi[0]+j)
+						# 	DPA.append(j*5/60)
+						# 	PRA.append((PCAf[-1]-PCAi)/DPA[-1])
+						# PCAf = np.array(PCAf)
+						# PCAxf = np.array(PCAxf)
+						# DPA = np.array(DPA)
+						# PRA = np.array(PRA)
+
+						# DifPR = np.abs(PresRatePos[i]-PRA)
+						# DifPRmx = np.where(DifPR == np.nanmin(DifPR))[0]
+						# PCxf = PCAxf[DifPRmx[0]]
+						# PCA = PCAf[DifPRmx[0]]
+						# PRAA = PRA[DifPRmx[0]]
+
+						# Primer método
+						PCAf = np.nanmin(TC[i,Dxi[0]:Dxf[0]+ValBef])
+						PCAxf = np.where(TC[i,Dxi[0]:Dxf[0]+ValBef] == PCAf)[0][-1]
+						PCxf = PCAxf + len(TC[i,:Dxi[0]])
+						DPB = (PCxf - PCxi[0])*dt/60
+						PRAA = (PCAf-PCAi)/DPB
+						PCA = np.abs(PCAf-PCAi)
+
+						if flagAf:
+							if PCA <= Mar:
+								PRAA = np.nan
+						if PRAA > 0:
+							PRAA = np.nan
+						# ---------------------
+
+						# if PCA <= Mar:
+						# 	PRAA = np.nan
+						# # else:
+						# # 	# Se obitenen los eventos que pasaron
+						# # 	Nameout = PathImg + '/US_MesoWest/Scatter/Pos/Adjusted/Events_Aft/' + Name + '/' + Name + '_' + 'Ev_' + str(i)
+						# # 	HyPl.EventPres(FechaEvv[i],TC[i],FechaEvst_Aft[i],PCxi,PCxf,np.nan,Dxi,Dxf,Name,PathImg + 'US_MesoWest/Scatter/Pos/Adjusted/Events_Aft/' + Name + '/',Nameout)
+
+						# Se guarda la tasa de cambio de presión durante
+						TempRateA.append(PRAA)
+						TempChangeA.append(PCAf-PCAi)
+
+
+						# Mínimo Before
+						# Tercer método
+						PCBf = []
+						PCBxf = []
+						DPB = []
+						PRB = []
+
+						BE = ValBef # Valor de posición antes.
+						# print('PCxi',PCxi[0])
+						# print('Dxf',Dxf[0])
+						# print('Dxi',Dxi[0])
+						# print('BE',BE)
+						# print('Dur',Dxf[0]-Dxi[0])
+						# print('Dif',PCxi[0]-(Dxf[0]-Dxi[0])-BE)
+						# print(TC[i,PCxi[0]-(Dxf[0]-Dxi[0])-BE:PCxi[0]])
+						Dif = PCxi[0]-(Dxf[0]-Dxi[0])-BE
+						if Dif < 0:
+							MaxBP = np.nan
+						else:
+							MaxBP = np.nanmin(TC[i,PCxi[0]-(Dxf[0]-Dxi[0])-BE:PCxi[0]])
+						# MaxBP = np.nanmax(TC[i,PCxi[0]-Dxi[0]-BE:PCxi[0]])
+
+						if np.isnan(MaxBP):
+							PRBM = np.nan
+							PCxfB = np.nan
+						else:
+							try:
+								MaxBPx = np.where(TC[i,PCxi[0]-(Dxf[0]-Dxi[0])-BE:PCxi[0]] == MaxBP)[0][-1]
+							except IndexError:
+								MaxBPx = np.where(TC[i,PCxi[0]-(Dxf[0]-Dxi[0])-BE:PCxi[0]] == MaxBP)[0]
+							MaxBPx += len(TC[i,:PCxi[0]-(Dxf[0]-Dxi[0])-BE])
+							
+							for j in range(1,(Dxi[0]-MaxBPx+1)):
+							# for j in range(1,(Dxf[0]-Dxi[0]+4)):
+							# for j in range(1,PCxi-2):
+								PCBf.append(TC[i,PCxi[0]-j])
+								PCBxf.append(PCxi[0]-j)
+								DPB.append(j*dt/60)
+								PRB.append((PCAi-PCBf[-1])/DPB[-1])
+							PCBf = np.array(PCBf)
+							PCBxf = np.array(PCBxf)
+							DPB = np.array(DPB)
+							PRB = np.array(PRB)
+							# print('PRB',PRB)
+							# print('PresRateA[-1]',PresRateA[-1])
+							qq = sum(~np.isnan(PRB))
+							if qq <= len(PRB)*.70 or np.isnan(TempRateA[-1]):
+								PCxfB = np.nan
+								PRBM = np.nan
+							else:
+								DifPRB = np.abs(TempRateA[-1]+PRB)
+								# print('DifPRB',DifPRB)
+								DifPRmxB = np.where(DifPRB == np.nanmin(DifPRB))[0]
+								PCxfB = PCBxf[DifPRmxB[0]]
+								PRBM = PRB[DifPRmxB[0]]
+								PCB = np.abs(PCAi-PCBf[DifPRmxB[0]])
+								# print(PRB)
+								# print(PRBM)
+								# Se verifica el último máximo
+								MaxBP2 = np.nanmin(PCBf[:DifPRmxB[0]+1])
+								MaxBPx2 = np.where(PCBf[:DifPRmxB[0]+1] == MaxBP2)[0][0]
+
+								# print('i',i)
+								# print('MaxBP2',MaxBP2)
+								# print('PCxfB',PCxfB)
+								# print('DifPRmxB[0]',DifPRmxB[0])
+								# print('MaxBPx2',MaxBPx2)
+								# print('PCBf',PCBf)
+								# print('PCBf1',PCBf[MaxBPx2])
+								# print('PCBf2',PCBf[DifPRmxB[0]])
+
+								if PCBf[MaxBPx2] > PCBf[DifPRmxB[0]]:
+									PCxfB = PCBxf[MaxBPx2]
+									PRBM = PRB[MaxBPx2]
+									PCB = np.abs(PCAi-PCBf[MaxBPx2])
+									TempChangeB.append(PCAi-PCBf[MaxBPx2])
+									print(PRBM)
+								# if i == 2:
+								# 	aaa
+								if PCB <= Mar:
+									PRBM = np.nan
+								else:
+									Pii.append(i)
+								if PRBM < 0:
+									PRBM = np.nan
+									Pii.remove
+									# if G <= 10:
+									# 	
+									# 	Nameout = PathImg + '/US_MesoWest/Scatter/Pos/Adjusted/Events/' + Name + '/' + Name + '_' + 'Ev_' + str(i)
+									# 	HyPl.EventPres(FechaEvv[i],TC[i],FechaEvst_Aft[i],PCxi,PCxf,PCxfB,Dxi,Dxf,Name,PathImg + 'US_MesoWest/Scatter/Pos/Adjusted/Events/' + Name + '/',Nameout)
+									# 	G += 1
+
+							
+						# Se guarda la tasa de cambio de presión antes
+						TempRateB.append(PRBM)
+						
+						# Se llenan los valores de las posiciones 
+						PCxii.append(PCxi[0])
+						PCxff.append(PCxf)
+						PCxfBf.append(PCxfB)
+						Dxii.append(Dxi[0])
+						Dxff.append(Dxf[0])
+						
+
+		# -------------------------
+		# Se grafican los eventos
+		# -------------------------
+						
+		DurPrec = np.array(DurPrec)
+		TempRateA = np.array(TempRateA)
+		TempRateB = np.array(TempRateB)
+		TempRateA = TempRateA*-1
+		# print(TempRateA)
+		# print(TempRateB)
+		if flagEv:
+			for i in Pii:
+
+				Nameout = PathImg + Name + '/' + Name + '_Ev_'+str(i)
+
+				# Se grafican las dos series
+				fH=30 # Largo de la Figura
+				fV = fH*(2/3) # Ancho de la Figura
+
+				# Se crea la carpeta para guardar la imágen
+				utl.CrFolder(PathImg + Name + '/')
+
+				plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+					,'font.sans-serif': 'Arial Narrow'\
+					,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+					,'xtick.major.width': 1,'xtick.minor.width': 1\
+					,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+					,'ytick.major.width': 1,'ytick.minor.width': 1\
+					,'axes.linewidth':1\
+					,'grid.alpha':0.1,'grid.linestyle':'-'})
+
+				f, ((ax22,ax23),(ax12,ax13)) = plt.subplots(2, 2, figsize=utl.cm2inch(fH,fV))
+				plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+					,'font.sans-serif': 'Arial Narrow'\
+					,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+					,'xtick.major.width': 1,'xtick.minor.width': 1\
+					,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+					,'ytick.major.width': 1,'ytick.minor.width': 1\
+					,'axes.linewidth':1\
+					,'grid.alpha':0.1,'grid.linestyle':'-'})
+
+				ax21 = plt.subplot(211)
+				ax21.tick_params(axis='x',which='both',bottom='on',top='off',\
+					labelbottom='on',direction='out')
+				ax21.tick_params(axis='y',which='both',left='on',right='off',\
+					labelleft='on')
+				ax21.tick_params(axis='y',which='major',direction='inout') 
+				
+				if flagIng:
+					# Inglés
+					a11 = ax21.plot(FechaEvv[i],TC[i],'-r', label = 'Temperature')
+					ax21.set_title(Name+r" Event "+FechaEvst_Aft[i],fontsize=16)
+					ax21.set_xlabel("Time [LT]",fontsize=15)
+					ax21.set_ylabel('Temperature [°C]',fontsize=15)
+				else:
+					# Español
+					a11 = ax21.plot(FechaEvv[i],TC[i],'-r', label = 'Temperatura')
+					ax21.set_title(Name+r" Evento "+FechaEvst_Aft[i],fontsize=16)
+					ax21.set_xlabel("Tiempo",fontsize=15)
+					ax21.set_ylabel('Temperatura [°C]',fontsize=15)
+				try:
+					p = len(PrecC)
+					axx11 = ax21.twinx()
+					if flagIng:
+						# Inglés
+						a12 = axx11.plot(FechaEvv[i],PrecC[i],'-b', label = 'Precipitation')
+						axx11.set_ylabel('Precipitation [mm]',fontsize=15)
+					else:
+						# Español
+						a12 = axx11.plot(FechaEvv[i],PrecC[i],'-b', label = 'Precipitación')
+						axx11.set_ylabel('Precipitación [mm]',fontsize=15)
+				except:
+					a12 = 0				
+
+				if ~np.isnan(PCxii[i]):
+					if flagIng:
+						L1 = ax21.plot([FechaEvv[i,PCxii[i]],FechaEvv[i,PCxii[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'--b', label = 'Maximum Temperature') # Punto mínimo
+						if ~np.isnan(PCxfBf[i]):
+							L2 = ax21.plot([FechaEvv[i,PCxfBf[i]],FechaEvv[i,PCxfBf[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'--r', label = 'Minimum Temperature Before') # Punto máximo B
+						L3 = ax21.plot([FechaEvv[i,PCxff[i]],FechaEvv[i,PCxff[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'--g', label = 'Minimum Temperature After') # Punto máximo A
+					else:
+						L1 = ax21.plot([FechaEvv[i,PCxii[i]],FechaEvv[i,PCxii[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'--b', label = 'Máximo de Temperatura') # Punto mínimo
+						if ~np.isnan(PCxfBf[i]):
+							L2 = ax21.plot([FechaEvv[i,PCxfBf[i]],FechaEvv[i,PCxfBf[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'--r', label = 'Mínimo de Temperatura Antes') # Punto máximo B
+						L3 = ax21.plot([FechaEvv[i,PCxff[i]],FechaEvv[i,PCxff[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'--g', label = 'Mínimo de Temperatura Durante') # Punto máximo A
+
+				# Líneas para la precipitación
+				if flagIng:
+					L4 = ax21.plot([FechaEvv[i,Dxii[i]],FechaEvv[i,Dxii[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'-.b', label = 'Beginning Precipitation Event') # Inicio del aguacero
+					L5 = ax21.plot([FechaEvv[i,Dxff[i]],FechaEvv[i,Dxff[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'-.g', label = 'Ending Precipitation Event') # Fin del aguacero
+				else:
+					L4 = ax21.plot([FechaEvv[i,Dxii[i]],FechaEvv[i,Dxii[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'-.b', label = 'Comienzo del Evento') # Inicio del aguacero
+					L5 = ax21.plot([FechaEvv[i,Dxff[i]],FechaEvv[i,Dxff[i]]],[np.nanmin(TC[i]),np.nanmax(TC[i])],'-.g', label = 'Finalización del Evento') # Fin del aguacero
+
+				xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
+				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+				minorLocatorx = MultipleLocator(MxL)
+				yTL = ax13.yaxis.get_ticklocs() # List of Ticks in y
+				MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+				minorLocatory = MultipleLocator(MyL)
+				ax13.yaxis.set_minor_locator(minorLocatory)
+
+				# added these three lines
+				try:
+					p = len(PrecC)
+					if ~np.isnan(PCxfB):
+						lns = a11+a12+L1+L2+L3+L4+L5
+					else:
+						lns = a11+a12+L1+L3+L4+L5
+				except:
+					if ~np.isnan(PCxfB):
+						lns = a11+L1+L2+L3+L4+L5
+					else:
+						lns = a11+L1+L3+L4+L5
+				labs = [l.get_label() for l in lns]
+				plt.legend(lns, labs, loc=3,fontsize=13)
+
+				ax12.tick_params(axis='x',which='both',bottom='on',top='off',\
+					labelbottom='on',direction='out')
+				ax12.tick_params(axis='y',which='both',left='on',right='off',\
+					labelleft='on')
+				ax12.tick_params(axis='y',which='major',direction='inout') 
+				# Precipitación 
+				ax12.scatter(DurPrec,TempRateB)
+				ax12.scatter(DurPrec[i],TempRateB[i],color='red')
+				
+				if flagIng:
+					# Inglés
+					ax12.set_title('Surface Temperature Changes Before the Event in '+ Name,fontsize=16)
+					ax12.set_xlabel(u'Duration [h]',fontsize=15)
+					ax12.set_ylabel('Temperature Rate [°C/h]',fontsize=15)
+				else:
+					# Español
+					ax12.set_title('Cambios en Temperatura Antes del Evento',fontsize=16)
+					ax12.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
+					ax12.set_ylabel('Tasa de Cambio de la Temperatura [°C/h]',fontsize=15)
+				ax12.grid()
+				
+				xTL = ax12.xaxis.get_ticklocs() # List of Ticks in x
+				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+				ax12.set_xlim([0,np.nanmax(DurPrec)+2*MxL])
+
+				# Se realiza la regresión
+				try:
+					Coef, perr,R2 = CF.FF(DurPrec,TempRateB,2)
+				except TypeError:
+					plt.close('all')
+					return DurPrec, TempRateA, TempRateB
+
+
+				# Se toman los datos para ser comparados posteriormente
+				DD,PP = utl.NoNaN(DurPrec,TempRateB,False)
+				N = len(DD)
+				a = Coef[0]
+				b = Coef[1]
+				desv_a = perr[0]
+				desv_b = perr[1]
+				# Se garda la variable
+				CC = np.array([N,a,b,desv_a,desv_b,R2])
+				# Se realiza el ajuste a ver que tal dió
+				x = np.linspace(np.nanmin(DurPrec),np.nanmax(DurPrec),100)
+				TRateC = Coef[0]*x**Coef[1]
+				ax12.plot(x,TRateC,'k--')
+
+
+				xTL = ax12.xaxis.get_ticklocs() # List of Ticks in x
+				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+				minorLocatorx = MultipleLocator(MxL)
+				yTL = ax12.yaxis.get_ticklocs() # List of Ticks in y
+				MyL = np.abs(np.abs(yTL[0])-np.abs(yTL[1]))/5 # minorLocatory value
+				minorLocatory = MultipleLocator(MyL)
+				ax12.xaxis.set_minor_locator(minorLocatorx)
+				ax12.yaxis.set_minor_locator(minorLocatory)
+
+				
+				# Se incluye la ecuación
+				if np.nanmin(TempRateB) < 0:
+					ax12.text(xTL[-4],yTL[3]+3*MyL, r'$\Delta_b = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+					ax12.text(xTL[-4],yTL[3], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+				else:
+					ax12.text(xTL[-4],yTL[-2], r'$\Delta_b = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+					ax12.text(xTL[-4],yTL[-2]-3*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+
+
+				# -----------
+				ax13.tick_params(axis='x',which='both',bottom='on',top='off',\
+					labelbottom='on',direction='out')
+				ax13.tick_params(axis='y',which='both',left='on',right='off',\
+					labelleft='on')
+				ax13.tick_params(axis='y',which='major',direction='inout') 
+				ax13.scatter(DurPrec,TempRateA)
+				ax13.scatter(DurPrec[i],TempRateA[i],color='red')
+
+				if flagIng:
+					# Inglés
+					ax13.set_title('Surface Temperature Changes After the Event in '+ Name,fontsize=16)
+					ax13.set_xlabel(u'Duration [h]',fontsize=15)
+					# ax13.set_ylabel('Tsure Rate [hPa/h]',fontsize=15)
+				else:
+					# Español
+					ax13.set_title('Cambios en Temperatura Durante el Evento',fontsize=16)
+					ax13.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
+					# ax13.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
+				ax13.grid()
+
+				# Se realiza la regresión
+				Coef, perr,R2 = CF.FF(DurPrec,TempRateA,2)
+
+				# Se toman los datos para ser comparados posteriormente
+				DD,PP = utl.NoNaN(DurPrec,TempRateA,False)
+				N = len(DD)
+				a = Coef[0]
+				b = Coef[1]
+				desv_a = perr[0]
+				desv_b = perr[1]
+				# Se garda la variable
+				CC = np.array([N,a,b,desv_a,desv_b,R2])
+				# Se realiza el ajuste a ver que tal dió
+				x = np.linspace(np.nanmin(DurPrec),np.nanmax(DurPrec),100)
+				TRateC = Coef[0]*x**Coef[1]
+
+				ax13.plot(x,TRateC,'k--')
+
+				xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
+				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+				ax13.set_xlim([0,np.nanmax(DurPrec)+2*MxL])
+
+				xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
+				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+				minorLocatorx = MultipleLocator(MxL)
+				yTL = ax13.yaxis.get_ticklocs() # List of Ticks in y
+				MyL = np.abs(yTL[1]-yTL[0])/5 # minorLocatory value
+				minorLocatory = MultipleLocator(MyL)
+				ax13.xaxis.set_minor_locator(minorLocatorx)
+				ax13.yaxis.set_minor_locator(minorLocatory)
+
+				# Se incluye la ecuación
+				if np.nanmin(TempRateA) < 0:
+					ax13.text(xTL[-3],yTL[2]+3*MyL, r'$\Delta_d = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+					ax13.text(xTL[-3],yTL[2], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+				else:
+					ax13.text(xTL[-4],yTL[-2], r'$\Delta_d = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+					ax13.text(xTL[-4],yTL[-2]-3*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+				
+				plt.grid()
+				plt.tight_layout()
+				plt.savefig(Nameout + '.png',format='png',dpi=300 )
+				plt.close('all')
+
+
+		return DurPrec, TempRateA, TempRateB, TempChangeA, TempChangeB
 
 
 
