@@ -24,6 +24,7 @@ import xlrd # Para poder abrir archivos de Excel
 import xlsxwriter as xlsxwl
 import scipy.io as sio # Para poder trabajar con archivos .mat
 from scipy import stats as st # Para realizar las regresiones
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import matplotlib.dates as mdates # Manejo de dateticks
@@ -32,6 +33,7 @@ import time
 from mpl_toolkits.axes_grid1 import host_subplot
 import mpl_toolkits.axisartist as AA
 from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.basemap import Basemap
 import os
 import warnings
 
@@ -42,11 +44,17 @@ from UtilitiesDGD import UtilitiesDGD
 from CorrSt import CorrSt
 from CFitting import CFitting
 from Hydro_Plotter import Hydro_Plotter
+from Thermo_An import Thermo_An
+from DatesUtil import DatesUtil
+from AnET import AnET
 
 utl = UtilitiesDGD()
 cr = CorrSt()
 HyPl = Hydro_Plotter()
 CF = CFitting()
+TA = Thermo_An()
+DUtil = DatesUtil()
+anet = AnET()
 
 class BPumpL:
 
@@ -57,7 +65,9 @@ class BPumpL:
 
 		Este es el constructor por defecto, no realiza ninguna acción.
 		'''
-	def GraphIDEA(self,FechaN,PrecC,TempC,HRC,PresBC,Var,PathImg,Tot,V=1):
+		self.dpi=300
+		return
+	def GraphIDEA(self,FechaN,PrecC,TempC,HRC,PresBC,Var,PathImg,Tot,V=1,Name=''):
 		'''
 			DESCRIPTION:
 		
@@ -83,8 +93,6 @@ class BPumpL:
 		# Tamaño de la Figura
 		fH=30 # Largo de la Figura
 		fV = fH*(2/3) # Ancho de la Figura
-		# Se crea la ruta en donde se guardarán los archivos
-		utl.CrFolder(PathImg+ 'Manizales/Series/')
 		plt.close('all')
 		lfs = 15
 		#fig, axs = plt.subplots(2,2, figsize=utl.cm2inch(fH,fV), facecolor='w', edgecolor='k')
@@ -135,8 +143,16 @@ class BPumpL:
 			for tick in axs[i].get_xticklabels():
 				tick.set_rotation(45)
 		plt.tight_layout()
-		plt.savefig(PathImg + 'Manizales/Series/' + Tot[71:-4] + '_Series_'+ \
-			str(V) +'.png',format='png',dpi=300 )
+		if Tot == 0:
+			# Se crea la ruta en donde se guardarán los archivos
+			utl.CrFolder(PathImg)
+			plt.savefig(PathImg + Name + '_Series_'+ \
+				'.png',format='png',dpi=300 )
+		else:
+			# Se crea la ruta en donde se guardarán los archivos
+			utl.CrFolder(PathImg+ 'Manizales/Series/')
+			plt.savefig(PathImg + 'Manizales/Series/' + Tot[71:-4] + '_Series_'+ \
+				str(V) +'.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def NaNEl(self,V):
@@ -214,7 +230,7 @@ class BPumpL:
 			maxPrec = np.nanmax(Prec2)
 			x += 1
 
-		return PrecC, VC,FechaEv
+		return PrecC, VC, np.array(FechaEv)
 
 	def ExEvSea(self,PrecC,VC,FechaEv):
 		'''
@@ -681,27 +697,27 @@ class BPumpL:
 
 		# -----------------------
 
-		f, (ax11) = plt.subplots( figsize=(20,10))
-		plt.rcParams.update({'font.size': 18})
-		# Precipitación
-		a11 = ax11.plot(Time_G,Prec_EvM,L1, label = V1)
-		ax11.set_title(r'Promedio de Eventos',fontsize=24)
-		ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=20)
-		ax11.set_ylabel(Ax1,fontsize=20)
+		# f, (ax11) = plt.subplots( figsize=(20,10))
+		# plt.rcParams.update({'font.size': 18})
+		# # Precipitación
+		# a11 = ax11.plot(Time_G,Prec_EvM,L1, label = V1)
+		# ax11.set_title(r'Promedio de Eventos',fontsize=24)
+		# ax11.set_xlabel("Tiempo [cada "+ DTT + " min]",fontsize=20)
+		# ax11.set_ylabel(Ax1,fontsize=20)
 
-		# Presión barométrica
-		axx11 = ax11.twinx()
+		# # Presión barométrica
+		# axx11 = ax11.twinx()
 
-		a112 = axx11.plot(Time_G,Pres_F_EvM,L2, label = V2)
-		axx11.set_ylabel(Ax2,fontsize=20)
+		# a112 = axx11.plot(Time_G,Pres_F_EvM,L2, label = V2)
+		# axx11.set_ylabel(Ax2,fontsize=20)
 
-		# added these three lines
-		lns = a11+a112
-		labs = [l.get_label() for l in lns]
-		ax11.legend(lns, labs, loc=0)
+		# # added these three lines
+		# lns = a11+a112
+		# labs = [l.get_label() for l in lns]
+		# ax11.legend(lns, labs, loc=0)
 
-		plt.savefig(PathImg +'Average/' + ix + '_' + 'P_' + V11 + 'V' + V22 +'_' + str(ii) + '.png')
-		plt.close('all')
+		# plt.savefig(PathImg +'Average/' + ix + '_' + 'P_' + V11 + 'V' + V22 +'_' + str(ii) + '.png')
+		# plt.close('all')
 		xx = Time_G
 		
 		# -----------------------
@@ -1314,9 +1330,9 @@ class BPumpL:
 		- DurPrec: Duración del evento de precipitación.
 		- MaxPrec: Máximo de precipitación.
 		- PresRateB: Tasa de cambio de presión antes.
-		- PresRateA: Tasa de cambio de presión después.
+		- PresRateA: Tasa de cambio de presión Durante.
 		- PresChangeB: Cambio de presión antes.
-		- PresChangeA: Cambio de presión después.
+		- PresChangeA: Cambio de presión Durante.
 		- DurPres: Duración de presión.
 		'''
 
@@ -1388,7 +1404,7 @@ class BPumpL:
 			#print('i='+str(i))
 			print('xM='+str(xM))
 
-			# Se busca el mínimo después del máximo
+			# Se busca el mínimo Durante del máximo
 			k = 1
 			a = 0
 			while k == 1:
@@ -1669,7 +1685,7 @@ class BPumpL:
 					# Líneas de eventos
 					L1 = ax11.plot([Time_G[PosiminPres[i]],Time_G[PosiminPres[i]]],[0,np.nanmax(PrecC[i])],'--b', label = 'Min Pres') # Punto mínimo
 					L2 = ax11.plot([Time_G[PosimaxPres[i]],Time_G[PosimaxPres[i]]],[0,np.nanmax(PrecC[i])],'--r', label = 'Max Pres Antes') # Punto máximo B
-					L3 = ax11.plot([Time_G[PosimaxPresA[i]],Time_G[PosimaxPresA[i]]],[0,np.nanmax(PrecC[i])],'--g', label = 'Max Pres Después') # Punto máximo A
+					L3 = ax11.plot([Time_G[PosimaxPresA[i]],Time_G[PosimaxPresA[i]]],[0,np.nanmax(PrecC[i])],'--g', label = 'Max Pres Durante') # Punto máximo A
 
 					# Líneas para la precipitación
 					L4 = ax11.plot([Time_G[PrecPre[i]],Time_G[PrecPre[i]]],[0,np.nanmax(PrecC[i])],'-.b', label = 'Inicio Prec') # Inicio del aguacero
@@ -1707,9 +1723,9 @@ class BPumpL:
 		- DurPrec: Duración del evento de precipitación.
 		- MaxPrec: Máximo de precipitación.
 		- PresRateB: Tasa de cambio de presión antes.
-		- PresRateA: Tasa de cambio de presión después.
+		- PresRateA: Tasa de cambio de presión Durante.
 		- PresChangeB: Cambio de presión antes.
-		- PresChangeA: Cambio de presión después.
+		- PresChangeA: Cambio de presión Durante.
 		- DurPres: Duración de presión.
 		'''
 
@@ -1781,7 +1797,7 @@ class BPumpL:
 			#print('i='+str(i))
 			#print('xM='+str(xM))
 
-			# Se busca el mínimo después del máximo
+			# Se busca el mínimo Durante del máximo
 			k = 1
 			a = 0
 			while k == 1:
@@ -2038,7 +2054,7 @@ class BPumpL:
 					# Líneas de eventos
 					L1 = ax11.plot([Time_G[PosiminPres[i]],Time_G[PosiminPres[i]]],[0,np.nanmax(PrecC[i])],'--b', label = 'Min Pres') # Punto mínimo
 					L2 = ax11.plot([Time_G[PosimaxPres[i]],Time_G[PosimaxPres[i]]],[0,np.nanmax(PrecC[i])],'--r', label = 'Max Pres Antes') # Punto máximo B
-					L3 = ax11.plot([Time_G[PosimaxPresA[i]],Time_G[PosimaxPresA[i]]],[0,np.nanmax(PrecC[i])],'--g', label = 'Max Pres Después') # Punto máximo A
+					L3 = ax11.plot([Time_G[PosimaxPresA[i]],Time_G[PosimaxPresA[i]]],[0,np.nanmax(PrecC[i])],'--g', label = 'Max Pres Durante') # Punto máximo A
 
 					# Líneas para la precipitación
 					L4 = ax11.plot([Time_G[PrecPre[i]],Time_G[PrecPre[i]]],[0,np.nanmax(PrecC[i])],'-.b', label = 'Inicio Prec') # Inicio del aguacero
@@ -2084,7 +2100,13 @@ class BPumpL:
 			OUTPUT:
 		- DurPrec: Duración del evento de precipitación.
 		- PresRateB: Tasa de cambio de presión antes.
-		- PresRateA: Tasa de cambio de presión después.
+		- PresRateA: Tasa de cambio de presión Durante.
+		- PresChangeB: Cambio de presión antes.
+		- PresChangeA: Cambio de presión Durante.
+		- DurPresB: Duración de la señal de presión antes.
+		- DurPresA: Duración de la señal de presión durante.
+		- TotalPrec: Total de precipitación durante el evento.
+		- MaxPrec: Máximo de precipitación durante el evento.
 		'''
 		
 		# Se filtran las alertas
@@ -2096,8 +2118,14 @@ class BPumpL:
 		# Se inicializan las variables
 		FechaEvv = []
 		DurPrec = []
+		DurPresA = []
+		DurPresB = []
 		PresRateA = []
 		PresRateB = []
+		PresChangeA = []
+		PresChangeB = []
+		TotalPrec = []
+		MaxPrec = []
 		PCxii = []
 		PCxff = []
 		PCxfBf = []
@@ -2109,6 +2137,14 @@ class BPumpL:
 		for k in range(len(FechaEv)):
 			FechaEvv.append([datetime(int(i[0:4]),int(i[5:7]),int(i[8:10]),int(i[11:13]),int(i[13:15])) for i in FechaEv[k]])
 		FechaEvv = np.array(FechaEvv)
+
+		# Banderas para generar los valores de precipitación.
+		if not(isinstance(FechaEvst_Aft,list)) and not(isinstance(FechaEvst_Aft,(np.ndarray,np.generic))) and FechaEvst_Aft != 0:
+			FlagPrecValues = False
+			FlagEvents = False
+		else:
+			FlagPrecValues = True
+			FlagEvents = True
 
 		if FechaEvst_Aft == 0:
 			FechaEvst_Aft = []
@@ -2160,7 +2196,7 @@ class BPumpL:
 				# print(len(xM))
 				# print(i)
 
-				# Se busca el mínimo después del máximo
+				# Se busca el mínimo Durante del máximo
 				k = 1
 				a = 0
 				while k == 1:
@@ -2223,6 +2259,12 @@ class BPumpL:
 				DurPrec.append(np.nan)
 				PresRateA.append(np.nan)
 				PresRateB.append(np.nan)
+				PresChangeA.append(np.nan)
+				PresChangeB.append(np.nan)
+				DurPresA.append(np.nan)
+				DurPresB.append(np.nan)
+				TotalPrec.append(np.nan)
+				MaxPrec.append(np.nan)
 
 				PCxii.append(np.nan)
 				PCxff.append(np.nan)
@@ -2242,6 +2284,12 @@ class BPumpL:
 					DurPrec[-1] = np.nan
 					PresRateA.append(np.nan)
 					PresRateB.append(np.nan)
+					PresChangeA.append(np.nan)
+					PresChangeB.append(np.nan)
+					DurPresA.append(np.nan)
+					DurPresB.append(np.nan)
+					TotalPrec.append(np.nan)
+					MaxPrec.append(np.nan)
 
 					PCxii.append(np.nan)
 					PCxff.append(np.nan)
@@ -2249,6 +2297,12 @@ class BPumpL:
 					Dxii.append(np.nan)
 					Dxff.append(np.nan)
 				else:
+					# --------------------------
+					# Valores de Precipitación
+					# --------------------------
+					if FlagPrecValues:
+						TotalPrec.append(np.nansum(PrecC[i,Dxi[0]:Dxf[0]]))
+						MaxPrec.append(np.nanmax(PrecC[i,Dxi[0]:Dxf[0]]))
 
 					# --------------------------
 					# Tasa de cambio de presión
@@ -2256,7 +2310,7 @@ class BPumpL:
 
 					# Mínimo
 					if dt <= 10 and dt > 1:
-						# Valores para posiciones antes y después
+						# Valores para posiciones antes y Durante
 						# basados en el tiempo.
 						ValBef = int(10/dt) # 10 min 
 						ValAft = int(20/dt) # 20 min
@@ -2282,6 +2336,12 @@ class BPumpL:
 						DurPrec[-1] = np.nan
 						PresRateA.append(np.nan)
 						PresRateB.append(np.nan)
+						PresChangeA.append(np.nan)
+						PresChangeB.append(np.nan)
+						DurPresA.append(np.nan)
+						DurPresB.append(np.nan)
+						TotalPrec.append(np.nan)
+						MaxPrec.append(np.nan)
 
 						PCxii.append(np.nan)
 						PCxff.append(np.nan)
@@ -2318,13 +2378,17 @@ class BPumpL:
 						PCAxf = np.where(PresC[i,Dxi[0]:Dxf[0]+ValBef] == PCAf)[0][-1]
 						PCxf = PCAxf + len(PresC[i,:Dxi[0]])
 						DPB = (PCxf - PCxi[0])*dt/60
-						PRAA = (PCAf-PCAi)/DPB
-						PCA = PCAf-PCAi
+						PRAA = (np.abs(PCAf)-np.abs(PCAi))/DPB
+						PCA = np.abs(PCAf)-np.abs(PCAi)
+						PCA2 = np.abs(PCAf)-np.abs(PCAi)
 						if flagAf:
 							if PCA <= Mar:
 								PRAA = np.nan
+								DPB = np.nan
+								PCA2 = np.nan
 						if PRAA < 0:
 							PRAA = np.nan
+							DPB = np.nan
 						# ---------------------
 
 						# if PCA <= Mar:
@@ -2336,6 +2400,8 @@ class BPumpL:
 
 						# Se guarda la tasa de cambio de presión durante
 						PresRateA.append(PRAA)
+						PresChangeA.append(PCA2)
+						DurPresA.append(DPB)
 
 
 						# Máximo Before
@@ -2459,7 +2525,7 @@ class BPumpL:
 								PCBf.append(PresC[i,PCxi[0]-j])
 								PCBxf.append(PCxi[0]-j)
 								DPB.append(j*dt/60)
-								PRB.append((PCAi-PCBf[-1])/DPB[-1])
+								PRB.append((np.abs(PCAi)-np.abs(PCBf)[-1])/DPB[-1])
 							PCBf = np.array(PCBf)
 							PCBxf = np.array(PCBxf)
 							DPB = np.array(DPB)
@@ -2470,13 +2536,17 @@ class BPumpL:
 							if qq <= len(PRB)*.70 or np.isnan(PresRateA[-1]):
 								PCxfB = np.nan
 								PRBM = np.nan
+								PCB2 = np.nan
+								DPB2 = np.nan
 							else:
 								DifPRB = np.abs(PresRateA[-1]+PRB)
 								# print('DifPRB',DifPRB)
 								DifPRmxB = np.where(DifPRB == np.nanmin(DifPRB))[0]
 								PCxfB = PCBxf[DifPRmxB[0]]
 								PRBM = PRB[DifPRmxB[0]]
-								PCB = np.abs(PCAi-PCBf[DifPRmxB[0]])
+								PCB = np.abs(np.abs(PCAi)-np.abs(PCBf[DifPRmxB[0]]))
+								PCB2 = np.abs(np.abs(PCAi)-np.abs(PCBf[DifPRmxB[0]]))
+								DPB2 = DPB[DifPRmxB[0]]
 
 								# Se verifica el último máximo
 								MaxBP2 = np.nanmax(PCBf[:DifPRmxB[0]+1])
@@ -2496,14 +2566,20 @@ class BPumpL:
 								if PCBf[MaxBPx2] > PCBf[DifPRmxB[0]]:
 									PCxfB = PCBxf[MaxBPx2]
 									PRBM = PRB[MaxBPx2]
-									PCB = np.abs(PCAi-PCBf[MaxBPx2])									
-
+									PCB = np.abs(np.abs(PCAi)-np.abs(PCBf[MaxBPx2]))
+									DPB2 = DPB[MaxBPx2]
+									PCB2 = np.abs(np.abs(PCAi)-np.abs(PCBf[MaxBPx2]))
+								# print(PCB)
 								if PCB <= Mar:
 									PRBM = np.nan
+									DPB2 = np.nan
+									PCB2 = np.nan
 								else:
 									Pii.append(i)
 								if PRBM > 0:
 									PRBM = np.nan
+									DPB2 = np.nan
+									PCB2 = np.nan
 									Pii.remove
 									# if G <= 10:
 									# 	
@@ -2514,6 +2590,8 @@ class BPumpL:
 							
 						# Se guarda la tasa de cambio de presión antes
 						PresRateB.append(PRBM)
+						PresChangeB.append(PCB2)
+						DurPresB.append(DPB2)
 						# Se llenan los valores de las posiciones 
 						PCxii.append(PCxi[0])
 						PCxff.append(PCxf)
@@ -2530,6 +2608,10 @@ class BPumpL:
 		PresRateA = np.array(PresRateA)
 		PresRateB = np.array(PresRateB)
 		PresRateB = PresRateB*-1
+		PresChangeA = np.array(PresChangeA)
+		PresChangeB = np.array(PresChangeB)
+		DurPresB = np.array(DurPresB)
+		DurPresA = np.array(DurPresA)
 		if flagEv:
 			for i in Pii:
 
@@ -2551,7 +2633,7 @@ class BPumpL:
 					,'axes.linewidth':1\
 					,'grid.alpha':0.1,'grid.linestyle':'-'})
 
-				f, ((ax12,ax13), (ax22,ax23)) = plt.subplots(2, 2, figsize=utl.cm2inch(fH,fV))
+				f, ((ax22,ax23), (ax12,ax13)) = plt.subplots(2, 2, figsize=utl.cm2inch(fH,fV))
 				plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
 					,'font.sans-serif': 'Arial Narrow'\
 					,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
@@ -2589,7 +2671,10 @@ class BPumpL:
 
 				# Se realiza la regresión
 				try:
-					Coef, perr,R2 = CF.FF(DurPrec,PresRateB,2)
+					Re = CF.FF(DurPrec,PresRateB,0)
+					Coef = Re['Coef']
+					perr = Re['perr']
+					R2 = Re['R2']
 				except TypeError:
 					plt.close('all')
 					return DurPrec, PresRateA, PresRateB
@@ -2606,7 +2691,7 @@ class BPumpL:
 				CC = np.array([N,a,b,desv_a,desv_b,R2])
 				# Se realiza el ajuste a ver que tal dió
 				x = np.linspace(np.nanmin(DurPrec),np.nanmax(DurPrec),100)
-				PresRateC = Coef[0]*x**Coef[1]
+				PresRateC = Re['Function'](x,*Coef)
 				ax12.plot(x,PresRateC,'k--')
 
 
@@ -2623,12 +2708,12 @@ class BPumpL:
 
 				
 				# Se incluye la ecuación
-				if np.nanmin(PresRateB) < 0:
-					ax12.text(xTL[-4],yTL[3]+3*MyL, r'$\Delta_b = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
-					ax12.text(xTL[-4],yTL[3], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
-				else:
-					ax12.text(xTL[-3],yTL[-2], r'$\Delta_b = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
-					ax12.text(xTL[-3],yTL[-2]-3*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+				# if np.nanmin(PresRateB) < 0:
+				# 	ax12.text(xTL[-5],yTL[3]+3*MyL, r'$\Delta_b = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+				# 	ax12.text(xTL[-5],yTL[3], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+				# else:
+				# 	ax12.text(xTL[-5],yTL[-2], r'$\Delta_b = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+				# 	ax12.text(xTL[-5],yTL[-2]-3*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
 
 				# -----------
 				ax13.tick_params(axis='x',which='both',bottom='on',top='off',\
@@ -2655,17 +2740,11 @@ class BPumpL:
 				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
 				plt.xlim([0,np.nanmax(DurPrec)+2*MxL])
 
-				xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
-				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-				minorLocatorx = MultipleLocator(MxL)
-				yTL = ax13.yaxis.get_ticklocs() # List of Ticks in y
-				MyL = np.abs(yTL[1]-yTL[0])/5 # minorLocatory value
-				minorLocatory = MultipleLocator(MyL)
-				ax13.xaxis.set_minor_locator(minorLocatorx)
-				ax13.yaxis.set_minor_locator(minorLocatory)
-
 				# Se realiza la regresión
-				Coef, perr,R2 = CF.FF(DurPrec,PresRateA,2)
+				Re = CF.FF(DurPrec,PresRateA,0)
+				Coef = Re['Coef']
+				perr = Re['perr']
+				R2 = Re['R2']
 
 				# Se toman los datos para ser comparados posteriormente
 				DD,PP = utl.NoNaN(DurPrec,PresRateA,False)
@@ -2678,18 +2757,27 @@ class BPumpL:
 				CC = np.array([N,a,b,desv_a,desv_b,R2])
 				# Se realiza el ajuste a ver que tal dió
 				x = np.linspace(np.nanmin(DurPrec),np.nanmax(DurPrec),100)
-				PresRateC = Coef[0]*x**Coef[1]
+				PresRateC = Re['Function'](x,*Coef)
 
 				ax13.plot(x,PresRateC,'k--')
-				# Se incluye la ecuación
-				if np.nanmin(PresRateA) < 0:
-					ax13.text(xTL[-3],yTL[2]+3*MyL, r'$\Delta_d = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
-					ax13.text(xTL[-3],yTL[2], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
-				else:
-					ax13.text(xTL[-3],yTL[-2], r'$\Delta_d = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
-					ax13.text(xTL[-3],yTL[-2]-3*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
 
-				ax21 = plt.subplot(212)
+				xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
+				MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+				minorLocatorx = MultipleLocator(MxL)
+				yTL = ax13.yaxis.get_ticklocs() # List of Ticks in y
+				MyL = np.abs(yTL[1]-yTL[0])/5 # minorLocatory value
+				minorLocatory = MultipleLocator(MyL)
+				ax13.xaxis.set_minor_locator(minorLocatorx)
+				ax13.yaxis.set_minor_locator(minorLocatory)
+				# Se incluye la ecuación
+				# if np.nanmin(PresRateA) < 0:
+				# 	ax13.text(xTL[-5],yTL[2]+3*MyL, r'$\Delta_d = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+				# 	ax13.text(xTL[-5],yTL[2], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+				# else:
+				# 	ax13.text(xTL[-5],yTL[-2], r'$\Delta_d = %sD^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+				# 	ax13.text(xTL[-5],yTL[-2]-3*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+
+				ax21 = plt.subplot(211)
 				ax21.tick_params(axis='x',which='both',bottom='on',top='off',\
 					labelbottom='on',direction='out')
 				ax21.tick_params(axis='y',which='both',left='on',right='off',\
@@ -2770,7 +2858,16 @@ class BPumpL:
 				plt.savefig(Nameout + '.png',format='png',dpi=300 )
 				plt.close('all')
 
-		return DurPrec, PresRateA, PresRateB
+		if FlagPrecValues:
+			if FlagEvents:
+				return DurPrec, PresRateA, PresRateB, DurPresA, DurPresB, PresChangeA, PresChangeB, np.array(TotalPrec), np.array(MaxPrec), FechaEvst
+			else:
+				return DurPrec, PresRateA, PresRateB, DurPresA, DurPresB, PresChangeA, PresChangeB, np.array(TotalPrec), np.array(MaxPrec)
+		else:
+			if FlagEvents:
+				return DurPrec, PresRateA, PresRateB, DurPresA, DurPresB, PresChangeA, PresChangeB, FechaEvst
+			else:
+				return DurPrec, PresRateA, PresRateB, DurPresA, DurPresB, PresChangeA, PresChangeB
 
 	def TvDP_C(self,PrecC,TC,FechaEv,FechaEvst_Aft=0,FechaEvend_Aft=0,Mar=0.8,flagAf=False,dt=1,M=60*4,flagEv=False,PathImg='',Name='',flagIng=False):
 		'''
@@ -2881,7 +2978,7 @@ class BPumpL:
 				# print(len(xM))
 				# print(i)
 
-				# Se busca el mínimo después del máximo
+				# Se busca el mínimo Durante del máximo
 				k = 1
 				a = 0
 				while k == 1:
@@ -2977,7 +3074,7 @@ class BPumpL:
 
 					# Máximo
 					if dt <= 10 and dt > 1:
-						# Valores para posiciones antes y después
+						# Valores para posiciones antes y Durante
 						# basados en el tiempo.
 						ValBef = int(10/dt) # 10 min 
 						ValAft = int(20/dt) # 20 min
@@ -3417,7 +3514,430 @@ class BPumpL:
 
 		return DurPrec, TempRateA, TempRateB, TempChangeA, TempChangeB
 
+	def MapEvents(self,elevation,ElCor,Est,Points,V1,V2,vmax1,vmin1,vmax2,vmin2,Fecha,xlim=[-75.55,-75.46],ylim=[5.02,5.09],flagsmall=True,VarL1='',VarL2='',PathImg='',Name=''):
+		'''
+		DESCRIPTION:
+			Este gráfico compara la variable1 con las variaciones de 
+			de otras variables en planta.
+		_________________________________________________________________________
+
+		INPUT:
+			+ elevation: GeoTIF con la elevación de la zona.
+			+ ElCor: Coordenadas de la elevación.
+			+ Est: Lista con las estaciones.
+			+ Points: diccionario con las coordenadas de las estaciones en 
+					  tupla.
+			+ V1: diccionario con el valor que tomará la Variable 1.
+			+ V2: diccionario con el valor que tomará la Variable 2.
+			+ vmax1 y vmax2: Valores máximos que puede tomar 1 y 2.
+			+ vmin1 y vmin2: Valores mínimos que puede tomar 1 y 2.
+			+ xlim: Lista con dos valores con los límites en x.
+			+ ylim: Lista con dos valores con los límites en y.
+			+ PathImg: Ruta de la imagen.
+			+ Name: Nombre de la imagen.
+		_________________________________________________________________________
+
+		OUTPUT:
+			Esta función saca un gráfico.
+		'''
+
+		llcrnrlon = ElCor[0]
+		llcrnrlat = ElCor[1]
+		urcrnrlon = ElCor[2]
+		urcrnrlat = ElCor[3]
+		if flagsmall:
+			xlabels = np.arange(xlim[0]-0.1,xlim[1]+0.1, .03)
+			ylabels = np.arange(ylim[0]-0.1,ylim[1]+0.1, .02)
+		else:
+			xlabels = np.arange(xlim[0]-0.1,xlim[1]+0.1, .2)
+			ylabels = np.arange(ylim[0]-0.1,ylim[1]+0.1, .2)
+
+		# Se crea la carpeta para guardar la imágen
+		if PathImg != '':
+			utl.CrFolder(PathImg)
+
+		fH=30 # Largo de la Figura
+		fV = 20 # Ancho de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial'\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 15,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+
+		# Map 1
+		fig = plt.figure(figsize=utl.cm2inch(fH,fV))
+		cax = fig.add_axes([0.015, 0.3, 0.5, 0.5])
+		# Create map
+		map = Basemap(llcrnrlon=llcrnrlon,llcrnrlat=llcrnrlat,urcrnrlon=urcrnrlon,urcrnrlat=urcrnrlat,
+			resolution='l',epsg=4326)
+		# Elevation map
+		im = map.imshow(elevation, cmap = plt.get_cmap('terrain'), alpha=1)
+		# ----------
+		# Stations
+		# ----------
+		for E in Est:
+			if np.isnan(V1[E]):
+				map.scatter(Points[E][0],Points[E][1],s=100,c=0.4,cmap='gray',lw=0.5)
+			else:
+				Im1 = map.scatter(Points[E][0],Points[E][1],s=100,c=V1[E],cmap='Blues',vmax=vmax1,vmin=vmin1,lw=0.5)
+			# plt.annotate(E,(Points[E][0],Points[E][1]),fontsize=10,textcoords='offset points')
+			plt.annotate(E,(Points[E][0],Points[E][1]),fontsize=10)
+
+		# Map Crop
+		x_formatter = matplotlib.ticker.ScalarFormatter(useOffset=False)
+		axs = plt.gca()
+		axs.xaxis.set_ticks(xlabels)
+		axs.xaxis.set_major_formatter(x_formatter)
+		axs.yaxis.set_ticks(ylabels)
+		plt.xlim(xlim)
+		plt.ylim(ylim)
+		plt.tick_params(labeltop=True, labelright=False)
+
+		# --------------
+		# Second map
+		# --------------
+		cax = fig.add_axes([0.49, 0.3, 0.5, 0.5])
+		# Create map
+		map = Basemap(llcrnrlon=llcrnrlon,llcrnrlat=llcrnrlat,urcrnrlon=urcrnrlon,urcrnrlat=urcrnrlat,
+			resolution='l',epsg=4326)
+		# map.drawcoastlines()
+		# map.drawmeridians(np.arange(-75.60, -75.40, .02), linewidth=1, labels=[0,1,2,3], color='k')
+		# map.drawparallels(np.arange(5.00, 5.10, .02), linewidth=1, labels=[0,1,2,3], color='k')
+
+		# Elevation map
+		im = map.imshow(elevation, cmap = plt.get_cmap('terrain'), alpha = 1)
+		
+		# --------
+		# Scatter
+		# --------
+		
+		# Stations
+		for E in Est:
+			if np.isnan(V2[E]):
+				map.scatter(Points[E][0],Points[E][1],s=100,c=0.4,cmap='gray',lw=0.5)
+			else:
+				Im2 = map.scatter(Points[E][0],Points[E][1],s=100,c=V2[E],cmap='coolwarm',vmax=vmax2,vmin=vmin2,lw=0.5)
+			# plt.annotate(E,(Points[E][0],Points[E][1]),fontsize=10,textcoords='offset points')
+			plt.annotate(E,(Points[E][0],Points[E][1]),fontsize=10)
+
+		# Map Crop
+		x_formatter = matplotlib.ticker.ScalarFormatter(useOffset=False)
+		axs = plt.gca()
+		axs.xaxis.set_ticks(xlabels)
+		axs.xaxis.set_major_formatter(x_formatter)
+		axs.yaxis.set_ticks(ylabels)
+		plt.xlim(xlim)
+		plt.ylim(ylim)
+		plt.tick_params(labeltop=True, labelright=True)
+
+		# -------
+		# Title
+		# -------
+		ax = fig.add_axes([0.35, 0.9, 0.3, 0.05])
+		ax.axes.get_xaxis().set_visible(False)
+		ax.axes.get_yaxis().set_visible(False)
+		ax.text(0.5,0.3, Fecha,
+        horizontalalignment='center',
+        verticalalignment='center',
+        transform=ax.transAxes,fontsize=24)
+
+		# ----------
+		# Colorbar
+		# ----------
+		v1 = np.linspace(vmin1, vmax1, 6, endpoint=True)
+		bounds1 = np.linspace(vmin1, vmax1, 8, endpoint=True)
+		v2 = np.linspace(vmin2, vmax2, 6, endpoint=True)
+		bounds2 = np.linspace(vmin2, vmax2, 8, endpoint=True)
+		# V1
+		cax = fig.add_axes([0.06, 0.2, 0.4, 0.05])
+		cbar1 = plt.colorbar(Im1,cax=cax,orientation='horizontal',boundaries=bounds1,ticks=v1)
+		cbar1.set_label(VarL1,fontsize=16)
+		# V2
+		cax = fig.add_axes([0.54, 0.2, 0.4, 0.05])
+		cbar2 = plt.colorbar(Im2,cax=cax,orientation='horizontal',boundaries=bounds2,ticks=v2)
+		cbar2.set_label(VarL2,fontsize=16)
 
 
+		plt.savefig(PathImg+Name+'.png',format = 'png',dpi=self.dpi)
+		plt.close('all')
 
 
+BP = BPumpL()
+class Proc(object):	
+	def __init__(self,PathDataImp='',PathData='',DataImp='Data_Imp',endingmat='',TipoD='IDEA'):
+		'''
+		DESCRIPTION:
+
+		Clase para abrir los documentos que se necesitan para hacer los diferentes
+		estudios de los diagramas de dispersión.
+		_________________________________________________________________________
+
+			INPUT:
+		+ DataImp: Hoja de Excel en donde se encuentra la información.
+		_________________________________________________________________________
+
+			OUTPUT:
+
+		'''
+		# ----------------------------
+		# Constantes
+		# ----------------------------
+		# Información para gráficos
+		LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica']
+		LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]']
+		
+		self.mmHg2hPa = 1.3332239
+
+		# Projections
+		self.epsgWGS84 = 4326
+		self.epsgMAGNA = 3116
+
+		# Diccionarios con las diferentes variables
+		self.Variables = ['PrecC','TC','HRC','PresC','qC']
+		self.Variables2 = dict()
+		self.Variables3 = dict()
+		self.Variables4 = dict()
+		self.VariablesF = dict()
+		self.LabelV = dict()
+		self.LabelVU = dict()
+		for iv,v in enumerate(self.Variables):
+			self.Variables2[v] = v[:-1]+'2'
+			self.Variables3[v] = v[:-1]+'3'
+			self.Variables4[v] = v[:-1]+'4'
+			self.VariablesF[v] = v[:-1]+'_F'
+			self.LabelV[v] = LabelV[iv]
+			self.LabelVU[v] = LabelVU[iv]
+
+		# Información para gráficos
+		LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica']
+		LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]']
+		
+
+		# ------------------
+		# Archivos a abrir
+		# ------------------
+
+		# Se carga la información de las estaciones
+		Tot = PathDataImp + DataImp + '.xlsx'
+		book = xlrd.open_workbook(Tot) # Se carga el archivo
+		SS = book.sheet_by_index(0) # Datos para trabajar
+		# Datos de las estaciones
+		Hoja = int(SS.cell(2,2).value)
+		S = book.sheet_by_index(Hoja) # Datos para trabajar
+		NEst = int(S.cell(1,0).value) # Número de estaciones y sensores que se van a extraer
+
+		# Se inicializan las variables que se tomarán del documento
+		x = 3 # Contador
+		self.ID = []
+		Names = [] # Nombre de las estaciones para las gráficas
+		NamesArch = [] # Nombre de los archivos
+		Tipo = [] # Tipo de datos - Se utiliza para encontrar la localización
+		ET = [] # Tipo de información 0: Horaria, 1: Diaria
+		self.ZT = [] # Alturas de las estaciones
+
+		# Ciclo para tomar los datos
+		for i in range(NEst):
+			self.ID.append(str(int(S.cell(x,0).value)))
+			Names.append(S.cell(x,1).value)
+			NamesArch.append(S.cell(x,2).value)
+			Tipo.append(S.cell(x,3).value)
+			ET.append(int(S.cell(x,4).value))
+			try:
+				self.ZT.append(int(S.cell(x,5).value))
+			except:
+				self.ZT.append(float('nan'))
+			x += 1
+
+		# En esta sección se extraerá la información 
+		self.Arch = []
+		self.Names = []
+		self.NamesArch = []
+
+		x = 0
+		for i in range(NEst): # Ciclo para las estaciones
+			if Tipo[i] == TipoD:
+				if ET[i] == -1:
+					# Se extrae la información horaria
+					Tot = PathData + NamesArch[i] + endingmat +'.mat'
+					self.Arch.append(Tot)
+					self.Names.append(Names[i])
+					self.NamesArch.append(NamesArch[i])
+			x += 1
+
+		self.ID = np.array(self.ID)
+		self.Names = np.array(self.Names)			
+		return
+	
+	def LoadData(self,irow=0):
+		'''
+			DESCRIPTION:
+		
+		Función para cargar los datos.
+		_________________________________________________________________________
+
+			INPUT:
+		+ irow: Fila en donde se encuentran los datos que se quieren cargar.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		- var: Variables que se tienen en los datos.
+		- FechaEv: Fechas de cada evento.
+		- PresC: Compuestos de Presión.
+		- PrecC: Compuestos de Precipitación
+		- TC: Compuestos de Temperatura.
+		- HRC: Compuestos de Humedad Relativa
+		- qC: Compuestos de Humedad Específica
+		'''
+		self.flag = dict()
+		self.irow = irow
+		# print('\nSe carga la estación: ',self.Names[irow])
+
+		# Se carga el archivo.
+		self.f = sio.loadmat(self.Arch[irow])
+
+		# Se verifica la existencia de todas las variables
+		try: 
+			self.f['PrecC'] = self.f['PrecC'][0]
+			self.flag['PrecC'] = True
+		except KeyError:
+			self.flag['PrecC'] = False
+		try: 
+			self.f['PresC'] = self.f['PresC'][0]
+			self.flag['PresC'] = True
+		except KeyError:
+			try:
+				self.f['PresC'] = self.f['PresBC'][0]
+				self.flag['PresC'] = True
+			except KeyError:
+				self.flag['PresC'] = False
+		try: 
+			self.f['TC'] = self.f['TC'][0]
+			self.flag['TC'] = True
+		except KeyError:
+			try: 
+				self.f['TC'] = self.f['TempC'][0]
+				self.flag['TC'] = True
+			except KeyError:
+				self.flag['TC'] = False
+		try:
+			self.f['HRC'] = self.f['HRC'][0]
+			self.flag['HRC'] = True
+		except KeyError:
+			self.flag['HRC'] = False
+		try: 
+			self.f['FechaC']
+			self.flag['FechaC'] = True
+			# last_time = time.time()
+			self.f['FechaCP'] = DUtil.Dates_str2datetime(self.f['FechaC'],Date_Format='%Y/%m/%d-%H%M',flagQuick=True)
+			if isinstance(self.f['FechaCP'],int):
+				self.f['FechaCP'] = DUtil.Dates_str2datetime(self.f['FechaC'],Date_Format='%Y-%m-%d-%H%M',flagQuick=True)
+			# print('Loop took {} seconds'.format(time.time()-last_time))
+			# Delta de tiempo
+			self.dtm = str(int(self.f['FechaC'][1][-2:]))
+			if self.dtm == '0':
+				self.dtm = str(int(self.f['FechaC'][1][--2:-2]))
+				if self.dtm == '0':
+					print('Revisar el delta de tiempo')
+		except KeyError:
+			self.flag['FechaC'] = False
+		try:
+			self.f['qC'] = TA.qeq(self.f['PresC'],self.f['HRC'],self.f['TC'])
+			self.flag['qC'] = True
+		except:
+			self.flag['qC'] = False
+		
+		self.var = self.f.keys()
+		self.VerifyData()			
+		return
+    
+	def VerifyData(self):
+		'''
+			DESCRIPTION:
+
+		Función para verificar los datos que se tienen
+		_________________________________________________________________________
+
+			INPUT:
+		_________________________________________________________________________
+
+			OUTPUT:
+		'''
+		x = 0
+		for v in self.Variables:
+			if not(self.flag[v]):
+				if x == 0:
+					print('No se tiene las siguientes variables')
+				print('-'+v)
+				x += 1
+		return
+	
+	def InterData(self):
+		'''
+		DESCRIPTION:
+
+			Función para interpolar los datos NaN que se puedan.
+		'''
+		print('	Se interpolan los datos NaN')
+		# Se interpolan los datos que se pueden interpolar
+		for iv,v in enumerate(self.Variables):
+			if self.flag[v]:
+				self.f[self.Variables2[v]] = BP.NaNEl(self.f[v])
+
+		self.var = list(self.f)
+		self.flag['Variables2'] = True
+		return
+	
+	def MeanRemove(self):
+		'''
+		DESCRIPTION:
+
+			Función para remover la media total de los datos.
+		'''
+		print('	Se remueven los datos promedios')
+		Var = self.Variables
+		
+		# Se interpolan los datos que se pueden interpolar
+		for iv,v in enumerate(Var):
+			if self.flag[self.Variables[iv]]:
+				if self.flag['Variables2']:
+					self.f[self.Variables2[v]] = self.f[self.Variables2[v]]-np.nanmean(self.f[self.Variables2[v]])
+				else:
+					self.f[v] = self.f[v]-np.nanmean(self.f[v])
+
+		self.var = list(self.f)
+		self.flag['Variables2'] = True
+		return
+	
+	def ButterFilt(self,lowcut,highcut,order=2,flagG=False,xTi=0,xTf=24*60/5,PathImg=''):
+		'''
+		DESCRIPTION:
+
+			Función para aplicar el fitro Butterworth.
+		'''
+		print('	Se realiza el filtro Butterworth')
+		Var = self.Variables
+			
+		for iv,v in enumerate(Var):
+			if self.flag[v]:
+				if self.flag['Variables2']:
+					qn = ~np.isnan(self.f[self.Variables2[v]])
+					self.f[self.Variables3[v]] = self.f[self.Variables2[v]][qn]
+					if v != 'PrecC':
+						fs = len(self.f[self.Variables3[v]])
+						b,a = anet.ButterworthFiler([lowcut,highcut],order,fs,btype='bandpass',flagG=flagG,worN=fs,PathImg=PathImg,Name='Filt_Function')
+						self.f[self.Variables4[v]] = anet.Filt_ButterworthApp(self.f[self.Variables3[v]],[lowcut,highcut],order,fs,btype='bandpass')
+						# b,a = anet.ButterworthFiler(highcut,order,fs,btype='lowpass',flagG=flagG,worN=fs,PathImg=PathImg,Name='Filt_Function')
+						# self.f[self.Variables4[v]] = anet.Filt_ButterworthApp(self.f[self.Variables3[v]],highcut,order,fs,btype='lowpass')
+						
+						self.f[self.VariablesF[v]] = np.empty(len(self.f[self.Variables2[v]]))*np.nan
+						self.f[self.VariablesF[v]][qn] = self.f[self.Variables4[v]]
+						
+						if flagG:
+							
+							Fol = '(%0.f_%.0f) Hours/' %(highcut*int(self.dtm)/60,lowcut*int(self.dtm)/60)
+							HyPl.FilComp(self.f['FechaCP'],self.f[self.Variables2[v]],self.f[self.VariablesF[v]],xTi,xTf,PathImg=PathImg+'Comp/'+Fol,Name=self.Names[self.irow],VarU=self.LabelVU[v],Var=v[:-1],Filt='')
+		self.var = list(self.f)
+		return

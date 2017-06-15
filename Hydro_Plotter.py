@@ -25,14 +25,15 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import sys
 import warnings
 from scipy import stats as st
+from scipy.signal import butter, lfilter, freqz
 
 
 # Se importan los paquetes para manejo de fechas
 from datetime import date, datetime, timedelta
 
-from UtilitiesDGD import UtilitiesDGD
+from Utilities import Utilities
 
-utl = UtilitiesDGD()
+utl = Utilities()
 
 
 
@@ -45,6 +46,22 @@ class Hydro_Plotter:
 
 		Este es el constructor por defecto, no realiza ninguna acción.
 		'''
+		self.font = 'Arial'
+
+		# Indicators
+		self.VarInd = {'precipitación':'Prec','precipitation':'Prec',
+					   'temperatura':'Temp','temperature':'Temp',
+					   'humedad relativa':'HR','relative humidity':'HR',
+					   'humedad específica':'HS','specific humidity':'HS'}
+		
+		# Image dimensions
+		self.fH = 20
+		self.fV = self.fH*(2.0/3.0)
+
+		# Image resolution
+		self.dpi = 300
+
+		
 	def monthlab(self,Date):
 		''' 			
 			DESCRIPTION:
@@ -92,8 +109,8 @@ class Hydro_Plotter:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -101,7 +118,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -133,12 +150,12 @@ class Hydro_Plotter:
 			tick.set_rotation(45)
 		# Labels
 		if flagT:
-			plt.title(v,fontsize=18)
+			plt.title(v,fontsize=15)
 		plt.ylabel(Var_LUn,fontsize=16)
 		# Se arregla el espaciado de la figura
 		plt.tight_layout()
 		# Se guarda la figura
-		plt.savefig(PathImg + Var + '.png',format='png',dpi=300)
+		plt.savefig(PathImg + Var + '.png',format='png',dpi=self.dpi)
 		plt.close('all')
 
 	def NaNMGr(self,Date,NNF,NF,Var='',flagT=True,Var_L='',Names='',PathImg=''):
@@ -164,8 +181,8 @@ class Hydro_Plotter:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -176,7 +193,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
@@ -206,7 +223,7 @@ class Hydro_Plotter:
 		plt.xlabel(u'Mes',fontsize=16)  # Colocamos la etiqueta en el eje x
 		plt.ylabel('Porcentaje de datos',fontsize=16)  # Colocamos la etiqueta en el eje y
 		plt.tight_layout()
-		plt.savefig(PathImg + Var +'_NaN_Mens' + '.png',format='png',dpi=300 )
+		plt.savefig(PathImg + Var +'_NaN_Mens' + '.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def NaNMGrC(self,Date,NNF,NF,Var='',flagT=True,Var_L='',Names='',PathImg=''):
@@ -231,8 +248,8 @@ class Hydro_Plotter:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -243,7 +260,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
@@ -273,7 +290,7 @@ class Hydro_Plotter:
 		plt.xlabel(u'Mes',fontsize=16)  # Colocamos la etiqueta en el eje x
 		plt.ylabel('Porcentaje de datos',fontsize=16)  # Colocamos la etiqueta en el eje y
 		plt.tight_layout()
-		plt.savefig(PathImg + Var +'_NaN_Mens' + '.png',format='png',dpi=300 )
+		plt.savefig(PathImg + Var +'_NaN_Mens' + '.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def DalyCycle(self,HH,CiDT,ErrT,VarL,VarLL,Name,NameA,PathImg,**args):
@@ -300,8 +317,8 @@ class Hydro_Plotter:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -309,7 +326,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -341,7 +358,7 @@ class Hydro_Plotter:
 		plt.gca().xaxis.set_minor_locator(minorLocatorx)
 		plt.gca().yaxis.set_minor_locator(minorLocatory)
 		plt.tight_layout()
-		plt.savefig(PathImg + 'CTErr_' + NameA+'.png',format='png',dpi=300 )
+		plt.savefig(PathImg + 'CTErr_' + NameA+'.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def DalyCyclePer(self,HH,zM,zMed,P10,P90,PV90,PV10,VarL,VarLL,Name,NameA,PathImg):
@@ -371,8 +388,8 @@ class Hydro_Plotter:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -380,7 +397,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -399,7 +416,7 @@ class Hydro_Plotter:
 		plt.plot(HH,zMed,'k--',label='Mediana',lw=1.5)
 		plt.fill_between(HH,P10,P90,color='silver',label=r'P$_{%s}$ a P$_{%s}$' %(PV10,PV90))
 		plt.plot(HH,P10,'w-',lw=0.0001)
-		plt.legend(loc=0)
+		plt.legend(loc=9)
 		plt.xlim([0,23])
 		ax = plt.gca()
 		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
@@ -419,7 +436,143 @@ class Hydro_Plotter:
 		plt.gca().xaxis.set_minor_locator(minorLocatorx)
 		plt.gca().yaxis.set_minor_locator(minorLocatory)
 		plt.tight_layout()
-		plt.savefig(PathImg + 'CTPer_' + NameA+'.png',format='png',dpi=300 )
+		plt.savefig(PathImg + 'CTPer_' + NameA+'.png',format='png',dpi=self.dpi )
+		plt.close('all')
+		return
+
+	def DalyAnCycle(self,MonthsM,PathImg='',Name='',NameSt='',VarL='',VarLL='',VarInd='',FlagMan=False,vmax=None,vmin=None,Flagcbar=True,FlagIng=False,FlagSeveral=True):
+		'''
+		DESCRIPTION:
+			
+			With this function you can get the diurnal cycle of the
+			percentage of precipitation along the year.
+
+			Also plots the graph.
+		_______________________________________________________________________
+
+		INPUT:
+			+ MonthsMM: Variable of days for months.
+			+ PathImg: Path for the Graph.
+			+ Name: Name of the graph.
+			+ NameSt: Name of the Name of the Sation.
+			+ FlagMan: Flag to get the same cbar values.
+			+ vmax: Maximum value of the cbar.
+			+ vmin: Maximum value of the cbar.
+			+ VarL: Variable label with units.
+			+ VarLL: Variable label without units.
+			+ VarInd: Variable indicative (example: Prec).
+			+ Flagcbar: Flag to plot the cbar.
+			+ FlagIng: Flag to convert laels to english.
+			+ FlagSeveral: Flag to make big labels.
+		_______________________________________________________________________
+		
+		OUTPUT:
+			This function plots and saves a graph.
+			- MonthsMP: Directory with the monthly values of percentage
+			- PorcP: Directory with the 
+		'''
+
+		if VarInd == '':
+			VarInd = self.VarInd[VarLL.lower()]
+		
+		if FlagIng:
+			MM = ['Jan','Mar','May','Jul','Sep','Nov','Jan']
+		else:
+			MM = ['Ene','Mar','May','Jul','Sep','Nov','Ene']
+
+		
+
+
+		# Input data from 7 to 7 and from Jan to Jan
+		x = np.arange(0,24)
+		x3 = np.arange(0,25)
+		ProcP2 = np.hstack((MonthsM[:,7:],MonthsM[:,:7]))
+		x2 = np.hstack((x[7:],x[:7]))
+		for i in range(len(ProcP2)):
+			ProcP22 = 0
+			ProcP22 = np.hstack((ProcP2[i,:],ProcP2[i,0]))
+			if i == 0:
+				ProcP3 = ProcP22
+			else:
+				ProcP3 = np.vstack((ProcP3,ProcP22))
+
+		ProcP3 = np.vstack((ProcP3,ProcP3[0,:]))
+		
+		# Datos para las gráficas
+		if vmax != None:
+			v = np.linspace(vmin, vmax, 9, endpoint=True)
+			bounds = np.arange(vmin,vmax+0.1,1)
+
+		x2 = np.hstack((x2,x2[0]))
+		x22 = np.array([x2[i] for i in range(0,len(x2),3)])
+
+		# Tamaño de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		# Labels fontsize
+		if FlagSeveral:
+			LabFont = 28
+			LabTi = 32
+		else:
+			LabFont = 16
+			LabTi = 18
+
+		# Se genera la gráfica
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': LabFont,'font.family': 'sans-serif'\
+			,'font.sans-serif': 'Arial'\
+			,'xtick.labelsize': LabFont,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': LabFont,'ytick.major.size': 6,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='x',which='major',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on',direction='out')
+		plt.tick_params(axis='y',which='major',direction='out') 
+		plt.grid()
+
+		if FlagMan:
+			plt.contourf(x3,np.arange(1,14),ProcP3,v,vmax=vmax,vmin=vmin)
+		else:
+			plt.contourf(x3,np.arange(1,14),ProcP3)
+		plt.title(NameSt,fontsize=LabTi)  # Colocamos el título del gráfico
+		# plt.ylabel('Meses',fontsize=15)  # Colocamos la etiqueta en el eje x
+		# plt.xlabel('Horas',fontsize=15)  # Colocamos la etiqueta en el eje y
+		axs = plt.gca()
+		axs.yaxis.set_ticks(np.arange(1,14,2))
+		axs.set_yticklabels(MM)
+		axs.xaxis.set_ticks(np.arange(0,25,3))
+		axs.set_xticklabels(x22)
+		plt.tight_layout()
+		if Flagcbar:
+			if FlagMan:
+				cbar = plt.colorbar(boundaries=bounds,ticks=v)
+			else:
+				cbar = plt.colorbar()
+			cbar.set_label(VarL)
+		plt.gca().invert_yaxis()
+		# plt.legend(loc=1)
+		plt.grid()
+		# The minor ticks are included
+		ax = plt.gca()
+		xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/3 # minorLocatorx value
+		minorLocatorx = MultipleLocator(MxL)
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/2 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().xaxis.set_minor_locator(minorLocatorx)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+		plt.tight_layout()
+		plt.savefig(PathImg + 'T'+VarInd+'_' + Name+'.png',format = 'png',dpi=self.dpi )
 		plt.close('all')
 
 	def AnnualCycle(self,MesM,MesE,VarL,VarLL,Name,NameA,PathImg,AH=False,**args):
@@ -446,8 +599,8 @@ class Hydro_Plotter:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 		# Vector de meses
@@ -465,7 +618,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -481,7 +634,7 @@ class Hydro_Plotter:
 		plt.grid()
 		# Argumentos que se deben incluir color=C,label=VarLL,lw=1.5
 		plt.errorbar(np.arange(1,13),MesM2,yerr=MesE2,fmt='-',**args)
-		plt.title('Ciclo anual de '+ VarLL +' en ' + Name,fontsize=16 )  # Colocamos el título del gráfico
+		plt.title('Ciclo anual de '+ VarLL +' en ' + Name,fontsize=15 )  # Colocamos el título del gráfico
 		plt.ylabel(VarL,fontsize=16)  # Colocamos la etiqueta en el eje x
 		plt.xlabel('Meses',fontsize=16)  # Colocamos la etiqueta en el eje y
 		# The minor ticks are included
@@ -493,7 +646,7 @@ class Hydro_Plotter:
 		ax.set_xlim([0.5,12.5])
 		plt.xticks(np.arange(1,13), Months2) # Se cambia el valor de los ejes
 		plt.tight_layout()
-		plt.savefig(PathImg + 'CAErr_' + NameA+'.png',format='png',dpi=300 )
+		plt.savefig(PathImg + 'CAErr_' + NameA+'.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def AnnualCycleBoxPlot(self,MesM,VarL,VarLL,Name,NameA,PathImg,AH=False):
@@ -519,8 +672,8 @@ class Hydro_Plotter:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 		# Vector de meses
@@ -538,7 +691,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -593,7 +746,7 @@ class Hydro_Plotter:
 		ax.set_xlim([-0.5,11.5])
 		plt.xticks(np.arange(0,12), Months2) # Se cambia el valor de los ejes
 		plt.tight_layout()
-		plt.savefig(PathImg + 'CAErr_' + NameA+'.png',format='png',dpi=300 )
+		plt.savefig(PathImg + 'CAErr_' + NameA+'.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def AnnualS(self,Fecha,AnM,AnE,VarL,VarLL,Name,NameA,PathImg,**args):
@@ -619,8 +772,8 @@ class Hydro_Plotter:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -628,7 +781,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -655,7 +808,7 @@ class Hydro_Plotter:
 		ax.set_xlim([Fecha[0]-timedelta(60),Fecha[-1]+timedelta(30)])
 		plt.gca().yaxis.set_minor_locator(minorLocatory)
 		plt.tight_layout()
-		plt.savefig(PathImg + 'SAnErr_' + NameA+'.png',format='png',dpi=300 )
+		plt.savefig(PathImg + 'SAnErr_' + NameA+'.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def GCorr(self,CP,VarL1,VarL2,Names,NameA,PathImg='',**args):
@@ -680,8 +833,8 @@ class Hydro_Plotter:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -691,7 +844,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
@@ -717,7 +870,7 @@ class Hydro_Plotter:
 		minorLocatory = MultipleLocator(MyL)
 		plt.gca().yaxis.set_minor_locator(minorLocatory)
 		plt.tight_layout()
-		plt.savefig(PathImg + 'Correlaciones_'+ NameA +'.png',format='png',dpi=300 )
+		plt.savefig(PathImg + 'Correlaciones_'+ NameA +'.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def AnnualCycleCompS(self,V1,V2,Lab1,Lab2,VarLL,Var_LUn,Var='',PathImg=''):
@@ -749,8 +902,8 @@ class Hydro_Plotter:
 		V2M = np.reshape(V2,(-1,12))
 		V2MM = np.nanmean(V2M,axis=0)
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 		# Vector de meses
@@ -761,7 +914,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -791,7 +944,7 @@ class Hydro_Plotter:
 		ax.set_xlim([0.5,12.5])
 		plt.xticks(np.arange(1,13), Months2) # Se cambia el valor de los ejes
 		plt.tight_layout()
-		plt.savefig(PathImg + Var+'.png',format='png',dpi=300 )
+		plt.savefig(PathImg + Var+'.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def CompS(self,Date,V1,V2,Lab1,Lab2,Var_LUn,Var='',flagT=True,v='',PathImg=''):
@@ -820,8 +973,8 @@ class Hydro_Plotter:
 		'''
 		warnings.filterwarnings('ignore')
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -829,7 +982,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -868,7 +1021,7 @@ class Hydro_Plotter:
 		# Se arregla el espaciado de la figura
 		plt.tight_layout()
 		# Se guarda la figura
-		plt.savefig(PathImg +Var +'_Comp' + '.png',format='png',dpi=300)
+		plt.savefig(PathImg +Var +'_Comp' + '.png',format='png',dpi=self.dpi)
 		plt.close('all')
 
 		# Se genera el gráfico de los errores de estimación
@@ -879,7 +1032,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -926,7 +1079,7 @@ class Hydro_Plotter:
 		# Se arregla el espaciado de la figura
 		plt.tight_layout()
 		# Se guarda la figura
-		plt.savefig(PathImg + Var+'_Err' + '.png',format='png',dpi=300)
+		plt.savefig(PathImg + Var+'_Err' + '.png',format='png',dpi=self.dpi)
 		plt.close('all')
 
 		q = ~np.isnan(Err)
@@ -937,12 +1090,12 @@ class Hydro_Plotter:
 
 		# Tamaño de la Figura
 		fH=25 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fV = fH*(2.0/3.0) # Ancho de la Figura
 
 		# Se incluye el histograma y el diagrama de dispersión
 		fig, axs = plt.subplots(1,2, figsize=utl.cm2inch(fH,fV), facecolor='w', edgecolor='k')
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -996,7 +1149,7 @@ class Hydro_Plotter:
 		minorLocatorx = MultipleLocator(MxL)
 		axs[1].xaxis.set_minor_locator(minorLocatorx)
 		plt.tight_layout()
-		plt.savefig(PathImg + Var+'_Hist' + '.png',format='png',dpi=300)
+		plt.savefig(PathImg + Var+'_Hist' + '.png',format='png',dpi=self.dpi)
 		plt.close('all')
 
 	def PorHid(self,PorP,PorI,PorE,Var='',flagT=True,Names='',PathImg=''):
@@ -1024,8 +1177,8 @@ class Hydro_Plotter:
 
 		Months2 = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dec']
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -1033,7 +1186,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
@@ -1072,37 +1225,37 @@ class Hydro_Plotter:
 		plt.xlabel(u'Mes',fontsize=16)  # Colocamos la etiqueta en el eje x
 		plt.ylabel('Porcentaje',fontsize=16)  # Colocamos la etiqueta en el eje y
 		plt.tight_layout()
-		plt.savefig(PathImg + Var +'Hidro_Por_Mens' + '.png',format='png',dpi=300 )
+		plt.savefig(PathImg + Var +'Hidro_Por_Mens' + '.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def EventPres(self,Date,Value,Datest,PCxi,PCxf,PCxfB,Dxi,Dxf,Name='',PathImg='',Nameout=''):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Esta función permite hacer las gráficas de datos faltantes mensuales.
+			Esta función permite .
 
 		_________________________________________________________________________
 
-			INPUT:
-		+ Date: Vector de fechas en formato date.
-		+ Value: Vector de valores de lo que se quiere graficar.
-		+ Datest: Fecha de comienzan del evento de lluvia en string.
-		+ PCxi: Posición del mínimo de presión.
-		+ PCxf: Posición del máximo de presión durante el evento.
-		+ PCxfB: Posición del máximo de presión antes el evento.
-		+ Dxi: Posición del inicio del evento.
-		+ Dxf: Posición del final del evento.
-		+ Name: Nombre de la estación para el título.
-		+ PathImg: Ruta donde se quiere guardar el archivo.
-		+ Nameout: Ruta y nombre del documento que se quiere guardar
+		INPUT:
+			+ Date: Vector de fechas en formato date.
+			+ Value: Vector de valores de lo que se quiere graficar.
+			+ Datest: Fecha de comienzan del evento de lluvia en string.
+			+ PCxi: Posición del mínimo de presión.
+			+ PCxf: Posición del máximo de presión durante el evento.
+			+ PCxfB: Posición del máximo de presión antes el evento.
+			+ Dxi: Posición del inicio del evento.
+			+ Dxf: Posición del final del evento.
+			+ Name: Nombre de la estación para el título.
+			+ PathImg: Ruta donde se quiere guardar el archivo.
+			+ Nameout: Ruta y nombre del documento que se quiere guardar
 		_________________________________________________________________________
 		
 			OUTPUT:
 		Esta función arroja una gráfica y la guarda en la ruta desada.
 		'''
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -1110,7 +1263,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -1159,7 +1312,7 @@ class Hydro_Plotter:
 		plt.gca().yaxis.set_minor_locator(minorLocatory)
 
 		plt.tight_layout()
-		plt.savefig(Nameout + '.png',format='png',dpi=300 )
+		plt.savefig(Nameout + '.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 	def SPvDPPotAdj(self,DurPrec,PresRate,Name='',PathImg='',Nameout='',FlagA=True,FlagAn=False):
@@ -1208,8 +1361,8 @@ class Hydro_Plotter:
 			PresRateC = Coef[0]*x**Coef[1]
 
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -1217,7 +1370,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -1269,7 +1422,121 @@ class Hydro_Plotter:
 				plt.text(xTL[-4],yTL[-2]-2*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
 
 		plt.tight_layout()
-		plt.savefig(Nameout+'.png',format='png',dpi=300 )
+		plt.savefig(Nameout+'.png',format='png',dpi=self.dpi )
+		plt.close('all')
+
+		if FlagA:
+			return CC
+
+	def SPvDPPotGen(self,DurPrec,PresRate,Title='',xLabel='',yLabel='',Name='',PathImg='',FlagA=True,FlagAn=False):
+		'''
+			DESCRIPTION:
+		
+		Esta función permite hacer las scatter.
+
+		_________________________________________________________________________
+
+			INPUT:
+		+ DurPrec: Vector de duración de las tormentas en horas.
+		+ PresRate: Vector de valores tasa de cambio de presión.
+		+ Name: Nombre de la estación para el título.
+		+ PathImg: Ruta donde se quiere guardar el archivo.
+		+ FlagA: Indicador si se quiere realizar el ajuste.
+		+ FlagAn: Indicador para anotar el número del punto.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+
+		# Se calcula el ajuste
+		if FlagA:
+			# Se importa el paquete de Fit
+			from CFitting import CFitting
+			CF = CFitting()
+
+			# Se realiza la regresión
+			Coef, perr,R2 = CF.FF(DurPrec,PresRate,2)
+
+			# Se toman los datos para ser comparados posteriormente
+			DD,PP = utl.NoNaN(DurPrec,PresRate,False)
+			N = len(DD)
+			a = Coef[0]
+			b = Coef[1]
+			desv_a = perr[0]
+			desv_b = perr[1]
+			# Se garda la variable
+			CC = np.array([N,a,b,desv_a,desv_b,R2])
+			
+			
+			# Se realiza el ajuste a ver que tal dió
+			x = np.linspace(np.nanmin(DurPrec),np.nanmax(DurPrec),100)
+			PresRateC = Coef[0]*x**Coef[1]
+
+		# Tamaño de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': self.font\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='out')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		# Precipitación
+		plt.scatter(DurPrec,PresRate)
+		plt.title(Title,fontsize=16)
+		plt.xlabel(xLabel,fontsize=16)
+		plt.ylabel(yLabel,fontsize=16)
+
+		if FlagAn:
+			# Número de cada punto
+			n = np.arange(0,len(DurPrec))
+			for i, txt in enumerate(n):
+				plt.annotate(txt, (DurPrec[i],PresRate[i]),fontsize=8)
+
+		# Axes
+		ax = plt.gca()
+		xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+		plt.xlim([0,np.nanmax(DurPrec)+2*MxL])
+
+		xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+		MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+		minorLocatorx = MultipleLocator(MxL)
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().xaxis.set_minor_locator(minorLocatorx)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+
+		# Se incluye el ajuste
+		if FlagA:
+			plt.plot(x,PresRateC,'k--')
+			# Se incluye la ecuación
+			if np.nanmin(PresRate) < 0:
+				plt.text(xTL[-4],yTL[2]+2*MyL, r'$y = %sx^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+				plt.text(xTL[-4],yTL[2], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+			else:
+				plt.text(xTL[-4],yTL[-2], r'$y = %sx^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
+				plt.text(xTL[-4],yTL[-2]-2*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+
+		plt.tight_layout()
+		Nameout = PathImg+Name
+		plt.savefig(Nameout+'.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 		if FlagA:
@@ -1321,8 +1588,8 @@ class Hydro_Plotter:
 			PresRateC = Coef[0]*x+Coef[1]
 
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -1330,7 +1597,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
@@ -1383,7 +1650,7 @@ class Hydro_Plotter:
 			plt.text(xTL[-4],yTL[-2]-2*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
 
 		plt.tight_layout()
-		plt.savefig(Nameout+'.png',format='png',dpi=300 )
+		plt.savefig(Nameout+'.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
 		if FlagA:
@@ -1433,8 +1700,8 @@ class Hydro_Plotter:
 		D = st.kurtosis(Data[q])
 
 		# Tamaño de la Figura
-		fH=20 # Largo de la Figura
-		fV = fH*(2/3) # Ancho de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
 		# Se crea la carpeta para guardar la imágen
 		utl.CrFolder(PathImg)
 
@@ -1442,7 +1709,7 @@ class Hydro_Plotter:
 		F = plt.figure(figsize=utl.cm2inch(fH,fV))
 		# Parámetros de la Figura
 		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-			,'font.sans-serif': 'Arial Narrow'\
+			,'font.sans-serif': self.font\
 			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
 			,'xtick.major.width': 1,'xtick.minor.width': 1\
 			,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
@@ -1496,7 +1763,146 @@ class Hydro_Plotter:
 		if M == 'porcen':
 			plt.ylabel('Porcentaje [%]',fontsize=16)  # Colocamos la etiqueta en el eje y
 		plt.tight_layout()
-		plt.savefig(PathImg + Name +'_Hist' + '.png',format='png',dpi=300 )
+		plt.savefig(PathImg + Name +'_Hist' + '.png',format='png',dpi=self.dpi )
 		plt.close('all')
 
+	def ButterworthGraph(self,FiltData,fs,order,worN=2000,PathImg='',Name='Filt'):
+		'''
+		DESCRIPTION:
 
+			Esta función permite comparar dos ciclos anuales.
+		________________________________________________________________________
+
+		INPUT:
+			+ FiltData: b and a of the filter. 
+			+ order: order of the filter.
+			+ worN: See freqz documentation.
+		_________________________________________________________________________
+
+		OUTPUT:
+			
+		'''
+		warnings.filterwarnings('ignore')
+		b = FiltData[0]
+		a = FiltData[1]
+		w, h = freqz(b, a, worN=worN)
+
+		# Figure size
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		if PathImg != '':
+			utl.CrFolder(PathImg)
+		# Se genera la gráfica
+		F = plt.figure(figsize=utl.cm2inch(fH,fV))
+		# Parámetros de la Figura
+		plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+			,'font.sans-serif': self.font\
+			,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+			labelbottom='on',direction='in')
+		plt.tick_params(axis='x',which='major',direction='inout')
+		plt.tick_params(axis='y',which='both',left='on',right='off',\
+			labelleft='on')
+		plt.tick_params(axis='y',which='major',direction='inout') 
+		plt.grid()
+		# plt.plot((fs*0.5/np.pi)*w, abs(h), label="order = %d" % order)
+		# plt.plot((fs*0.5)*w, abs(h), label="order = %d" % order)
+		plt.plot(w, abs(h), label="order = %d" % order)
+		# plt.semilogx(w,  20 * np.log10(abs(h)), label="order = %d" % order)
+		plt.title('Butterworth filter frequency response')
+		plt.xlabel('Frequency [radians / second]')
+		plt.ylabel('Amplitude [dB]')
+		# The minor ticks are included
+		ax = plt.gca()
+		yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+		MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+		minorLocatory = MultipleLocator(MyL)
+		plt.gca().yaxis.set_minor_locator(minorLocatory)
+		plt.tight_layout()
+		plt.savefig(PathImg + Name +'.png',format='png',dpi=self.dpi )
+		plt.close('all')
+		return
+	
+	def FilComp(self,dates,Data,DataF,a,b,VarU,PathImg='',Name='Estación',Var='Pres',Filt=''):
+		'''
+		DESCRIPTION:
+		
+			Esta función permite comparar la serie normal con la serie 
+			filtrada.
+		_________________________________________________________________________
+
+		INPUT:
+			+ Date: Vector de fechas en formato date.
+		_________________________________________________________________________
+		
+			OUTPUT:
+		Esta función arroja una gráfica y la guarda en la ruta desada.
+		'''
+		warnings.filterwarnings('ignore')
+		# Tamaño de la Figura
+		fH = self.fH # Largo de la Figura
+		fV = self.fV # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg)
+
+		plt.rcParams.update({'font.size': 14,'font.family': 'sans-serif'\
+			,'font.sans-serif': self.font\
+			,'xtick.labelsize': 14,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 10,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+
+		# Se genera la gráfica
+		fig, axs = plt.subplots(2,1, figsize=utl.cm2inch(fH,fV))
+		axs = axs.ravel() # Para hacer un loop con los subplots
+
+		axs[0].plot(dates[a:b],Data[a:b],'k-')
+		axs[0].axes.get_xaxis().set_visible(False)
+		axs[0].set_title('Serie sin filtrar',fontsize=16)
+		axs[0].set_ylabel(VarU,fontsize=16)
+		axs[1].plot(dates[a:b],DataF[a:b],'k-')
+		axs[1].set_title('Serie filtrada',fontsize=16)
+		axs[1].set_ylabel(VarU,fontsize=16)
+		# axs[1].set_xlabel(u'Fecha',fontsize=16)
+		# for tick in axs[0].get_xticklabels():
+		# 	tick.set_rotation(45)
+		for tick in axs[1].get_xticklabels():
+			tick.set_rotation(45)
+		plt.tight_layout()
+		plt.savefig(PathImg+ Name + '_' +Var+Filt+'_SeriesSep.png',format='png',dpi=300)
+		plt.close('all')
+
+		# -----------
+		# Se genera la gráfica
+		plt.rcParams.update({'font.size': 14,'font.family': 'sans-serif'\
+			,'font.sans-serif': self.font\
+			,'xtick.labelsize': 14,'xtick.major.size': 6,'xtick.minor.size': 4\
+			,'xtick.major.width': 1,'xtick.minor.width': 1\
+			,'ytick.labelsize': 10,'ytick.major.size': 12,'ytick.minor.size': 4\
+			,'ytick.major.width': 1,'ytick.minor.width': 1\
+			,'axes.linewidth':1\
+			,'grid.alpha':0.1,'grid.linestyle':'-'})
+		fig= plt.figure(figsize=utl.cm2inch(fH,fV))
+
+		plt.plot(dates[a:b],Data[a:b],'b-',label='Sin filtrar')
+		plt.plot(dates[a:b],DataF[a:b],'r--',label='Filtrada')
+		plt.title('Serie',fontsize=16)
+		plt.ylabel(VarU,fontsize=16)
+		# plt.xlabel(u'Fecha',fontsize=16)
+		plt.legend(loc=1,fontsize=13)
+
+		# for tick in axs[0].get_xticklabels():
+		# 	tick.set_rotation(45)
+		for tick in plt.gca().get_xticklabels():
+			tick.set_rotation(45)
+		plt.tight_layout()
+		plt.savefig(PathImg+ Name + '_' +Var+Filt+'_Series.png',format='png',dpi=300)
+		plt.close('all')

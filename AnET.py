@@ -21,112 +21,74 @@ import matplotlib.pyplot as plt
 import scipy.fftpack as fftpack
 from scipy.fftpack import rfft, irfft, fftfreq # Paquete para utilizar las funciones
 from scipy import stats as st
-from scipy.signal import butter, lfilter
-from scipy.signal import freqz
+import scipy.signal as signal
+from scipy.signal import butter, lfilter, freqz
 
-from UtilitiesDGD import UtilitiesDGD
-utl = UtilitiesDGD()
+from Utilities import Utilities
+from Hydro_Plotter import Hydro_Plotter
+utl = Utilities()
+HyPl = Hydro_Plotter()
+
 
 class AnET:
+	'''
+	____________________________________________________________________________
+	
+	CLASS DESCRIPTION:
+		
+		This class have different routines for data analysis.
+	
+		This class is of free use and can be modify, if you have some 
+		problem please contact the programmer to the following e-mails:
+	
+		- danielgondu@gmail.com	
+		- dagonzalezdu@unal.edu.co
+		- daniel.gonzalez17@eia.edu.co
+	
+		--------------------------------------
+		 How to use the library
+		--------------------------------------
 
+	____________________________________________________________________________
 
+	'''
 	def __init__(self):
+    	
+		
+		return
 
+	def FT(self,f,t):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
+			This function calculates the Fourier transformation of a data array.
 
-		Este es el constructor por defecto, no realiza ninguna acción.
-		'''
-
-	def butter_bandpass(self, lowcut, highcut, fs, order=5):
-		'''
-			DESCRIPTION:
-
-		Con esta función se pretende realizar un filtro de pasa baja, para recortar
-		una serie, este código fue tomado de: 
-
-		http://scipy-cookbook.readthedocs.io/items/ButterworthBandpass.html
-		_________________________________________________________________________
-
-			INPUT:
-		+ lowcut: Frecuencia baja a recortar.
-		+ highcut: Frecuenca alta a recortar.
-		+ fs: Frecuencia.
-		+ order: Orden de la ecuación.
-		_________________________________________________________________________		
-
-			OUTPUT:
-		- b: Numerator.
-		- a: Denominator.
-		'''
-		nyq = 0.5 * fs
-		low = lowcut / nyq
-		high = highcut / nyq
-		b, a = butter(order, [low, high], btype='band')
-		return b, a
-
-	def butter_bandpass_filter(self, data, lowcut, highcut, fs, order=5):
-		'''
-			DESCRIPTION:
-
-		Con esta función se pretende realizar un filtro de pasa baja, para recortar
-		una serie, este código fue tomado de: 
-
-		http://scipy-cookbook.readthedocs.io/items/ButterworthBandpass.html
-		_________________________________________________________________________
-			INPUT:
-		+ data: Serie de datos.
-		+ lowcut: Frecuencia baja a recortar.
-		+ highcut: Frecuenca alta a recortar.
-		+ fs: Frecuencia.
-		+ order: Orden de la ecuación.
-		_________________________________________________________________________
-
-			OUTPUT:
-		- y: Serie de datos filtrada.
-		'''
-		b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-		y = lfilter(b, a, data)
-		return y
-
-	def FT(self,f,t,dt=1):
-
-		'''
-			DESCRIPTION:
-
-		Con esta función se obtiene la transformada de Fourier de unos datos.
+			This function requieres that f has the same lenght that t and no NaN
+			Data.
 		____________________________________________________________________________
 
-			INPUT:
-		+ f: Los datos a los que se les va a sacar la transformada de Fourier.
-		+ t: La serie temporal utilizada para obtener las dfrecuencias.
-		+ dt: el paso de tiempo determinado para la serie de tiempo.
+		INPUT:
+			+ f: Data for the Fourier Transformation.
+			+ t: Time series for the Frequency.
 		____________________________________________________________________________
 
-			OUTPUT:
-		- amplitud: La amplitud de los coeficientes.
-		- potencia: la potencia asociada a los coeficientes.
-		- total: La suma total de las potencias.
-		- var: El porcentaje de varianza explicado por cada potencia.
-		- fr: La frecuencia asociada al tiempo.
-		- Period: Periodo asociado al tiempo.
-		- A: Coeficientes encontrados con la FFT.
+		OUTPUT:
+			- amplitud: Coefficient Amplitud.
+			- power: Power Spectrum.
+			- total: Sum of the potencies.
+			- var: Percentaje of the variance explained by each coefficient.
+			- fr: Frequency asociated to the time.
+			- Period: Period asociated with the time.
+			- A: Coefficients calcualted.
 		'''
-		# Se eliminan los datos faltantes
-		# xx = np.where(f == np.isnan(f))
-		# ff = f[xx[0]]
+		A = np.fft.fft(f)
+		fr = np.fft.fftfreq(len(t))
+		amplitud = np.abs(A)
+		power = np.abs(A)**2
+		total = np.sum(power)
+		var = power*100/total
+		period = 1/fr
 
-		A=np.fft.fft(f)
-		fr=np.fft.fftfreq(len(t),dt)
-		#if len(f) is not len(t):
-		#	utl.ExitError('FT','AnET','Vectors A and fr must be the same length')
-		amplitud=np.abs(A)
-		potencia=np.abs(A)**2
-		total=np.sum(potencia)
-		var=potencia*100/total
-		Period = 1/fr
-
-		return amplitud, potencia, total, var, fr, Period, A
+		return amplitud, power, total, var, fr, period, A
 
 	def FTr(self,f,t,dt=1):
 		'''
@@ -167,8 +129,6 @@ class AnET:
 		return amplitud, potencia, total, var, fr, Period, A
 
 	def graphfft(self,t,amplitud,potencia,var,fr,Period,Pathimg,ii=1,i=1):
-
-
 		'''
 			DESCRIPTION:
 
@@ -234,6 +194,78 @@ class AnET:
 		#Guardar la imagen
 		plt.savefig(Pathimg + 'Var'+ str(ii) + '_' + str(i) + '.png')
 
+	def ButterworthFiler(self,cuts,order,fs,btype='lowpass',flagG=False,worN=2000,PathImg='',Name='Filt'):
+		'''
+		DESCRIPTION:
+			This function makes a butterworth filter defaulted to bandpass.
+		____________________________________________________________________________
+
+		INPUT:
+			+ cuts: Can be either a a list or an intenger depending of what
+					the user wants to calculates.
+					if list then it should be like [lowcut,highcut]
+			+ order: order of the butterworth filter.
+			+ fs: sampling frequency, number of data.
+			+ btype: Type of the filter defaulted to lowpass.
+		____________________________________________________________________________
+
+		OUTPUT:
+			
+		'''
+		nyq = 0.5 * fs # Nyquist frequency.
+
+		flagboth = False
+		if isinstance(cuts,list):
+    			flagboth = True
+		
+		if flagboth:
+			low = ((1/cuts[0])*fs) / nyq
+			high = ((1/cuts[1])*fs) / nyq
+			Cut = [low,high]
+		else:
+			Cut = ((1/cuts)*fs) / nyq
+		
+		b, a = butter(order, Cut, btype=btype)
+
+		if flagG:
+			HyPl.ButterworthGraph([b,a],fs,order,worN=worN,PathImg=PathImg,Name=Name)
+
+		return b, a
+
+	def Filt_ButterworthApp(self,data,cuts,order,fs,btype='lowpass'):
+		'''
+		DESCRIPTION:
+			This function makes a butterworth filter defaulted to bandpass.
+		____________________________________________________________________________
+
+		INPUT:
+			+ data: Data that needs to be filtered
+			+ cuts: Can be either a a list or an intenger depending of what
+					the user wants to calculates.
+			+ order: order of the butterworth filter.
+			+ fs: sampling frequency, number of data.
+			+ btype: Type of the filter defaulted to lowpass.
+		____________________________________________________________________________
+
+		OUTPUT:
+			y: filtered series.
+		'''
+
+		# Filer
+		b,a = self.ButterworthFiler(cuts,order,fs,btype=btype,flagG=False)
+		
+		# Data filtered
+		y = signal.filtfilt(b, a, data)
+
+		# b1,a1 = self.ButterworthFiler(1/0.001,order,fs,btype='lowpass',flagG=False)
+		
+		# # Data filtered 2
+		# y2 = signal.filtfilt(b1, a1, data,padtype='constant')
+
+		# y = y + y2
+
+		return y
+    		
 	def FilFFT(self,f,t,FiltHi,FiltHf,dt=1,flag=True,Pathimg='',x1=0,x2=50,V='Pres',tt='minutos',Ett=0,ii=1,ix='pos',DTT='5'):
 		'''
 			DESCRIPTION:
@@ -892,22 +924,22 @@ class AnET:
 
 		return Anom
 
-	def t_test(self,Data,Time,Alpha):
+	def t_test(self,Data,Time,Alpha=0.025):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		This function calculates the statistical significance of a trend using a
-		t-test.
-		_________________________________________________________________________
+			This function calculates the statistical significance of a 
+			trend using a t-test.
+		_______________________________________________________________________
 
-			INPUT:
-		+ Data: Data series.
-		+ Time: Time series.
-		+ Alpha: Statistical significance.
-		_________________________________________________________________________
+		INPUT:
+			+ Data: Data series.
+			+ Time: Time series.
+			+ Alpha: Statistical significance asummed 0.05.
+		_______________________________________________________________________
 		
-			OUTPUT:
-		- HP: Hipotesis result: 1 if it accept, 0 if it rejects.
+		OUTPUT:
+			- HP: Hipotesis result: 1 if it accept, 0 if it rejects.
 		'''
 		# No NaN data
 		q = ~(np.isnan(Data))
@@ -921,6 +953,7 @@ class AnET:
 		# Correlation
 		C = st.pearsonr(Data[q],Time[q])[0]
 		CC = C**2
+
 		# Calculated T_Score
 		T_Cal = C*np.sqrt((N-2)/(1-CC))
 
@@ -935,31 +968,35 @@ class AnET:
 
 	def Trend(self,Data,Time,Alpha=0.025):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		This function calculates the trend of a series.
-		_________________________________________________________________________
+			This function calculates the trend of a series.
+		_______________________________________________________________________
 
-			INPUT:
-		+ Data: Data series.
-		+ Time: Time series.
-		+ Alpha: Statistical significance.
-		_________________________________________________________________________
+		INPUT:
+			+ Data: Data series.
+			+ Time: Time series.
+			+ Alpha: Statistical significance.
+		_______________________________________________________________________
 		
-			OUTPUT:
-		- Tr: Trend.
-		- HP: Statistical significance
+		OUTPUT:
+			- Tr: Trend.
+			- HP: Statistical significance
 		'''
 		# No NaN data
 		Data = np.array(Data)
 		Time = np.array(Time)
 		q = ~(np.isnan(Data))
+		qq = sum(q)
 
-		# Trend
-		Tr, intercept, r_value, p_value, std_err = st.linregress(Time[q],Data[q])
-
-		# Statistical significance
-		HP = self.t_test(Data,Time,Alpha)
+		if qq >= len(Data)*0.7:
+			# Trend
+			Tr, intercept, r_value, p_value, std_err = st.linregress(Time[q],Data[q])
+			# Statistical significance
+			HP = self.t_test(Data,Time,Alpha)
+		else:
+			Tr = np.nan
+			HP = np.nan
 
 		return Tr,HP
 

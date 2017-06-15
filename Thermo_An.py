@@ -145,14 +145,14 @@ class Thermo_An:
 
 	def Eeq(self,q,p):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		This function calculates the vapor pressure from the specific humidity
+			This function calculates the vapor pressure from the specific humidity
 		_________________________________________________________________________
 
-			INPUT:
-		+ q: Specific Humidity.
-		+ p: Pressure.
+		INPUT:
+			+ q: Specific Humidity.
+			+ p: Pressure.
 		_________________________________________________________________________
 		
 			OUTPUT:

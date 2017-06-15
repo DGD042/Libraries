@@ -22,23 +22,43 @@ class UtilitiesDGD:
 	def __init__(self):
 
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 
-		Este es el constructor por defecto, no realiza ninguna acción.
+			Este es el constructor por defecto, no realiza ninguna acción.
 		'''
+	
+	def ShowError(self,fn,cl,msg):
+		'''
+		DESCRIPTION:
+
+			This function manages errors, and shows them. 
+
+			Error managment is -1 in all this class.
+
+		_________________________________________________________________________
+		INPUT:
+			+ fn: Function that produced the error.
+			+ cl: Class that produced the error.
+			+ msg: Message of the error.
+		'''
+
+		print('Error in the function '+fn+' from the class '+cl+': '+msg)
+		
+		return -1
 
 	def ExitError(self,fn,cl,msg):
 
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 
-		Este detiene la ejecución de un código por un error que se
-		presente que no deje avanzar la ejecución.
+			Este detiene la ejecución de un código por un error que se
+			presente que no deje avanzar la ejecución.
 		_________________________________________________________________________
-			INPUT:
-		+ fn: Función que produjo el error
-		+ cl: Clase que produjo el error
-		+ msg: Mensaje del error
+		
+		INPUT:
+			+ fn: Función que produjo el error
+			+ cl: Clase que produjo el error
+			+ msg: Mensaje del error
 		'''
 
 		print('Error in the function '+fn+' from the class '+cl+': '+msg)

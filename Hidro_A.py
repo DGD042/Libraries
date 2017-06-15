@@ -49,7 +49,7 @@ class Hidro_A:
 		This is the build up function.
 		'''
 
-	def CiclD(self,Var,Fecha,FlagG=True,PathImg='',NameA='',VarL='',VarLL='',C='k',Name='',flagTri=False,flagTriP=False,PathImgTri='',DTH=24):
+	def CiclD(self,Var,Fecha,FlagG=True,PathImg='',NameA='',VarL='',VarLL='',C='k',Name='',flagTri=False,flagTriP=False,PathImgTri='',DTH=24,flagCeros=True):
 		'''
 			DESCRIPTION:
 		
@@ -97,7 +97,7 @@ class Hidro_A:
 		TriMD = dict() # Desviación estándar trimestral
 		TriME = dict() # Error medio trimestral
 
-		VarM = np.reshape(Var[:],(-1,DTH))
+		VarM = np.reshape(np.copy(Var),(-1,DTH))
 		
 		Yi = int(Fecha[0])
 		Yf = int(Fecha[1])
@@ -156,12 +156,13 @@ class Hidro_A:
 
 				d = dtt
 			x += 1
-		if VarLL == 'Precipitación':
+		if VarLL == 'Precipitación' or VarLL == 'Precipitacion'or VarLL == 'Precipitation':
 			TM = []
 			# Se eliminan todos los ceros de las variables.
 			for i in range(1,13):
-				q = np.where(MesesM[i] <= 0.1)
-				MesesM[i][q] = float('nan')
+				if flagCeros:
+					q = np.where(MesesM[i] <= 0.1)
+					MesesM[i][q] = float('nan')
 
 			for i in range(1,13): # Meses
 				MesesMM[i] = np.nanmean(MesesM[i],axis=0)
@@ -182,8 +183,9 @@ class Hidro_A:
 					TriME[i] = [k/np.sqrt(len(TriM[i])) for k in TriMD[i]]
 
 		if VarLL == 'Precipitación':
-			q = np.where(VarM <= 0.1)
-			VarM[q] = np.nan
+			if flagCeros:
+				q = np.where(VarM <= 0.1)
+				VarM[q] = np.nan
 
 			# Se calcula el ciclo diurno para todos los datos
 			CiDT = np.nanmean(VarM, axis=0)

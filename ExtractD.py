@@ -21,6 +21,7 @@
 #______________________________________________________________________________
 
 import numpy as np
+import matplotlib.pyplot as plt
 import sys
 import csv
 import xlrd # Para poder abrir archivos de Excel
@@ -33,49 +34,120 @@ from datetime import date, datetime, timedelta
 from UtilitiesDGD import UtilitiesDGD
 utl = UtilitiesDGD()
 
+# ------------------------
+# Funciones
+# ------------------------
+def LoopDataDaily_IDEAM(FechaP,Value,xRow_St,xCol_St,Years):
+	'''
+		DESCRIPTION:
+	
+	Con esta función se extraen los valores de un documento del IDEAM.
+	_________________________________________________________________________
 
-class ExtractD:
+		INPUT:
+	+ FechaP: Lista vacía o con valores previós para agregar datos.
+	+ Value: Lista vacío o con valires previós para agregar datos.
+	+ xRow_St: Fila en donde comienzan los datos.
+	+ xCol_St: Columna en donde comienzan los datos.
+	+ Year: Año que se comenzará a llenar.
+	_________________________________________________________________________
+	
+		OUTPUT:
+	- FechaP: Fechas que se extrajeron.
+	- Value: Valores que se extrajeron.
+	'''
+	for j in range(1,13):
+		FechaSt = date(int(Years),j,1)
+		if j == 12:
+			FechaEnd = date(int(Years)+1,1,1)
+		else:
+			FechaEnd = date(int(Years),j+1,1)
+		Days = (FechaEnd-FechaSt).days
+		
+		xR = xRow_St
+		for i in range(1,Days+1):
+			FechaP.append(date(int(Years),j,i))
+			try:
+				Value.append(float(Lines[xR][xCol_St:xCol_St+5]))
+			except ValueError:
+				Value.append(np.nan)
+
+			xR += 2
+		xCol_St += 9
+
+	return FechaP,Value
+
+def perdelta(start, end, delta):
+	'''
+	DESCRIPTION:
+	
+		Función extraída de internet que permite realizar vectores de fechas a 
+		partir de dos fechas
+	_________________________________________________________________________
+	
+	INPUT:
+		+ start: Fecha de inicio.
+		+ end: Fecha de final.
+		+ delta: Paso de tiempo
+	_________________________________________________________________________
+	
+	OUTPUT:
+	
+	'''
+	curr = start
+	while curr < end:
+		yield curr
+		curr += delta
+
+
+# ------------------------
+# Clase
+# ------------------------
+
+class ExtractD(object):
 
 	def __init__(self):
 
 		'''
 			DESCRIPTION:
 
-		Este es el constructor por defecto, no realiza ninguna acción.
+		
 		'''
+		return
 
+	# Extracción de información
 	def ED(self,Tot,flagD=True,sheet=0,Header=True,ni=0,n=1,deli=';',rrr=2):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende extraer la información de un archivo, por 
-		defecto siempre extrae la primera columna y luego la segunda, si es
-		necesario extraer otra columna adicional se debe incluir un vector en n.
+			Con esta función se pretende extraer la información de un archivo, por 
+			defecto siempre extrae la primera columna y luego la segunda, si es
+			necesario extraer otra columna adicional se debe incluir un vector en n.
 
-		Máximo se extraerán 4 columnas y los datos que se extraen deben estar en
-		flias y las variables en columnas.
+			Máximo se extraerán 4 columnas y los datos que se extraen deben estar en
+			flias y las variables en columnas.
 		_________________________________________________________________________
 
-			INPUT:
-		+ Tot: Es la ruta completa del archivo que se va a abrir.
-		+ flagD: Para ver que tipo de archivo se abrirá.
-				True: Para archivos de Excel.
-				False: Para el resto.
-		+ sheet: Número de la hoja del documento de excel
-		+ Header: Se pregunta si el archivo tiene encabezado.
-		+ ni: es la columna inicial en donde se tomarán los datos de tiempo.
-		+ n: es la columna o columnas que se van a extraer.
-		+ deli: Delimitador que separa las variables en caso que no sean de Excel.
-		+ rrr: Fila en donde comienzan los valores
+		INPUT:
+			+ Tot: Es la ruta completa del archivo que se va a abrir.
+			+ flagD: Para ver que tipo de archivo se abrirá.
+					True: Para archivos de Excel.
+					False: Para el resto.
+			+ sheet: Número de la hoja del documento de excel
+			+ Header: Se pregunta si el archivo tiene encabezado.
+			+ ni: es la columna inicial en donde se tomarán los datos de tiempo.
+			+ n: es la columna o columnas que se van a extraer.
+			+ deli: Delimitador que separa las variables en caso que no sean de Excel.
+			+ rrr: Fila en donde comienzan los valores
 		_________________________________________________________________________
 		
-			OUTPUT:
-		- Tiempo: Es la primera variable que se extrae del documento en formato txt.
-		- Hora: Valores de hora, solo si len(ni) > 1.
-		- V1: Variable 1 que se extrae como float
-		- V2: Variable 2 que se extrae como float, depende de la cantidad de columnas.
-		- V3: Variable 3 que se extrae como float, depende de la cantidad de columnas.
-		- V4: Variable 4 que se extrae como float, depende de la cantidad de columnas.
+		OUTPUT:
+			- Tiempo: Es la primera variable que se extrae del documento en formato txt.
+			- Hora: Valores de hora, solo si len(ni) > 1.
+			- V1: Variable 1 que se extrae como float
+			- V2: Variable 2 que se extrae como float, depende de la cantidad de columnas.
+			- V3: Variable 3 que se extrae como float, depende de la cantidad de columnas.
+			- V4: Variable 4 que se extrae como float, depende de la cantidad de columnas.
 		
 		'''
 		# Se mira cuantas columnas se va a extraer como m
@@ -426,32 +498,30 @@ class ExtractD:
 
 	def EDEIA(self,Tot,Ai,Af):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende extraer la información horaria de los
-		sensores brindados por la Universidad EIA en el sector del PNN Los 
-		Nevados.
+			Con esta función se pretende extraer la información horaria de los
+			sensores brindados por la Universidad EIA en el sector del PNN Los 
+			Nevados.
 
-		Los sensores Hobo fueron instalados por el grupo de investigación a cargo
-		del profesor Daniel Ruiz Carrascal y son de uso libre para proyectos 
-		designados al estudio de la climatología de alta montaña.
+			Los sensores Hobo fueron instalados por el grupo de investigación a cargo
+			del profesor Daniel Ruiz Carrascal y son de uso libre para proyectos 
+			designados al estudio de la climatología de alta montaña.
 
-		Los archivos deben tener la organización específica de la plantilla de la
-		EIA, de otra manera la función no arrojará los resultados correctos.
+			Los archivos deben tener la organización específica de la plantilla de la
+			EIA, de otra manera la función no arrojará los resultados correctos.
 		_________________________________________________________________________
 
-			INPUT:
-		+ Tot: Es la ruta completa del archivo que se va a abrir.
-		+ Ai: Año incial de descarga no puede ser menor al 2008.
-		+ Af: Año final de descarga no puede ser mayor al 2015, se cambiará cuando
-			  se tengan los nuevos años.
+		INPUT:
+			+ Tot: Es la ruta completa del archivo que se va a abrir.
+			+ Ai: Año incial de descarga no puede ser menor al 2008.
+			+ Af: Año final de descarga no puede ser mayor al 2015, se cambiará cuando
+				  se tengan los nuevos años.
 		_________________________________________________________________________
 		
-			OUTPUT:
-		- Fecha: Vector con todas las fechas descargadas en formato 'Año/Mes/Dia-HH:MM'.
-		- V1: Variable que se extrae como float.
-		
-		
+		OUTPUT:
+			- Fecha: Vector con todas las fechas descargadas en formato 'Año/Mes/Dia-HH:MM'.
+			- V1: Variable que se extrae como float.
 		'''
 		# ------------------------------
 		# Inicializador de variables
@@ -539,30 +609,30 @@ class ExtractD:
 
 	def EDEST(self,Tot,Aii,Ai,Af,flagMa=True):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende extraer la información diaria de las
-		estaciones Cenicafé y Brisas dadas por Universidad EIA. El formato debe 
-		ser el entregado por Daniel Ruiz Carrascal ya que depende de las hojas 
-		del documento de excel.
+			Con esta función se pretende extraer la información diaria de las
+			estaciones Cenicafé y Brisas dadas por Universidad EIA. El formato debe 
+			ser el entregado por Daniel Ruiz Carrascal ya que depende de las hojas 
+			del documento de excel.
 		_________________________________________________________________________
 
-			INPUT:
-		+ Tot: Es la ruta completa del archivo que se va a abrir.
-		+ Aii: Año inicial del documento.
-		+ Ai: Año incial de descarga no puede ser menor al 2008.
-		+ Af: Año final de descarga no puede ser mayor al 2015, se cambiará cuando
-			  se tengan los nuevos años.
-		+ flagMa: Condicional para saber si se obtienen los datos máximos y mínimos
-				  True: Obtiene los datos máximos y mínimos díarios.
-				  False: Solamente obtienen los datos diarios
+		INPUT:
+			+ Tot: Es la ruta completa del archivo que se va a abrir.
+			+ Aii: Año inicial del documento.
+			+ Ai: Año incial de descarga no puede ser menor al 2008.
+			+ Af: Año final de descarga no puede ser mayor al 2015, se cambiará cuando
+				  se tengan los nuevos años.
+			+ flagMa: Condicional para saber si se obtienen los datos máximos y mínimos
+					  True: Obtiene los datos máximos y mínimos díarios.
+					  False: Solamente obtienen los datos diarios
 		_________________________________________________________________________
 		
-			OUTPUT:
-		- Fecha: Vector con todas las fechas descargadas en formato 'Año/Mes/Dia'.
-		- V1: Variable que se extrae como float.
-		- Vmax: Variable para los máximos.
-		- Vmin: Variable para los mínimos.
+		OUTPUT:
+			- Fecha: Vector con todas las fechas descargadas en formato 'Año/Mes/Dia'.
+			- V1: Variable que se extrae como float.
+			- Vmax: Variable para los máximos.
+			- Vmin: Variable para los mínimos.
 		'''
 		# ------------------------------
 		# Inicializador de variables
@@ -655,40 +725,270 @@ class ExtractD:
 		else:
 			return Fecha, V1
 
-	def CompD(self,Fecha,V1,flagH=False,Hora='',flagM=False,Min='',dtm=1):
+	def EDDAT_NCDCCOOP(self,Tot,Stations=None,Header=False,row_skip=0):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende completar la información faltante de un
-		docuemnto que no tenga todas las fechas activas, el código llena años
-		enteros utilizando escribiendo como 'nan' a los datos faltantes.
+			Con esta función se pretende extraer la información de los archivos 
+			con extensión .dat de la base de datos de estaciones de precipitación
+			cada 15 minutos generadas por el NCDC_COOP.
 		_________________________________________________________________________
 
-			INPUT:
-		+ Fecha: Fecha de los datos organizada como 'año/mes/dia' los '/' pueden
-				 ser substituidos por cualquier caracter. 
-				 Debe ser un vector string.
-		+ V1: Variable que se desea rellenar. 
-		+ flagH: Para ver si se llenan los datos horarios.
-				True: Para llenar datos horarios.
-				False: Para llenar datos diarios.
-		+ Hora: Es el vector de horas en 24H, debe ser un vector string con dos 
-				dígitos, es decir, con un '0' si son números de 1 a 9.
-		+ flagM: Para ver si se llenan los datos minutales.
-				True: Para llenar datos minutales.
-				False: Para llenar datos horarios o diarios.
-		+ Min: Son los minutos en caso de ser necesitados, deben tener el mismo
-			   formato que las horas.
-		+ dtm: delta de tiempo de minutos, por defecto esta cada minuto
+		INPUT:
+			+ Tot: Es la ruta completa del archivo que se va a abrir.
+			+ sheet: Número de la hoja del documento de excel
+			+ Header: Se pregunta si el archivo tiene encabezado.
+			+ Stations: por defecto None, este parámetro permite preguntar si se van 
+						a extraer estaciones específicas.
 		_________________________________________________________________________
 		
-			OUTPUT:
-		- FechaC: Vector con las fechas completas de la forma 'año/mes/dia' si
-				  si tiene Horas y minutos quedará como 'año/mes/dia-HH:MM'
-		- V1C: Variable con los datos completados.
-		- FechaN: Vector de fechas con las variables con el número designado
-				  por Python.
-		- FechaD: Vector de fechas originales con los datos horarios.
+		OUTPUT:
+			- Fecha: Diccionario con todas las fechas separadas por estaciones.
+			- V1: Diccionario con todos los datos separados por estaciones.
+		'''
+
+		# Se organizan las fechas
+		Months = {'jan':1,'feb':2,'mar':3,'apr':4,'may':5,'jun':6\
+			,'jul':7,'aug':8,'sep':9,'oct':10,'nov':11,'dec':12}
+
+		Year = int(Tot[-4-4:-4])
+		Month = Months[Tot[-4-4-3:-4-4]]
+		Fi = date(Year,Month,1)
+		if Month == 12:
+			Ff = date(Year+1,1,1)
+		else:
+			Ff = date(Year,Month+1,1)
+		
+		Fii = datetime(Year,Month,1,0,15)
+		Fff = datetime(Year,Month,1,0,30)
+		Dif = Fff-Fii
+		FechaN = [Fii]
+		for i in range((Ff-Fi).days):
+			for j in range(96):
+				FechaN.append(FechaN[-1]+Dif)
+		FechaN.pop()
+		FechaC = np.array([i.strftime('%Y/%m/%d-%H%M') for i in FechaN])
+		FechaN = np.array(FechaN)
+		# Datos iniciales 
+		PrecC = np.zeros(len(FechaN))
+		
+		# Se extraen los datos
+		delidat = (3,6,2,4,2,4,2,2,2,3,4)
+		St_Info = np.genfromtxt(Tot,dtype=str,unpack=True,delimiter=delidat,usecols=(0,1,2,3,4,5,6,8,9,10))
+		StationCode = St_Info[1]
+		HTorHI = St_Info[4]
+		QPCPorQGAG = St_Info[3]
+		# Data Counts
+		Data_Counts = St_Info[-2]
+
+		# Indicatives
+		Indi = {'a':'START','A':'END',",":'BEGIN MONTH','{':'DELETED BEGIN'\
+			,'}':'DELETED END','[':'MISSING BEGIN',']':'MISSING END'\
+			,'g':'BEGIN DAY','b':'BLANK','I':'INCOMPLETE','P':'DAILY TOTAL'\
+			,'X':'CAUTION','Z':'MELTING','R':'TIME PROBLEMS','Q':'HOURLY DATA'\
+			,'q':'EXCLUDE DATA'}
+
+		FechaD = np.array([St_Info[5,i]+'/'+St_Info[6,i]+'/'+St_Info[7,i] for i in range(len(St_Info[0]))])
+		# Data
+		f = open(Tot,'r',encoding='utf-8')
+		Data = f.readlines()
+
+		Station = []
+		Fecha = []
+		Prec = []
+		Hour = []
+		I = []
+		x = (QPCPorQGAG == 'QPCP')
+		StationCode = StationCode[x]
+		Data_Counts = Data_Counts[x]
+		FechaD = FechaD[x]
+		HTorHI = HTorHI[x]
+		for irow,row in enumerate(np.array(Data)[x]):
+
+			Station.append(StationCode[irow])
+			Fecha.append(FechaD[irow])
+			Count = int(Data_Counts[irow])
+			Hour.append(row[30:34])
+			Prec.append(float(row[35:40]))
+			I.append(row[40])
+			# print('Prec=',Prec[-1])
+			# print('HTorHI=',HTorHI[irow])
+			# print('I=',I[-1])
+			if Prec[-1] == 99999.0 or Prec[-1] == 9999. or I[-1] == 'I':
+				Prec[-1] = 9999.
+			elif HTorHI[irow] == 'HI':
+				Prec[-1] = round(Prec[-1] /1000 * 25.4,1)
+			elif HTorHI[irow] == 'HT':
+				if Prec[-1] >= 100:
+					Prec[-1] = round(Prec[-1] /1000 * 25.4,1)
+				else:
+					Prec[-1] = round(Prec[-1] /100 * 25.4,1)
+				# Prec[-1] = Prec[-1]
+			if I[-1] == 'P' or Hour[-1] == '2500':
+				Hour.pop()
+				Prec.pop()
+				I.pop()
+				Station.pop()
+				Fecha.pop()
+			iCol = 42
+			if Count != 0:
+				for iDat in range(1,Count):
+
+					Station.append(StationCode[irow])
+					Fecha.append(FechaD[irow])
+					Hour.append(row[iCol:iCol+4])
+					Prec.append(float(row[iCol+5:iCol+5+5]))
+					I.append(row[iCol+5+5])
+					# print('Prec=',Prec[-1])
+					# print('HTorHI=',HTorHI[irow])
+					# print('I=',I[-1])
+					# print(HTorHI[irow])
+					if Prec[-1] == 99999.0 or Prec[-1] == 9999. or I[-1] == 'I':
+						Prec[-1] = 9999.
+					elif HTorHI[irow] == 'HI':
+						Prec[-1] = round(Prec[-1] / 1000 * 25.4,1)
+					elif HTorHI[irow] == 'HT':
+						if Prec[-1] >= 100:
+							Prec[-1] = round(Prec[-1] /1000 * 25.4,1)
+						else:
+							Prec[-1] = round(Prec[-1] /100 * 25.4,1)
+						# Prec[-1] = Prec[-1]
+					if I[-1] == 'P' or Hour[-1] == '2500':
+						Hour.pop()
+						Prec.pop()
+						I.pop()
+						Station.pop()
+						Fecha.pop()
+					iCol += 5+5+2
+		Station = np.array(Station)
+		Fecha = np.array(Fecha)
+		HH = np.array([i[:2] for i in Hour])
+		MM = np.array([i[2:] for i in Hour])
+		Fecha_Hour = np.array([Fecha[i]+'-'+Hour[i] for i  in range(len(Fecha))])
+		FechaH = []
+		for i in Fecha_Hour:
+			if i[-4:] == '2400':
+				i = i[:-4]+'2345'
+				FechaH.append(datetime.strptime(i,'%Y/%m/%d-%H%M')+Dif)
+			else:
+				FechaH.append(datetime.strptime(i,'%Y/%m/%d-%H%M'))
+		FechaH = np.array(FechaH)
+
+		Hour = np.array(Hour)
+		Prec = np.array(Prec)
+		I = np.array(I)
+
+		if isinstance(Stations,list) or isinstance(Stations,(np.ndarray,np.generic)):
+			StationCodeU = Stations
+		else:
+			if Stations == None:
+				StationCodeU = np.unique(StationCode)
+			else:
+				StationCodeU = Stations
+
+		Fecha_Dict = dict()
+		Prec_Dict = dict()
+		for St in StationCodeU:
+			x = np.where(Station == St)
+			if len(x) == 0:
+				PrecC = np.empty(len(FechaN))*np.nan
+			else:
+				InStations = I[x]
+				# print('x =',x)
+				# print('St = ',St)
+				# Se completa la información
+				xx = FechaN.searchsorted(FechaH[x])
+				PrecC[xx] = Prec[x]
+
+
+				# Se llenan los datos faltantes
+				x = np.where(PrecC == 9999.)
+				PrecC[x] = np.nan
+				x = np.where(PrecC == 99999.0)
+				PrecC[x] = np.nan
+
+				I_St = np.where(InStations == '{')[0]
+				I_End = np.where(InStations == '}')[0]
+				if len(I_St) != 0:
+					for i in range(len(I_St)):
+						FechaEl_St = FechaH[I_St[i]]
+						FechaEl_End = FechaH[I_End[i]]
+						xFi = np.where(FechaN == FechaEl_St)[0][0]
+						xFf = np.where(FechaN == FechaEl_End)[0][0]
+						PrecC[xFi:xFf+1] = np.nan
+				I_St = np.where(InStations == '[')[0]
+				I_End = np.where(InStations == ']')[0]
+				if len(I_St) != 0:
+					for i in range(len(I_St)):
+						FechaEl_St = FechaH[I_St[i]]
+						FechaEl_End = FechaH[I_End[i]]
+						xFi = np.where(FechaN == FechaEl_St)[0][0]
+						xFf = np.where(FechaN == FechaEl_End)[0][0]
+						PrecC[xFi:xFf+1] = np.nan
+			Fecha_Dict[St] = FechaC
+			Prec_Dict[St] = PrecC
+
+
+		return StationCodeU,Fecha_Dict,Prec_Dict
+
+	def EDIDEAM(self,):
+		'''
+		DESCRIPTION:
+	
+			Con esta función se extraen los valores de un documento del IDEAM.
+		_________________________________________________________________________
+
+		INPUT:
+			+ FechaP: Lista vacía o con valores previós para agregar datos.
+			+ Value: Lista vacío o con valires previós para agregar datos.
+			+ xRow_St: Fila en donde comienzan los datos.
+			+ xCol_St: Columna en donde comienzan los datos.
+			+ Year: Año que se comenzará a llenar.
+		_________________________________________________________________________
+		
+		OUTPUT:
+			- FechaP: Fechas que se extrajeron.
+			- Value: Valores que se extrajeron.
+		'''
+
+
+
+
+	# Manejo de datos
+	def CompD(self,Fecha,V1,flagH=False,Hora='',flagM=False,Min='',dtm=1):
+		'''
+		DESCRIPTION:
+		
+			Con esta función se pretende completar la información faltante de un
+			docuemnto que no tenga todas las fechas activas, el código llena años
+			enteros utilizando escribiendo como 'nan' a los datos faltantes.
+		_________________________________________________________________________
+
+		INPUT:
+			+ Fecha: Fecha de los datos organizada como 'año/mes/dia' los '/' pueden
+					 ser substituidos por cualquier caracter. 
+					 Debe ser un vector string.
+			+ V1: Variable que se desea rellenar. 
+			+ flagH: Para ver si se llenan los datos horarios.
+					True: Para llenar datos horarios.
+					False: Para llenar datos diarios.
+			+ Hora: Es el vector de horas en 24H, debe ser un vector string con dos 
+					dígitos, es decir, con un '0' si son números de 1 a 9.
+			+ flagM: Para ver si se llenan los datos minutales.
+					True: Para llenar datos minutales.
+					False: Para llenar datos horarios o diarios.
+			+ Min: Son los minutos en caso de ser necesitados, deben tener el mismo
+				   formato que las horas.
+			+ dtm: delta de tiempo de minutos, por defecto esta cada minuto
+		_________________________________________________________________________
+		
+		OUTPUT:
+			- FechaC: Vector con las fechas completas de la forma 'año/mes/dia' si
+					  si tiene Horas y minutos quedará como 'año/mes/dia-HH:MM'
+			- V1C: Variable con los datos completados.
+			- FechaN: Vector de fechas con las variables con el número designado
+					  por Python.
+			- FechaD: Vector de fechas originales con los datos horarios.
 		'''
 		# Se inicializan las Fechas
 		FechaC = ["" for k in range(1)] # Vector de comparación
@@ -745,7 +1045,7 @@ class ExtractD:
 
 		rr = 0
 		# Se realiza el vector completo de fechas
-		for result in utl.perdelta(date(int(yeari), 1, 1), date(int(yearf)+1, 1, 1), timedelta(days=1)):
+		for result in perdelta(date(int(yeari), 1, 1), date(int(yearf)+1, 1, 1), timedelta(days=1)):
 			#print(result.strftime('%Y%m%d'))
 			FR = result.strftime('%Y'+Sep+'%m'+Sep+'%d')			
 			if flagH == True: # Condicional para horario
@@ -825,34 +1125,34 @@ class ExtractD:
 
 	def CompDC(self,FechaC,V1C,ai,af,flagH=False,flagLH=False,dt=60):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende extrear la información de unos años 
-		específicos y donde no se tenga la información simplemente se completarán
-		los datos. Esta función extraer años enteros, si es necesario una resolución
-		más exacta se deben hacer modificaciones manuales a la información.
+			Con esta función se pretende extrear la información de unos años 
+			específicos y donde no se tenga la información simplemente se completarán
+			los datos. Esta función extraer años enteros, si es necesario una resolución
+			más exacta se deben hacer modificaciones manuales a la información.
 		_________________________________________________________________________
 
-			INPUT:
-		+ FechaC: Fecha de los datos organizada como 'año/mes/dia' los '/' pueden
-				 ser substituidos por cualquier caracter. 
-				 Debe ser un vector string.
-		+ V1C: Variable que se desea extraer. 
-		+ ai: Año inicial que se desea extraer.
-		+ af: Año final al que se desea extraer
-		+ flagH: Para ver si se extraen los datos horarios.
-				 True: Para extraer datos horarios.
-				 False: Para extraer datos diarios.
-		+ flagLH: Para extraer datos menores al horario.
-		+ dt: Delta de tiempo en minutos.
+		INPUT:
+			+ FechaC: Fecha de los datos organizada como 'año/mes/dia' los '/' pueden
+					 ser substituidos por cualquier caracter. 
+					 Debe ser un vector string.
+			+ V1C: Variable que se desea extraer. 
+			+ ai: Año inicial que se desea extraer.
+			+ af: Año final al que se desea extraer
+			+ flagH: Para ver si se extraen los datos horarios.
+					 True: Para extraer datos horarios.
+					 False: Para extraer datos diarios.
+			+ flagLH: Para extraer datos menores al horario.
+			+ dt: Delta de tiempo en minutos.
 		_________________________________________________________________________
 		
-			OUTPUT:
-		- FechaC2: Vector con las fechas completas de la forma 'año/mes/dia' si
-				  si tiene Horas y minutos quedará como 'año/mes/dia-HH:MM'
-		- FechaN2: Vector de fechas con las variables con el número designado
-				  por Python.
-		- V1C2: Variable con los datos completados.
+		OUTPUT:
+			- FechaC2: Vector con las fechas completas de la forma 'año/mes/dia' si
+					  si tiene Horas y minutos quedará como 'año/mes/dia-HH:MM'
+			- FechaN2: Vector de fechas con las variables con el número designado
+					  por Python.
+			- V1C2: Variable con los datos completados.
 		
 		'''
 		
@@ -870,7 +1170,7 @@ class ExtractD:
 		# Vector de fechas
 		# -------------------------------------------
 
-		for result in utl.perdelta(date(int(ai), 1, 1), date(int(af)+1, 1, 1), timedelta(days=1)):
+		for result in perdelta(date(int(ai), 1, 1), date(int(af)+1, 1, 1), timedelta(days=1)):
 			FR = result.strftime('%Y'+Sep+'%m'+Sep+'%d') # Fecha
 			if flagH == True:
 				if flagLH == True:
@@ -972,45 +1272,45 @@ class ExtractD:
 
 	def Ca_E(self,FechaC,V1C,dt=24,escala=1,op='mean',flagMa=False,flagDF=False):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende cambiar de escala temporal los datos,
-		agregándolos a diferentes escalas temporales, se deben insertar series
-		completas de tiempo.
+			Con esta función se pretende cambiar de escala temporal los datos,
+			agregándolos a diferentes escalas temporales, se deben insertar series
+			completas de tiempo.
 
-		Los datos faltantes deben estar como NaN.
+			Los datos faltantes deben estar como NaN.
 		_________________________________________________________________________
 
-			INPUT:
-		+ FechaC: Fecha de los datos organizada como 'año/mes/dia - HHMM' 
-				  los '/' pueden ser substituidos por cualquier caracter. 
-				  Debe ser un vector string y debe tener años enteros.
-		+ V1C: Variable que se desea cambiar de escala temporal. 
-		+ dt: Delta de tiempo para realizar la agregación, depende de la naturaleza
-			  de los datos.
-			  Si se necesitan datos mensuales, el valor del dt debe ser 1.
-		+ escala: Escala a la cual se quieren pasar los datos:
-				0: de minutal o horario.
-				1: a diario.
-				2: a mensual, es necesario llevarlo primero a escala diaria.
-		+ op: Es la operación que se va a llevar a cabo para por ahora solo responde a:
-			  'mean': para obtener el promedio.
-			  'sum': para obtener la suma.
-		+ flagMa: Para ver si se quieren los valores máximos y mínimos.
-				True: Para obtenerlos.
-				False: Para no calcularos.
-		+ flagDF: Para ver si se quieren los datos faltantes por mes, solo funciona
-				  en los datos que se dan diarios.
-				True: Para calcularlos.
-				False: Para no calcularos.
+		INPUT:
+			+ FechaC: Fecha de los datos organizada como 'año/mes/dia - HHMM' 
+					  los '/' pueden ser substituidos por cualquier caracter. 
+					  Debe ser un vector string y debe tener años enteros.
+			+ V1C: Variable que se desea cambiar de escala temporal. 
+			+ dt: Delta de tiempo para realizar la agregación, depende de la naturaleza
+				  de los datos.
+				  Si se necesitan datos mensuales, el valor del dt debe ser 1.
+			+ escala: Escala a la cual se quieren pasar los datos:
+					0: de minutal o horario.
+					1: a diario.
+					2: a mensual, es necesario llevarlo primero a escala diaria.
+			+ op: Es la operación que se va a llevar a cabo para por ahora solo responde a:
+				  'mean': para obtener el promedio.
+				  'sum': para obtener la suma.
+			+ flagMa: Para ver si se quieren los valores máximos y mínimos.
+					True: Para obtenerlos.
+					False: Para no calcularos.
+			+ flagDF: Para ver si se quieren los datos faltantes por mes, solo funciona
+					  en los datos que se dan diarios.
+					True: Para calcularlos.
+					False: Para no calcularos.
 		_________________________________________________________________________
 		
-			OUTPUT:
-		- FechaEs: Nuevas fechas escaladas.
-		- FechaNN: Nuevas fechas escaladas como vector fechas. 
-		- VE: Variable escalada.
-		- VEMax: Vector de máximos.
-		- VEMin: Vector de mínimos.
+		OUTPUT:
+			- FechaEs: Nuevas fechas escaladas.
+			- FechaNN: Nuevas fechas escaladas como vector fechas. 
+			- VE: Variable escalada.
+			- VEMax: Vector de máximos.
+			- VEMin: Vector de mínimos.
 		'''
 		# Se desactivan los warnings en este codigo para que corra más rápido, los
 		# warnings que se generaban eran por tener realizar promedios de datos NaN
@@ -1046,7 +1346,7 @@ class ExtractD:
 
 		# Los años se toman para generar el output de FechasEs
 		if escala == 0 or escala == 1: # Para datos horarios o diarios
-			for result in utl.perdelta(date(int(yeari), 1, 1), date(int(yearf)+1, 1, 1), timedelta(days=1)):
+			for result in perdelta(date(int(yeari), 1, 1), date(int(yearf)+1, 1, 1), timedelta(days=1)):
 				FR = result.strftime('%Y'+Sep+'%m'+Sep+'%d') # Fecha
 				if escala == 0:
 					for i in range(0,24):
@@ -1323,516 +1623,23 @@ class ExtractD:
 			else:
 				return FechaEs, FechaNN, VE
 
-	def EDH(self,Tot,flagD=True,sheet=1,Header=True,n=2):
-
-		'''
-			DESCRIPTION:
-		
-		Con esta función se pretende extraer la información de un archivo con
-		información horaria y cualquier fecha, y después organizarlo.
-		_________________________________________________________________________
-
-			INPUT:
-		+ Tot: Es la ruta completa del archivo que se va a abrir.
-		+ flagD: Para ver que tipo de archivo se abrirá.
-				True: Para archivos de Excel.
-				False: Para el resto.
-		+ sheet: Número de la hoja del documento de excel
-		+ Header: Se pregunta si el archivo tiene encabezado.
-		+ n: es la columan en donde se encuentran los datos que se van a extraer.
-		_________________________________________________________________________
-		
-			OUTPUT:
-		- FechaA: Fechas del archivo.
-		- HoraA: Extrae la hora si el archivo la contiene.
-		- Var: Variable que se va a extraer del archivo.
-		- FechaC: Fechas del archivo completas de la forma "Fecha-Hora".
-		- FechaR: Fechas reales de la forma "Fecha-Hora".
-		- ValR: Variable del archivo con las fechas reales completas.
-		- FechaD: Fechas reales en formato fecha de Python.
-		'''
-
-		# Contador de filas
-		if Header == True:
-			r = 1 
-		else:
-			r = 0
-
-		
-		p = 0 # Activador de filas para excel
-
-
-		# Se inicializan las variables
-		FechaA = ["" for k in range(1)]
-		HoraA = ["" for k in range(1)]
-		Val = ["" for k in range(1)]
-		
-		FechaR = ["" for k in range(1)]
-
-		# Se abren los archivos dependiendo de la extensión
-		if flagD == False:
-			
-			# Abre el libro determinado
-			book = xlrd.open_workbook(Tot)
-			# Escoge la hoja en donde se encuentran los datos
-			S = book.sheet_by_index(0)
-
-			while p == 0:
-				
-				# Se mira si tiene encabezado
-				if Header == True:
-					if r == 1:
-						# Se obtiene la fecha
-						FechaA[0] = str(int(S.cell(r,0).value))
-						
-						# Se obtiene la hora
-						HH = S.cell(r,1).value[0:2] # Estos valores se deben 
-						MM = S.cell(r,1).value[3:5] # cambiar dependiendo del archivo
-						# Se mira si es a.m. o p.m.
-						AM = S.cell(r,1).value[9]
-						if AM == 'p':
-							HH = str(int(HH) + 12)
-
-						if int(MM) >= 1:
-
-							if int(HH) <9:
-								HH = '0'+str(int(HH)+1)
-								MM = '00'
-							elif int(HH) == 23:
-								HH = '00'
-								MM = '00'
-								
-								yeari = FechaA[0][0:4]
-								monthi = FechaA[0][4:6]
-								dayi = FechaA[0][6:8]
-								
-								delta = timedelta(days=1)
-								D = date(int(yeari), int(monthi), int(dayi))
-
-								DD = D + delta
-								FR = DD.strftime('%Y%m%d')
-
-								FechaA[0] = FR
-							elif int(HH) == 24:
-								HH = '13'
-								MM = '00'
-							elif int(HH) == 12:
-								HH = '01'
-								MM = '00'
-							elif int(HH) == 11:
-								HH = '24'
-								MM = '00'	
-							else:
-								HH = str(int(HH)+1)
-								MM = '00'
-
-
-						HoraA[0] = str(HH)+str(MM)
-
-						# Se obtiene la variable
-						try:
-							Val[0] = float(S.cell(r,2).value)
-						except:
-							Val[0] = float('nan')
-						
-					else:
-
-						# Se incluyen los siguientes datos hasta que no haya más
-						# Se mira si se tiene la última fecha sino se sale del programa
-						try:
-							FechaA.append(str(int(S.cell(r,0).value)))
-						except:
-							break
-
-						HH = S.cell(r,1).value[0:2] # Estos valores se deben 
-						MM = S.cell(r,1).value[3:5] # cambiar dependiendo del archivo
-						# Se mira si es a.m. o p.m.
-						AM = S.cell(r,1).value[9]
-						if AM == 'p':
-							HH = str(int(HH) + 12)
-
-						if int(MM) >= 1:
-							if int(HH) <9:
-								HH = '0'+str(int(HH)+1)
-								MM = '00'
-							elif int(HH) == 23:
-								HH = '00'
-								MM = '00'
-
-								yeari = FechaA[r-1][0:4]
-								monthi = FechaA[r-1][4:6]
-								dayi = FechaA[r-1][6:8]
-								
-								delta = timedelta(days=1)
-								D = date(int(yeari), int(monthi), int(dayi))
-
-								DD = D + delta
-								FR = DD.strftime('%Y%m%d')
-
-								FechaA[r-1] = FR
-							elif int(HH) == 24:
-								HH = '13'
-								MM = '00'
-							elif int(HH) == 12:
-								HH = '01'
-								MM = '00'
-							elif int(HH) == 11:
-								HH = '24'
-								MM = '00'
-							else:
-								HH = str(int(HH)+1)
-								MM = '00'
-
-						HoraA.append(str(HH)+str(MM))
-
-						try:
-							Val.append(float(S.cell(r,2).value))
-						except:
-							Val.append(float('nan'))
-
-
-				else:
-
-					if r == 0:
-						# Se obtiene la fecha
-						FechaA[0] = str(int(S.cell(r,0).value))
-						
-						# Se obtiene la hora
-						HH = S.cell(r,1).value[0:2] # Estos valores se deben 
-						MM = S.cell(r,1).value[3:5] # cambiar dependiendo del archivo
-						# Se mira si es a.m. o p.m.
-						AM = S.cell(r,1).value[9]
-						if AM == 'p':
-							HH = str(int(HH) + 12)
-
-						if int(MM) >= 1:
-							if int(HH) <9:
-								HH = '0'+str(int(HH)+1)
-								MM = '00'
-							elif int(HH) == 23:
-								HH = '00'
-								MM = '00'
-
-								yeari = FechaA[0][0:4]
-								monthi = FechaA[0][4:6]
-								dayi = FechaA[0][6:8]
-								
-								delta = timedelta(days=1)
-								D = date(int(yeari), int(monthi), int(dayi))
-
-								DD = D + delta
-								FR = DD.strftime('%Y%m%d')
-
-								FechaA[0] = FR
-							elif int(HH) == 24:
-								HH = '13'
-								MM = '00'
-							elif int(HH) == 12:
-								HH = '01'
-								MM = '00'
-							elif int(HH) == 11:
-								HH = '24'
-								MM = '00'
-							else:
-								HH = str(int(HH)+1)
-								MM = '00'
-
-						HoraA[0] = str(HH)+str(MM)
-
-						# Se obtiene la variable
-						try:
-							Val[0] = float(S.cell(r,2).value)
-						except:
-							Val[0] = float('nan')
-						
-					else:
-
-						# Se incluyen los siguientes datos hasta que no haya más
-						# Se mira si se tiene la última fecha sino se sale del programa
-						try:
-							FechaA.append(str(int(S.cell(r,0).value)))
-						except:
-							break
-							#return FechaA,HoraA,Var
-
-						HH = S.cell(r,1).value[0:2] # Estos valores se deben 
-						MM = S.cell(r,1).value[3:5] # cambiar dependiendo del archivo
-
-						# Se mira si es a.m. o p.m.
-						AM = S.cell(r,1).value[9]
-						if AM == 'p':
-							HH = str(int(HH) + 12)
-
-						if int(MM) >= 1:
-							if int(HH) <9:
-								HH = '0'+str(int(HH)+1)
-								MM = '00'
-							elif int(HH) == 23:
-								HH = '00'
-								MM = '00'
-								
-								yeari = FechaA[r][0:4]
-								monthi = FechaA[r][4:6]
-								dayi = FechaA[r][6:8]
-								
-								delta = timedelta(days=1)
-								D = date(int(yeari), int(monthi), int(dayi))
-
-								DD = D + delta
-								FR = DD.strftime('%Y%m%d')
-
-								FechaA[r] = FR
-							elif int(HH) == 24:
-								HH = '13'
-								MM = '00'
-							elif int(HH) == 12:
-								HH = '01'
-								MM = '00'
-							elif int(HH) == 11:
-								HH = '24'
-								MM = '00'
-							else:
-								HH = str(int(HH)+1)
-								MM = '00'
-
-						HoraA.append(str(HH)+str(MM))
-
-						try:
-							Val.append(float(S.cell(r,2).value))
-						except:
-							Val.append(float('nan'))
-
-
-				#if r == 30:
-					#p = 1
-
-
-				# Se suma la fila
-				r += 1
-			
-			# Se arreglan las horas
-			for i,j in enumerate(HoraA):
-				if HoraA[i] == '1200':
-					HoraA[i] = '0000'
-				elif HoraA[i] == '2400':
-					HoraA[i] = '1200'
-
-
-			# Se toma una Fecha completa
-			FechaC = [(j +'-'+ HoraA[i]) for i,j in enumerate(FechaA)]
-
-			# Se toma la fecha de inicio y la fecha final para hacer el vector completo de fechas
-			yeari = FechaA[0][0:4]
-			monthi = FechaA[0][4:6]
-			dayi = FechaA[0][6:8]
-
-			yearf = FechaA[len(FechaA)-1][0:4]
-			monthf = FechaA[len(FechaA)-1][4:6]
-			dayf = FechaA[len(FechaA)-1][6:8]
-
-			rr = 0
-
-			FechaD = ["" for k in range(1)]
-			# Se realiza el vector completo de fechas
-			for result in utl.perdelta(date(int(yeari), 1, 1), date(int(yearf)+1, 1, 1), timedelta(days=1)):
-				
-				#print(result.strftime('%Y%m%d'))
-				FR = result.strftime('%Y%m%d')
-				for i in range(0,24):
-					if rr == 0:
-						FechaD[0] = result
-						if i < 10:
-							FechaR[rr] = FR + '-0' +str(i)+'00'
-						else:
-							FechaR[rr] = FR + '-' +str(i)+'00'
-					else:
-						FechaD.append(result)
-						if i < 10:
-							FechaR.append(FR + '-0' +str(i)+'00')
-						else:
-							FechaR.append(FR + '-' +str(i)+'00')
-
-
-					rr +=1
-
-			#Se analizan las fechas reales vs las fechas del documento
-			ValR = [float('nan') for k in FechaR] # Vector real de valores
-
-			x = 0 # Contador para las fechas del archivo
-			for i,j in enumerate(FechaR):
-
-				if len(FechaC) == x:
-					print('acabe')
-				else:
-					if j == FechaC[x]:	
-
-						ValR[i] = Val[x]
-						x +=1
-						# Los archivos pueden problemas con la toma de datos si se repiten los datos
-						# se toma el primero de ellos.
-						if len(FechaC) == x: 
-							print('acabe')
-						else:
-							if FechaC[x-1] == FechaC[x]:
-								x +=1
-								
-
-					
-
-			return FechaA,HoraA,Val,FechaC,FechaR,ValR,FechaD
-
-		else:
-			# Se abre el archivo que se llamó
-			f = open(Tot)
-
-			# Se inicializan las variables
-			ff = csv.reader(f, dialect='excel', delimiter=';')
-
-			# Se inicializan las variables
-
-
-			r = 0
-			# Se recorren todas las filas de la matriz
-			for row in ff:
-
-				#print(row)
-				if r == 1:
-					
-					# Estos valores se deben cambiar según el documento
-					if float(row[2]) < 10:
-						
-						if float(row[3]) < 10:
-							FechaA[0] = str(row[1]) + '0' + str(int(row[2])) + '0' + str(int(row[3]))
-						else:
-							FechaA[0] = str(row[1]) + '0' + str(int(row[2])) + str(int(row[3]))
-					else:
-						if float(row[3]) < 10:
-							FechaA[0] = str(row[1]) + str(int(row[2])) + '0' + str(int(row[3]))
-						else:	
-							FechaA[0] = str(row[1]) + str(row[2]) + str(row[3])
-
-
-					
-					if float(row[4]) < 10:
-						HoraA[0] = '0' + str(int(row[4])) + '00'
-					else:
-						HoraA[0] = str(row[4]) + '00'
-
-					# Se obtiene la variable
-					try:
-						Val[0] = float(row[8])
-					except:
-						Val[0] = float('nan')
-				
-				elif r > 0:
-
-					if float(row[2]) < 10:
-						
-						if float(row[3]) < 10:
-							FechaA.append(str(row[1]) + '0' + str(int(row[2])) + '0' + str(int(row[3])))
-						else:
-							FechaA.append(str(row[1]) + '0' + str(int(row[2])) + str(int(row[3])))
-					else:
-						if float(row[3]) < 10:
-							FechaA.append(str(row[1]) + str(int(row[2])) + '0' + str(int(row[3])))
-						else:
-							FechaA.append(str(row[1]) + str(row[2]) + str(row[3]))
-					
-
-					if float(row[4]) < 10:
-						HoraA.append('0' + str(int(row[4])) + '00')
-					else:
-						HoraA.append(str(row[4]) + '00')
-
-					# Se obtiene la variable
-					try:
-						Val.append(float(row[8]))
-					except:
-						Val.append(float('nan'))
-
-
-				r += 1 # Se suman las filas
-
-
-			# Se toma una Fecha completa
-			FechaC = [(j +'-'+ HoraA[i]) for i,j in enumerate(FechaA)]
-
-			# Se toma la fecha de inicio y la fecha final para hacer el vector completo de fechas
-			yeari = FechaA[0][0:4]
-			monthi = FechaA[0][4:6]
-			dayi = FechaA[0][6:8]
-
-			yearf = FechaA[len(FechaA)-1][0:4]
-			monthf = FechaA[len(FechaA)-1][4:6]
-			dayf = FechaA[len(FechaA)-1][6:8]
-
-			rr = 0
-
-			FechaD = ["" for k in range(1)]
-			# Se realiza el vector completo de fechas
-			for result in utl.perdelta(date(int(yeari), 1, 1), date(int(yearf)+1, 1, 1), timedelta(days=1)):
-				
-				#print(result.strftime('%Y%m%d'))
-				FR = result.strftime('%Y%m%d')
-				for i in range(0,24):
-					if rr == 0:
-						FechaD[0] = result
-						if i < 10:
-							FechaR[rr] = FR + '-0' +str(i)+'00'
-						else:
-							FechaR[rr] = FR + '-' +str(i)+'00'
-					else:
-						FechaD.append(result)
-						if i < 10:
-							FechaR.append(FR + '-0' +str(i)+'00')
-						else:
-							FechaR.append(FR + '-' +str(i)+'00')
-
-
-					rr +=1
-
-			#Se analizan las fechas reales vs las fechas del documento
-			ValR = [float('nan') for k in FechaR] # Vector real de valores
-
-			x = 0 # Contador para las fechas del archivo
-			for i,j in enumerate(FechaR):
-
-				if len(FechaC) == x:
-					print('acabe')
-				else:
-					if j == FechaC[x]:	
-						#print(j)
-						#print(x)
-						ValR[i] = Val[x]
-						x +=1
-						# Los archivos pueden problemas con la toma de datos si se repiten los datos
-						# se toma el primero de ellos.
-						if len(FechaC) == x: 
-							print('acabe')
-						else:
-							if FechaC[x-1] == FechaC[x]:
-								x +=1
-
-
-			return FechaA,HoraA,Val,FechaC,FechaR,ValR,FechaD
-
 	def MIA(self,FechasC,Fechas,Data):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende encontrar la cantidad de datos faltantes de
-		una serie.
+			Con esta función se pretende encontrar la cantidad de datos faltantes de
+			una serie.
 		_________________________________________________________________________
 
-			INPUT:
-		+ FechaC: Fecha inicial y final de la serie original.
-		+ Fechas: Vector de fechas completas de las series.
-		+ Data: Vector de fechas completo
+		INPUT:
+			+ FechaC: Fecha inicial y final de la serie original.
+			+ Fechas: Vector de fechas completas de las series.
+			+ Data: Vector de fechas completo
 		_________________________________________________________________________
 		
-			OUTPUT:
-		N: Vector con los datos NaN.
-		FechaNaN: Fechas en donde se encuentran los valores NaN
+		OUTPUT:
+			N: Vector con los datos NaN.
+			FechaNaN: Fechas en donde se encuentran los valores NaN
 		'''
 		# Se toman los datos 
 		Ai = Fechas.index(FechasC[0])
@@ -1852,25 +1659,26 @@ class ExtractD:
 
 		return N, FechaNaN
 
+	# Escritura de datos
 	def WriteD(self,path,fieldnames,data,deli=','):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Esta función fue extraída de la página web: 
-		https://dzone.com/articles/python-101-reading-and-writing
-		Y los códigos fueron creados por Micheal Driscoll
+			Esta función fue extraída de la página web: 
+			https://dzone.com/articles/python-101-reading-and-writing
+			Y los códigos fueron creados por Micheal Driscoll
 
-		Con esta función se pretende guardar los datos en un .csv.
+			Con esta función se pretende guardar los datos en un .csv.
 		_________________________________________________________________________
 
-			INPUT:
-		+ path: Ruta con nombre del archivo.
-		+ fieldnames: Headers del archivo.
-		+ data: Lista con todos los datos.
+		INPUT:
+			+ path: Ruta con nombre del archivo.
+			+ fieldnames: Headers del archivo.
+			+ data: Lista con todos los datos.
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .csv con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .csv con todos los datos.
 		'''
 		with open(path, "w") as out_file:
 			writer = csv.DictWriter(out_file, delimiter=deli, fieldnames=fieldnames)
@@ -1881,26 +1689,26 @@ class ExtractD:
 
 	def SaEIA(self,Fecha,V,VD,VDmax,VDmin,Pathout,Name,Var,Var2,Hdt=1):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende guardar los datos en una plantilla similar
-		a la plantilla de la EIA para los datos de los sensores.
+			Con esta función se pretende guardar los datos en una plantilla similar
+			a la plantilla de la EIA para los datos de los sensores.
 		_________________________________________________________________________
 
-			INPUT:
-		+ Fecha: Fecha de las variables en formato yyyy/mm/dd-HHMM.
-		+ V: Variable que se quiere guardar en la plantilla
-		+ VD: Variable en agregación diaria.
-		+ VDmax: Variable en agregación diaria máxima.
-		+ VDmin: Variable en agregación diaria mínima.
-		+ Pathout: Ruta con nombre del archivo.
-		+ Name: Nombre del documento.
-		+ Var: Variable.
-		+ Hdt: Delta de tiempo.
+		INPUT:
+			+ Fecha: Fecha de las variables en formato yyyy/mm/dd-HHMM.
+			+ V: Variable que se quiere guardar en la plantilla
+			+ VD: Variable en agregación diaria.
+			+ VDmax: Variable en agregación diaria máxima.
+			+ VDmin: Variable en agregación diaria mínima.
+			+ Pathout: Ruta con nombre del archivo.
+			+ Name: Nombre del documento.
+			+ Var: Variable.
+			+ Hdt: Delta de tiempo.
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .xlsx con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .xlsx con todos los datos.
 		'''
 
 		# Se carga el documento de la base de datos
@@ -1978,18 +1786,18 @@ class ExtractD:
 
 	def HeadEIA(self,NameE,ZTE,FInsE,LatE,LonE,Var,worksheet,W):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende escribir el inicio de los archivos de la
-		base de datos de la escuela.
+			Con esta función se pretende escribir el inicio de los archivos de la
+			base de datos de la escuela.
 		_________________________________________________________________________
 
-			INPUT:
+		INPUT:
 
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .xlsx con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .xlsx con todos los datos.
 		'''
 
 		bold = W.add_format({'bold': True,'align': 'left'})
@@ -2015,27 +1823,27 @@ class ExtractD:
 
 	def SaEIANev(self,Fecha,V,VD,VDmax,VDmin,Pathout,Name,Var,Var2,Hdt=1,PathDataBase=''):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende guardar los datos en una plantilla similar
-		a la plantilla de la EIA para los datos de los sensores.
+			Con esta función se pretende guardar los datos en una plantilla similar
+			a la plantilla de la EIA para los datos de los sensores.
 		_________________________________________________________________________
 
-			INPUT:
-		+ Fecha: Fecha de las variables en formato yyyy/mm/dd-HHMM.
-		+ V: Variable que se quiere guardar en la plantilla
-		+ VD: Variable en agregación diaria.
-		+ VDmax: Variable en agregación diaria máxima.
-		+ VDmin: Variable en agregación diaria mínima.
-		+ Pathout: Ruta con nombre del archivo.
-		+ Name: Nombre del documento.
-		+ Var: Variable.
-		+ Var2: Variable con unidades.
-		+ Hdt: Delta de tiempo.
+		INPUT:
+			+ Fecha: Fecha de las variables en formato yyyy/mm/dd-HHMM.
+			+ V: Variable que se quiere guardar en la plantilla
+			+ VD: Variable en agregación diaria.
+			+ VDmax: Variable en agregación diaria máxima.
+			+ VDmin: Variable en agregación diaria mínima.
+			+ Pathout: Ruta con nombre del archivo.
+			+ Name: Nombre del documento.
+			+ Var: Variable.
+			+ Var2: Variable con unidades.
+			+ Hdt: Delta de tiempo.
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .xlsx con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .xlsx con todos los datos.
 		'''
 
 		# Se carga el documento de la base de datos
@@ -2113,18 +1921,18 @@ class ExtractD:
 
 	def HeadEIANev(self,NameE,ZTE,FInsE,LatE,LonE,Var,worksheet,W):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende escribir el inicio de los archivos de la
-		base de datos de la escuela.
+			Con esta función se pretende escribir el inicio de los archivos de la
+			base de datos de la escuela.
 		_________________________________________________________________________
 
-			INPUT:
+		INPUT:
 
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .xlsx con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .xlsx con todos los datos.
 		'''
 
 		bold = W.add_format({'bold': True,'align': 'left'})
@@ -2153,17 +1961,17 @@ class ExtractD:
 
 	def DailyEIA(self,Ai,Af,VD,worksheet,W):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende escribir los datos diarios de la plantilla.
+			Con esta función se pretende escribir los datos diarios de la plantilla.
 		_________________________________________________________________________
 
-			INPUT:
+		INPUT:
 
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .xlsx con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .xlsx con todos los datos.
 		'''
 		bold = W.add_format({'bold': True,'align': 'left'})
 		boldc = W.add_format({'bold': True,'align': 'center'})
@@ -2232,17 +2040,17 @@ class ExtractD:
 
 	def HourEIA(self,Ai,ii,VD,Hdt,xx,worksheet,W):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende escribir los datos horarios de la plantilla.
+			Con esta función se pretende escribir los datos horarios de la plantilla.
 		_________________________________________________________________________
 
-			INPUT:
+		INPUT:
 
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .xlsx con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .xlsx con todos los datos.
 		'''
 		# Meses
 		Mes = ['January','February','March','April','May','June',\
@@ -2336,17 +2144,17 @@ class ExtractD:
 
 	def HourEIANev(self,Ai,ii,VD,Hdt,xx,worksheet,W):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende escribir los datos horarios de la plantilla.
+			Con esta función se pretende escribir los datos horarios de la plantilla.
 		_________________________________________________________________________
 
-			INPUT:
+		INPUT:
 
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .xlsx con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .xlsx con todos los datos.
 		'''
 		# Meses
 		Mes = ['January','February','March','April','May','June',\
@@ -2440,15 +2248,15 @@ class ExtractD:
 
 	def CSVEIA(self,fieldnames,FechaCT,TC,DPC,HRC,Pathout,Name):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende guardar los datos de la EIA en un archivo .csv.
-		
-		Esta función guardará las tres variables: Temperatura, Temperatura a punto 
-		de rocío y Humedad Relativa.
+			Con esta función se pretende guardar los datos de la EIA en un archivo .csv.
+			
+			Esta función guardará las tres variables: Temperatura, Temperatura a punto 
+			de rocío y Humedad Relativa.
 		_________________________________________________________________________
 
-			INPUT:
+		INPUT:
 			+ filednames: Encabezados de las variables.
 			+ FechaCt: Vector de fechas.
 			+ TC: Temperatura.
@@ -2458,8 +2266,8 @@ class ExtractD:
 			+ Name: Nombre del archivo.
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .csv con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .csv con todos los datos.
 		'''
 
 		data1=[] # Se inicializa la variable de los datos sin valores NaN
@@ -2495,15 +2303,15 @@ class ExtractD:
 
 	def CSVCUASHI(self,Fecha,T,Pathout,Name,VariableCode,V=0):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende guardar los datos de la EIA en un archivo .csv
-		con la plantilla de CUASHI.
+			Con esta función se pretende guardar los datos de la EIA en un archivo .csv
+			con la plantilla de CUASHI.
 
-		Si es necesario modificar algo de la plantilla se debe realizar manualmente
+			Si es necesario modificar algo de la plantilla se debe realizar manualmente
 		_________________________________________________________________________
 
-			INPUT:
+		INPUT:
 			+ filednames: Encabezados de las variables.
 			+ FechaCt: Vector de fechas.
 			+ T: Variable que se quiere guardar.
@@ -2513,8 +2321,8 @@ class ExtractD:
 											 2: Relative Humidity
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .csv con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .csv con todos los datos.
 		'''
 
 		# Se guardan los archivos en un .csv por aparte
@@ -2587,12 +2395,12 @@ class ExtractD:
 
 	def CrASCIIfile(self,data,xllcorner,yllcorner,cellsize,Nameout):
 		'''
-			DESCRIPTION:
+		DESCRIPTION:
 		
-		Con esta función se pretende guardar los datos en formato ASCII.
+			Con esta función se pretende guardar los datos en formato ASCII.
 		_________________________________________________________________________
 
-			INPUT:
+		INPUT:
 			+ data: Matriz de datos.
 			+ xllcorner: Left down corner coordinates.
 			+ yllcorner: Down left corner coordinates.
@@ -2600,8 +2408,8 @@ class ExtractD:
 			+ Nameout: Name out.
 		_________________________________________________________________________
 		
-			OUTPUT:
-		Esta función arroja un archivo .asc con todos los datos.
+		OUTPUT:
+			Esta función arroja un archivo .asc con todos los datos.
 		'''
 
 		# Se guarda la información
