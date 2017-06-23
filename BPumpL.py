@@ -34,27 +34,36 @@ from mpl_toolkits.axes_grid1 import host_subplot
 import mpl_toolkits.axisartist as AA
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.basemap import Basemap
-import os
+import matplotlib.image as mpimg
+from matplotlib import animation
 import warnings
+# Sistemas
+import os
+import glob as gl
+import subprocess
 
 # Se importan los paquetes para manejo de fechas
 from datetime import date, datetime, timedelta
 
-from UtilitiesDGD import UtilitiesDGD
+# from UtilitiesDGD import UtilitiesDGD
+from Utilities import Utilities
 from CorrSt import CorrSt
 from CFitting import CFitting
 from Hydro_Plotter import Hydro_Plotter
 from Thermo_An import Thermo_An
 from DatesUtil import DatesUtil
 from AnET import AnET
+from EMSD import EMSD
 
-utl = UtilitiesDGD()
+# utl = UtilitiesDGD()
+utl = Utilities()
 cr = CorrSt()
 HyPl = Hydro_Plotter()
 CF = CFitting()
 TA = Thermo_An()
 DUtil = DatesUtil()
 anet = AnET()
+EMSD = EMSD()
 
 class BPumpL:
 
@@ -3680,7 +3689,6 @@ class Proc(object):
 		_________________________________________________________________________
 
 			OUTPUT:
-
 		'''
 		# ----------------------------
 		# Constantes
@@ -3697,25 +3705,34 @@ class Proc(object):
 
 		# Diccionarios con las diferentes variables
 		self.Variables = ['PrecC','TC','HRC','PresC','qC']
+		self.Variables_N = dict()
 		self.Variables2 = dict()
 		self.Variables3 = dict()
 		self.Variables4 = dict()
 		self.VariablesF = dict()
+		self.VariablesComp = dict()
 		self.LabelV = dict()
 		self.LabelVU = dict()
 		for iv,v in enumerate(self.Variables):
+			self.Variables_N[v] = v
 			self.Variables2[v] = v[:-1]+'2'
 			self.Variables3[v] = v[:-1]+'3'
 			self.Variables4[v] = v[:-1]+'4'
 			self.VariablesF[v] = v[:-1]+'_F'
+			self.VariablesComp[v] = v[:-1]+'Comp'
 			self.LabelV[v] = LabelV[iv]
 			self.LabelVU[v] = LabelVU[iv]
-
 		# Información para gráficos
 		LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica']
 		LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]']
-		
-
+		self.DatesDoc = ['FechaEv','FechaC']
+		# Flags
+		self.flag = dict()
+		self.flag['Variables1'] = False
+		self.flag['Variables2'] = False
+		self.flag['Variables3'] = False
+		self.flag['VariablesF'] = False
+		self.flag['VariablesComp'] = False
 		# ------------------
 		# Archivos a abrir
 		# ------------------
@@ -3791,7 +3808,6 @@ class Proc(object):
 		- HRC: Compuestos de Humedad Relativa
 		- qC: Compuestos de Humedad Específica
 		'''
-		self.flag = dict()
 		self.irow = irow
 		# print('\nSe carga la estación: ',self.Names[irow])
 
@@ -3902,13 +3918,18 @@ class Proc(object):
 		# Se interpolan los datos que se pueden interpolar
 		for iv,v in enumerate(Var):
 			if self.flag[self.Variables[iv]]:
-				if self.flag['Variables2']:
-					self.f[self.Variables2[v]] = self.f[self.Variables2[v]]-np.nanmean(self.f[self.Variables2[v]])
+				if v == 'PrecC':
+					if self.flag['Variables2']:
+						self.f[self.Variables2[v]] = self.f[self.Variables2[v]]
+					else:
+						self.f[v] = self.f[v]
 				else:
-					self.f[v] = self.f[v]-np.nanmean(self.f[v])
+					if self.flag['Variables2']:
+						self.f[self.Variables2[v]] = self.f[self.Variables2[v]]-np.nanmean(self.f[self.Variables2[v]])
+					else:
+						self.f[v] = self.f[v]-np.nanmean(self.f[v])
 
 		self.var = list(self.f)
-		self.flag['Variables2'] = True
 		return
 	
 	def ButterFilt(self,lowcut,highcut,order=2,flagG=False,xTi=0,xTf=24*60/5,PathImg=''):
@@ -3939,5 +3960,219 @@ class Proc(object):
 							
 							Fol = '(%0.f_%.0f) Hours/' %(highcut*int(self.dtm)/60,lowcut*int(self.dtm)/60)
 							HyPl.FilComp(self.f['FechaCP'],self.f[self.Variables2[v]],self.f[self.VariablesF[v]],xTi,xTf,PathImg=PathImg+'Comp/'+Fol,Name=self.Names[self.irow],VarU=self.LabelVU[v],Var=v[:-1],Filt='')
+		self.flag['VariablesF'] = True
 		self.var = list(self.f)
 		return
+
+	def AnomaliasSeries(self):
+		'''
+		DESCRIPTION:
+
+			Función para calcular las anomalías mensuales.
+		'''
+		print('	Se obtienen las anomalias de los datos')
+		# Deltas de tiempo
+		h12 = int(12*(60/int(self.dtm)))
+		h24 = int(24*(60/int(self.dtm)))
+		
+		if self.flag['VariablesF']:
+			Var2 = self.VariablesF
+		elif self.flag['Variables2']:
+			Var2 = self.Variables2
+		else:
+			Var2 = self.Variables_N
+		Var = self.Variables
+		for iv,v in enumerate(Var):
+			if self.flag[v]:
+				if v != 'PrecC':
+					# Se promedia cada 12 horas
+					self.f[Var2[v]] = anet.AnomGen(self.f[Var2[v]],h12)
+					# Se promedia cada 24 horas
+					self.f[Var2[v]] = anet.AnomGen(self.f[Var2[v]],h24)
+		return
+
+	def EventSeparation(self):
+		'''
+		DESCRIPTION:
+
+			Función para separar los eventos.
+		'''
+		print('	Se generan los diferentes diagramas de compuestos')
+		if self.flag['VariablesF']:
+			Var2 = self.VariablesF
+		elif self.flag['Variables2']:
+			Var2 = self.Variables2
+		else:
+			Var2 = self.Variables_N
+
+		Var = self.Variables
+		PrecC = dict()
+		Variable = dict()
+		for iv,v in enumerate(Var[1:]):
+			if self.flag[v]:
+				PrecC, Variable[v], FechaEv = BP.ExEv(self.f[Var2['PrecC']],self.f[Var2[v]],self.f['FechaC'])
+		
+		xx = 0
+		FechaEv2=[]
+		# Se realiza una limpeza de los datos adicional
+		for i in range(len(PrecC)):
+			q = ~np.isnan(PrecC[i])
+			N = np.sum(q)
+			q2 = ~np.isnan(Variable['PresC'][i])
+			N2 = np.sum(q2)
+			q3 = ~np.isnan(Variable['TC'][i])
+			N3 = np.sum(q3)
+			a = len(q)*0.70
+			if N >= a and N2 >= a and N3 >= a:
+				if xx == 0:
+					PrecC2 = PrecC[i]
+					PresC2 = Variable['PresC'][i]
+					TC2 = Variable['TC'][i]
+					HRC2 = Variable['HRC'][i]
+					qC2 = Variable['qC'][i]
+					xx += 1
+				else:
+					PrecC2 = np.vstack((PrecC2,PrecC[i]))
+					PresC2 = np.vstack((PresC2,Variable['PresC'][i]))
+					TC2 = np.vstack((TC2,Variable['TC'][i]))
+					HRC2 = np.vstack((HRC2,Variable['HRC'][i]))
+					qC2 = np.vstack((qC2,Variable['qC'][i]))
+				FechaEv2.append(FechaEv[i])
+				xx += 1
+		self.f[self.VariablesComp['PrecC']] = PrecC2
+		self.f[self.VariablesComp['PresC']] = PresC2
+		self.f[self.VariablesComp['TC']] = TC2
+		self.f[self.VariablesComp['HRC']] = HRC2
+		self.f[self.VariablesComp['qC']] = qC2
+		self.f['FechaEv'] = FechaEv2
+		self.flag['VariablesComp'] = True
+		return
+
+	def SaveInf(self,pathout='',endingmat=''):
+		'''
+		DESCRIPTION:
+
+			Función para guardar la información.
+		'''
+		
+		if self.flag['VariablesF']:
+			Var2 = self.VariablesF
+		elif self.flag['Variables2']:
+			Var2 = self.Variables2
+		else:
+			Var2 = self.Variables_N
+		# Diagrama de compuestos
+		if not(self.flag['VariablesComp']):
+			print('	No se ha realizado los diagramas de compuestos, ¡Revisar!')
+			return
+		else:
+			VarComp =  self.VariablesComp
+		
+		Var = self.Variables
+		Dates = dict()
+		Dates['FechaC'] = self.f['FechaC']
+		Dates['FechaEv'] = self.f['FechaEv']
+		savingkeys = ['FechaEv','FechaC']
+		Data = dict()
+		# Datos completos
+		for iv,v in enumerate(Var):
+			if self.flag[v]:
+				if v == 'PrecC':
+					savingkeys.append(v[:-1])
+					Data[v[:-1]] = self.f[Var2[v]]
+				else:
+					savingkeys.append(v[:-1]+'_F')
+					Data[v[:-1]+'_F'] = self.f[Var2[v]]
+		# Datos Compuestos
+		for iv,v in enumerate(Var):
+			if self.flag[v]:
+				savingkeys.append(v[:-1]+'C')
+				Data[v[:-1]+'C'] = self.f[VarComp[v]]
+		EMSD.Writemat(Dates,Data,savingkeys,datekeys=self.DatesDoc,datakeys=savingkeys[2:],pathout=pathout,Names=self.NamesArch[self.irow]+endingmat)
+
+
+class MapSeriesGen(object):	
+	'''
+	DESCRIPTION:
+
+	Clase para abrir los documentos que se necesitan para hacer los diferentes
+	estudios de los diagramas de dispersión.
+	
+	'''
+
+	def __init__(self,PathImg='',Fol='201303060940'):
+		MapFold = np.array(utl.GetFolders(PathImg+'Maps/'))
+		SeriesFold = np.array(utl.GetFolders(PathImg+'Series/'))
+		xFolMap = np.where(MapFold== Fol)[0]
+		xFolSer = np.where(SeriesFold== Fol)[0]
+
+		if len(xFolMap) == 0:
+			E = utl.ShowError('__init__','MapSeriesGen','No se encuentra la carpeta en los dos directorios')
+			raise E
+
+		self.PathMaps = PathImg+'Maps/'+MapFold[xFolMap[0]]+'/'
+		self.PathSeries = PathImg+'Series/'+SeriesFold[xFolSer[0]]+'/'
+		
+		# Se miran los archivos
+		self.ArchMap = gl.glob(self.PathMaps+'*.png')
+		self.ArchSeries = gl.glob(self.PathSeries+'*.png')
+		self.Names = [i[len(self.PathMaps):-4] for i in self.ArchMap]
+		self.NamesSeries = [i[len(self.PathSeries):-4] for i in self.ArchSeries]
+		return
+	
+	def GraphComp(self,PathImg=''):
+		'''
+		DESCRIPTION:
+
+			Función para hacer la combinación de gráficos.
+		'''
+		
+		# Tamaño de la Figura
+		fH=40 # Largo de la Figura
+		fV = 20 # Ancho de la Figura
+		# Se crea la carpeta para guardar la imágen
+		utl.CrFolder(PathImg+ self.Names[0])
+		for iar,ar in enumerate(self.ArchMap):
+			if self.Names[iar] == self.NamesSeries[iar]:
+				# Se extraen los datos
+				MapImg = mpimg.imread(self.ArchMap[iar])
+				SeriesImg = mpimg.imread(self.ArchSeries[iar])
+				f = plt.figure(figsize=utl.cm2inch(fH,fV),facecolor='w',edgecolor='w')
+				a = f.add_subplot(1,2,1)
+				a.imshow(SeriesImg)
+				a.axes.get_xaxis().set_visible(False)
+				a.axes.get_yaxis().set_visible(False)
+				a = f.add_subplot(1,2,2)
+				a.imshow(MapImg)
+				a.axes.get_xaxis().set_visible(False)
+				a.axes.get_yaxis().set_visible(False)
+				plt.tight_layout()
+				plt.savefig(PathImg + self.Names[0] + '/' + 'Image' + '_%02d.png' % iar,format='png',dpi=200)
+				plt.close('all')
+	
+	def VidComp(self,PathImg='',Ev=0):
+		'''
+		DESCRIPTION:
+
+			Función para realizar el video.
+		'''		
+
+		PathAct = os.getcwd()
+		os.chdir(PathImg+self.Names[Ev])
+		print(os.getcwd())
+		# Se hace el video
+		'''ffmpeg -i postgrados_ATrTEv.mov -vf scale=720:-1 
+		-c:v libx264 -profile:v high -pix_fmt yuv420p -g 30 
+		-r 30 postgrados_ATrTEv2.mov'''
+
+		subprocess.call(['ffmpeg','-y','-framerate','2','-i',
+			'Image_%02d.png',
+			'-vcodec','libx264',
+			'-vf', 'scale=1700:-2',
+			'-pix_fmt','yuv420p',
+			self.Names[Ev]+'_Video.mp4'])
+
+		os.chdir(PathAct)
+	
+
+

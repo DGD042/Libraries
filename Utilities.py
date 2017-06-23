@@ -18,6 +18,7 @@ import glob as gl
 import re
 import operator as op
 import warnings
+import subprocess
 
 class Utilities(object):
 	'''
@@ -108,10 +109,36 @@ class Utilities(object):
 		OUTPUT:
 			This function create all the given path.
 		'''
+		if Path != '':
+			# Verify if the path already exists
+			if not os.path.exists(Path):
+				os.makedirs(Path)
 
-		# Verify if the path already exists
-		if not os.path.exists(Path):
-			os.makedirs(Path)
+		return
+	
+	def GetFolders(self,Path):
+		'''
+		DESCRIPTION:
+		
+			This function gets the folders and documents inside a 
+			specific folder.
+		_______________________________________________________________________
+
+		INPUT:
+			+ Path: Path where the data would be taken.
+		_______________________________________________________________________
+		OUTPUT:
+			- R: List with the folders and files inside the path.
+		'''
+
+		Act = os.getcwd()
+		os.chdir(Path)
+		proc = subprocess.Popen('ls',stdout=subprocess.PIPE)
+		R = proc.stdout.read().decode('utf-8').split('\n')
+		R.pop()
+		os.chdir(Act)
+
+		return R
 
 	# Units
 	def cm2inch(self,*tupl):
@@ -190,6 +217,29 @@ class Utilities(object):
 			return XX,YY,N
 		else:
 			return XX,YY
+		
+	def Interp(self,Xi,Yi,X,Xf,Yf):
+		'''
+		DESCRIPTION:
+		
+			Con esta función se pretende realizar una interpolación lineal 
+			de los datos.
+		_________________________________________________________________________
+
+		INPUT:
+			+ Xi: Primer valor de x.
+			+ Yi: Primer valor de y.
+			+ X: Valor del punto en x.
+			+ Xf: Segundo valor de x.
+			+ Yf: Segundo valor de y.
+		_________________________________________________________________________
+		
+		OUTPUT:
+			- Y: Valor interpolado de Y
+		'''
+		Y = Yi+((Yf-Yi)*((X-Xi)/(Xf-Xi)))
+
+		return Y
 
 
 
