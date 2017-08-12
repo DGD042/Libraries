@@ -345,13 +345,14 @@ class DatesUtil(object):
                                     DatesC.append(Date)
                                     Date += dtm
                     else:
-                        if Date <= DateI or Date > DateE+dtm:
+                        if Date <= DateI or Date >= DateE+dtm:
+                            DatesC.append(Date)
                             Date += dtm
+                            DatesC.pop()
                         else:
                             DatesC.append(Date)
                             Date += dtm
 
-        DatesC.pop()
         DatesC = np.array(DatesC)
 
         return DatesC

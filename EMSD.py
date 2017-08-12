@@ -23,6 +23,7 @@ import os
 import glob as gl
 import re
 import warnings
+import platform
 
 # ------------------
 # Personal Modules
@@ -73,7 +74,13 @@ def LoopDataDaily_IDEAM(DateP,Value,Flags,xRow_St,xCol_St,Years,Lines,Sum2=2):
                 Value.append(float(Lines[xR][xCol_St:xCol_St+5]))
             except ValueError:
                 Value.append(np.nan)
-            Flags.append(Lines[xR][xCol_St+5+1:xCol_St+5+2])
+            except IndexError:
+                Value.append(np.nan)
+
+            try:
+                Flags.append(Lines[xR][xCol_St+5+1:xCol_St+5+2])
+            except IndexError:
+                Flags.append(' ')
             if Flags[-1] == '' or Flags[-1] == ' ' or Flags[-1] == '\r':
                 Flags[-1] = np.nan
 
@@ -183,8 +190,9 @@ class EMSD(object):
         _______________________________________________________________________
         
         OUTPUT:
+            
+            This function ouptus a Matlab document.
         
-            Dates and values are given in dictionaries.
         '''
         # ------------
         # Parameters
@@ -205,9 +213,20 @@ class EMSD(object):
             keysDates = list(DatesP)
             if flagCompelete:
                 for ikey,key in enumerate(keys):
+                    # print(key)
                     DatesStr = [i.strftime(self.Date_Formats[0]) for i in DatesP[key]]
-                    self.Dates[key],self.Values[key],self.DatesN[key],self.DatesO[key] = self.CompD(DatesStr,Values[key])
-                    self.Dates[key],self.Flags[key],self.DatesN[key],self.DatesO[key] = self.CompD(DatesStr,Flags[key])
+                    try:
+                        R = self.CompD(DatesStr,Values[key])
+                        self.Dates[key]= R['DatesC']
+                        self.DatesN[key] = R['DatesN']
+                        self.Values[key] = R['VC']
+                        R = self.CompD(DatesStr,Flags[key])
+                        self.Flags[key] = R['VC']
+                    except:
+                        self.Dates[key]= DatesStr
+                        self.DatesN[key]= DatesP
+                        self.Values[key] = Values[key]
+                        print('Problema en '+key)
         elif File[-3:] == 'xls' or File[-4:] == 'xlsx':
             # Excel data extraction
             DatesP, Values, self.Header = self.EDExcel(File=File,sheet=sheet,colDates=colDates,colData=colData,row_skip=row_skip,flagHeader=Header,row_end=row_end)
@@ -1032,9 +1051,10 @@ class EMSD(object):
         Lat_Compile = re.compile('LATITUD')
         Lon_Compile = re.compile('LONGITUD')
         Elv_Compile = re.compile('ELEVACION')
-        Year_Compile = re.compile('ANO')
+        Year_Compile = re.compile(' ANO ')
         Var_Temp_Compile = re.compile('TEMPERATURA')
         Var_Prec_Compile = re.compile('PRECIPITACION')
+        Var_BS_Compile = re.compile('BRILLO SOLAR')
         Med_Temp_Compile = re.compile('VALORES MEDIOS')
         Min_Temp_Compile = re.compile('VALORES MINIMOS')
         Max_Temp_Compile = re.compile('VALORES MAXIMOS')
@@ -1051,6 +1071,10 @@ class EMSD(object):
             f = open(File,'r')
             Lines1 = f.readlines()
             Lines = np.array([i.encode('UTF-8') for i in Lines1])
+            Sum1 = 3
+            Sum2 = 1
+
+        if platform.system() == 'Windows':
             Sum1 = 3
             Sum2 = 1
         
@@ -1072,9 +1096,12 @@ class EMSD(object):
         # Estaciones con Temperatura
         Var_Temp_Match = []
         Row_Var_Temp = []
-        # Estaciones con Temperatura
+        # Estaciones con Precipitación
         Var_Prec_Match = []
         Row_Var_Prec = []
+        # Estaciones con Brillo Solar
+        Var_BS_Match = []
+        Row_Var_BS = []
         # Valores Medios
         Med_Temp_Match = []
         Row_Med_Temp = []
@@ -1112,7 +1139,7 @@ class EMSD(object):
             if re.search(Year_Compile,row) != None:
                 Row_Year.append(irow)
                 Year_Match.append(re.search(Year_Compile,row))
-                Years.append(row[Year_Match[-1].end()+2:Year_Match[-1].end()+2+4])
+                Years.append(row[Year_Match[-1].end()+1:Year_Match[-1].end()+1+4])
             # Temperature
             if re.search(Var_Temp_Compile,row) != None:
                 Row_Var_Temp.append(irow)
@@ -1130,8 +1157,13 @@ class EMSD(object):
             if re.search(Var_Prec_Compile,row) != None:
                 Row_Var_Prec.append(irow)
                 Var_Temp_Match.append('PRECIPITACION')
-                Med_Temp_Match.append(0)
-            # MORE VARIABLE DETECTION NEEDED!!
+                Med_Temp_Match.append('TOTALES')
+
+            # Brillo Solar
+            if re.search(Var_BS_Compile,row) != None:
+                Row_Var_BS.append(irow)
+                Var_Temp_Match.append('BRILLO SOLAR')
+                Med_Temp_Match.append('TOTALES') 
             # Data
             if re.search(Start_Compile,row) != None:
                 Row_Start.append(irow)
@@ -1197,6 +1229,7 @@ class EMSD(object):
                 Flag_Un = np.hstack((Flag_Un,np.unique(np.array(Flags_Dict[key]))))
 
         Flag_Un2 = np.unique(Flag_Un)
+        
         # Removing the nan values
         x = np.where(Flag_Un2 == 'nan')
         Flag_Un2 = np.delete(Flag_Un2,x)
@@ -1205,6 +1238,7 @@ class EMSD(object):
         Flag_Meaning = []
         for flag in Flag_Un2:
             Flag_Compile = re.compile(flag+' :')
+            
             for irow,row in enumerate(Lines):
                 # Stations
                 if re.search(Flag_Compile,row) != None:
@@ -1259,9 +1293,11 @@ class EMSD(object):
                     Er = utl.ShowError('EDNCFile','EDSM','Key %s not in the nc file.' %Var)
                     raise Er
                 if VarRangeDict == None:
-                    Data[Var] = dataset.variables[Var][:]
+                    if Var == 'time':
+                        Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,dataset.variables[Var].calendar)
+                    else:
+                        Data[Var] = dataset.variables[Var][:]
                 else:
-                    
                     a = dataset.variables[Var] # Variable
                     dimensions = a.dimensions # Keys of dimensions
                     LenD = len(dimensions) # Number of dimensions
@@ -1275,7 +1311,10 @@ class EMSD(object):
                             Range[VarR] = [0,dataset.variables[VarR].shape[0]]
 
                     if LenD == 1:
-                        Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
+                        if Var == 'time':
+                            Data[Var] = nc,num2date(dataset.variables[Var],dataset.variables[Var].units,dataset.variables[Var].calendar)[slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
+                        else:
+                            Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
                     elif LenD == 2:
                         Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])][slice(Range[dimensions[1]][0],Range[dimensions[1]][1])]
                     elif LenD == 3:
@@ -1370,7 +1409,9 @@ class EMSD(object):
         DatesN = np.array(DatesN)
         DatesO = np.array(DatesO)
         V = np.array(V)
-        x = DatesN.searchsorted(DatesO)
+        # x = DatesN.searchsorted(DatesO)
+        x = np.searchsorted(DatesN,DatesO) 
+
         try:
             VC[x] = V
         except ValueError:
@@ -1459,7 +1500,6 @@ class EMSD(object):
 
         Results = {'DatesC':DatesC,'DatesN':DatesN,'VC':VC}
         return Results
-
 
     def Ca_E(self,FechaC,V1C,dt=24,escala=1,op='mean',flagMa=False,flagDF=False):
         '''
@@ -1886,10 +1926,10 @@ class EMSD(object):
         _______________________________________________________________________
 
         INPUT:
-            + Labels: String left labels, this acts as the keys.
+            + Dates: Dates of the series.
             + Values: Value dictionary.
             + deli: delimeter of the data.
-            + Headers: Headers of the data, defaulted to None.
+            + Headers: Headers of the data, Labels of the Dates and Values.
             + flagHeaders: if headers are needed.
             + Pathout: Saving directory.
             + Name: File Name with extension.
@@ -2069,7 +2109,7 @@ class EMSD(object):
         Title = W.add_format({'bold': True,'align': 'center','valign': 'vcenter'\
             ,'font_name':'Arial','font_size':11,'top':1,'bottom':1,'right':1\
             ,'left':1})
-        Data_Format = W.add_format({'bold': False,'align': 'center','valign': 'vcenter'\
+        Data_Format = W.add_format({'bold': False,'align': 'left','valign': 'vcenter'\
             ,'font_name':'Arial','font_size':11,'top':1,'bottom':1,'right':1\
             ,'left':1})
         # Column Formats

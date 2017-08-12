@@ -3961,12 +3961,9 @@ class Proc(object):
                         self.f[self.Variables4[v]] = anet.Filt_ButterworthApp(self.f[self.Variables3[v]],[lowcut,highcut],order,fs,btype='bandpass')
                         # b,a = anet.ButterworthFiler(highcut,order,fs,btype='lowpass',flagG=flagG,worN=fs,PathImg=PathImg,Name='Filt_Function')
                         # self.f[self.Variables4[v]] = anet.Filt_ButterworthApp(self.f[self.Variables3[v]],highcut,order,fs,btype='lowpass')
-                        
                         self.f[self.VariablesF[v]] = np.empty(len(self.f[self.Variables2[v]]))*np.nan
                         self.f[self.VariablesF[v]][qn] = self.f[self.Variables4[v]]
-                        
                         if flagG:
-                            
                             Fol = '(%0.f_%.0f) Hours/' %(highcut*int(self.dtm)/60,lowcut*int(self.dtm)/60)
                             HyPl.FilComp(self.f['FechaCP'],self.f[self.Variables2[v]],self.f[self.VariablesF[v]],xTi,xTf,PathImg=PathImg+'Comp/'+Fol,Name=self.Names[self.irow],VarU=self.LabelVU[v],Var=v[:-1],Filt='')
         self.flag['VariablesF'] = True
@@ -4009,6 +4006,7 @@ class Proc(object):
         print(' Se generan los diferentes diagramas de compuestos')
         if self.flag['VariablesF']:
             Var2 = self.VariablesF
+            Var2['PrecC'] = 'PrecC'
         elif self.flag['Variables2']:
             Var2 = self.Variables2
         else:
@@ -4064,6 +4062,7 @@ class Proc(object):
             Función para guardar la información.
         '''
         
+        print(' Se guarda la información')
         if self.flag['VariablesF']:
             Var2 = self.VariablesF
         elif self.flag['Variables2']:
@@ -4393,23 +4392,23 @@ class Scatter_Gen(object):
 
     def LoadData(self,irow=0):
         '''
-            DESCRIPTION:
+        DESCRIPTION:
         
-        Función para cargar los datos.
+            Función para cargar los datos.
         _________________________________________________________________________
 
-            INPUT:
-        + irow: Fila en donde se encuentran los datos que se quieren cargar.
+        INPUT:
+            + irow: Fila en donde se encuentran los datos que se quieren cargar.
         _________________________________________________________________________
         
-            OUTPUT:
-        - var: Variables que se tienen en los datos.
-        - FechaEv: Fechas de cada evento.
-        - PresC: Compuestos de Presión.
-        - PrecC: Compuestos de Precipitación
-        - TC: Compuestos de Temperatura.
-        - HRC: Compuestos de Humedad Relativa
-        - qC: Compuestos de Humedad Específica
+        OUTPUT:
+            - var: Variables que se tienen en los datos.
+            - FechaEv: Fechas de cada evento.
+            - PresC: Compuestos de Presión.
+            - PrecC: Compuestos de Precipitación
+            - TC: Compuestos de Temperatura.
+            - HRC: Compuestos de Humedad Relativa
+            - qC: Compuestos de Humedad Específica
         '''
         self.irow = irow
 
@@ -4553,7 +4552,7 @@ class Scatter_Gen(object):
                 print(' -FechaC')
         return
 
-    def DP(self):
+    def DP(self,dt=None):
         '''
         DESCRIPTION:
         
@@ -4567,9 +4566,40 @@ class Scatter_Gen(object):
         OUTPUT:
             Se generan diferentes variables o se cambian las actuales.
         '''
+        if dt == None:
+            dt = int(self.dtm)
 
-        R = HA.PrecCount(self.f['PrecC'],self.f['FechaEv'],dt=1,M=self.Middle)
+        R = HA.PrecCount(self.f['PrecC'],self.f['FechaEv'],dt=dt,M=self.Middle)
         self.f.update(R)
         self.var = self.f.keys()
         return
+
+    def EventsGraphSeries(self,ImgFolder='Manizales/Events/'):
+        '''
+            DESCRIPTION:
+
+        Función para graficar los eventos
+        _________________________________________________________________________
+
+            INPUT:
+        + ImgFolder: Carpeta donde se guardarán los datos.
+        _________________________________________________________________________
+
+            OUTPUT:
+        Se generan los gráficos
+        '''
+        self.ImgFolder = ImgFolder
+
+        # Diagramas de compuestos promedios
+        if self.PrecC:
+            if self.PresC and self.TC:
+                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['TC'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow],PathImg+self.ImgFolder)
+            if self.PresC and self.HRC:
+                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['HRC'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],PathImg+self.ImgFolder)
+            if self.PresC and self.qC:
+                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['qC'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],PathImg+self.ImgFolder)
+            if self.PresC and self.qC:
+                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['TC'],self.f['qC'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow],PathImg+self.ImgFolder)
+        else:
+            print('No se tiene información de precipitación para realizar los diagramas')
 
