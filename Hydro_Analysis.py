@@ -466,7 +466,7 @@ class Hydro_Analysis(object):
 
         return MesesM1, MesesMM1, MesesMD1,MesesME1,CiDT1,DesT1,ErrT1, MesesM2, MesesMM2, MesesMD2,MesesME2,CiDT2,DesT2,ErrT2
 
-    def CiclDP(self,MonthsM,PathImg='',Name='',NameSt='',FlagMan=False,vmax=None,vmin=None,Flagcbar=True,FlagIng=False):
+    def CiclDP(self,MonthsM,PathImg='',Name='',NameSt='',FlagMan=False,vmax=None,vmin=None,Flagcbar=True,FlagIng=False,Oper='Percen',VarInd='',VarL='Precipitación [%]'):
         '''
         DESCRIPTION:
             
@@ -486,6 +486,7 @@ class Hydro_Analysis(object):
             + vmin: Maximum value of the cbar.
             + Flagcbar: Flag to plot the cbar.
             + FlagIng: Flag to convert laels to english.
+            + VarInd: Variable indicative (example: Prec).
         _______________________________________________________________________
         
         OUTPUT:
@@ -503,10 +504,14 @@ class Hydro_Analysis(object):
         MonthsMP = dict()
 
         for ii,i in enumerate(range(1,13)):
-            MonthsMP[i] = PrecPor(MonthsM[i])
-            ProcP[ii,:] = np.nanmean(MonthsMP[i],axis=0)*100
+            if Oper == 'Percen':
+                MonthsMP[i] = PrecPor(MonthsM[i])
+                ProcP[ii,:] = np.nanmean(MonthsMP[i],axis=0)*100
+            else:
+                MonthsMP[i] = MonthsM[i]
+                ProcP[ii,:] = np.nanmean(MonthsMP[i],axis=0)
 
-        HyPl.DalyAnCycle(ProcP,PathImg=PathImg,Name=Name,NameSt=NameSt,VarL='Precipitación (%)',VarLL='Precipitación',VarInd='',FlagMan=FlagMan,vmax=vmax,vmin=vmin,Flagcbar=Flagcbar,FlagIng=FlagIng,FlagSeveral=True)
+        HyPl.DalyAnCycle(ProcP,PathImg=PathImg,Name=Name,NameSt=NameSt,VarL=VarL,VarLL='Precipitación',VarInd=VarInd,FlagMan=FlagMan,vmax=vmax,vmin=vmin,Flagcbar=Flagcbar,FlagIng=FlagIng,FlagSeveral=True)
         # x = np.arange(0,24)
         # x3 = np.arange(0,25)
         # # for i in range(8):

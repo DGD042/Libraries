@@ -461,7 +461,7 @@ class Hydro_Plotter:
             + VarLL: Variable label without units.
             + VarInd: Variable indicative (example: Prec).
             + Flagcbar: Flag to plot the cbar.
-            + FlagIng: Flag to convert laels to english.
+            + FlagIng: Flag to convert labels to english.
             + FlagSeveral: Flag to make big labels.
         _______________________________________________________________________
         

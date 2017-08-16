@@ -3997,7 +3997,7 @@ class Proc(object):
                     self.f[Var2[v]] = anet.AnomGen(self.f[Var2[v]],h24)
         return
 
-    def EventSeparation(self):
+    def EventSeparation(self,Ci=60,Cf=60,m=0.8,M=100):
         '''
         DESCRIPTION:
 
@@ -4017,7 +4017,7 @@ class Proc(object):
         Variable = dict()
         for iv,v in enumerate(Var[1:]):
             if self.flag[v]:
-                PrecC, Variable[v], FechaEv = BP.ExEv(self.f[Var2['PrecC']],self.f[Var2[v]],self.f['FechaC'])
+                PrecC, Variable[v], FechaEv = BP.ExEv(self.f[Var2['PrecC']],self.f[Var2[v]],self.f['FechaC'],Ci=Ci,Cf=Cf,m=m,M=M)
         
         xx = 0
         FechaEv2=[]
@@ -4276,7 +4276,7 @@ class Scatter_Gen(object):
         estudios de los diagramas de dispersión.
     '''
 
-    def __init__(self,PathDataImp='',PathData='',PathData2='',DataImp='Data_Imp',endingmat='',TipoD='IDEA'):
+    def __init__(self,PathDataImp='',PathData='',PathData2='',DataImp='Data_Imp',endingmat='',TipoD='IDEA',PathImg=''):
         '''
         DESCRIPTION:
 
@@ -4290,6 +4290,8 @@ class Scatter_Gen(object):
 
         OUTPUT:
         '''
+
+        self.PathImg = PathImg
         # ----------------------------
         # Constantes
         # ----------------------------
@@ -4593,13 +4595,14 @@ class Scatter_Gen(object):
         # Diagramas de compuestos promedios
         if self.PrecC:
             if self.PresC and self.TC:
-                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['TC'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow],PathImg+self.ImgFolder)
+                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['TC'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.PresC and self.HRC:
-                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['HRC'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],PathImg+self.ImgFolder)
+                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['HRC'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.PresC and self.qC:
-                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['qC'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],PathImg+self.ImgFolder)
+                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['qC'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.PresC and self.qC:
-                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['TC'],self.f['qC'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow],PathImg+self.ImgFolder)
+                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['TC'],self.f['qC'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
         else:
             print('No se tiene información de precipitación para realizar los diagramas')
+        return
 
