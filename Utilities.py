@@ -19,6 +19,7 @@ import re
 import operator as op
 import warnings
 import subprocess
+import platform
 
 class Utilities(object):
     '''
@@ -77,7 +78,6 @@ class Utilities(object):
         return -1
 
     def ExitError(self,fn,cl,msg):
-
         '''
         DESCRIPTION:
 
@@ -93,7 +93,6 @@ class Utilities(object):
 
         print('ERROR: Function <'+fn+'> Class <'+cl+'>: '+msg)
         sys.exit(0)
-
 
     def CrFolder(self,Path):
         '''
@@ -133,7 +132,10 @@ class Utilities(object):
 
         Act = os.getcwd()
         os.chdir(Path)
-        proc = subprocess.Popen('ls',stdout=subprocess.PIPE)
+        if platform.system() == 'Windows':
+            proc = subprocess.Popen('dir',stdout=subprocess.PIPE)
+        else:
+            proc = subprocess.Popen('ls',stdout=subprocess.PIPE)
         R = proc.stdout.read().decode('utf-8').split('\n')
         R.pop()
         os.chdir(Act)
