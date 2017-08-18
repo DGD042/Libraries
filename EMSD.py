@@ -1312,7 +1312,7 @@ class EMSD(object):
 
                     if LenD == 1:
                         if Var == 'time':
-                            Data[Var] = nc,num2date(dataset.variables[Var],dataset.variables[Var].units,dataset.variables[Var].calendar)[slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
+                            Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,dataset.variables[Var].calendar)[slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
                         else:
                             Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
                     elif LenD == 2:
