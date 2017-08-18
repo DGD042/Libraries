@@ -1255,7 +1255,7 @@ class EMSD(object):
         '''
         DESCRIPTION:
     
-            With this function the information of an IDEAM type file can 
+            With this function the information of an NetCDF type file can 
             be extracted.
         _______________________________________________________________________
 
