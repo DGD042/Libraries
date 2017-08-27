@@ -1254,7 +1254,7 @@ class EMSD(object):
         '''
         DESCRIPTION:
     
-            With this function the information of an IDEAM type file can 
+            With this function the information of an NetCDF type file can 
             be extracted.
         _______________________________________________________________________
 
@@ -1309,19 +1309,20 @@ class EMSD(object):
                         except:
                             Range[VarR] = [0,dataset.variables[VarR].shape[0]]
 
+
                     if LenD == 1:
                         if Var == 'time':
                             Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,dataset.variables[Var].calendar)[slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
                         else:
                             Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
                     elif LenD == 2:
-                        Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])][slice(Range[dimensions[1]][0],Range[dimensions[1]][1])]
+                        Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1]),slice(Range[dimensions[1]][0],Range[dimensions[1]][1])]
                     elif LenD == 3:
-                        Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])][slice(Range[dimensions[1]][0],Range[dimensions[1]][1])][slice(Range[dimensions[2]][0],Range[dimensions[2]][1])]
+                        Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1]),slice(Range[dimensions[1]][0],Range[dimensions[1]][1]),slice(Range[dimensions[2]][0],Range[dimensions[2]][1])]
                     elif LenD == 4:
-                        Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])][slice(Range[dimensions[1]][0],Range[dimensions[1]][1])][slice(Range[dimensions[2]][0],Range[dimensions[2]][1])][slice(Range[dimensions[3]][0],Range[dimensions[3]][1])]
+                        Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1]),slice(Range[dimensions[1]][0],Range[dimensions[1]][1]),slice(Range[dimensions[2]][0],Range[dimensions[2]][1]),slice(Range[dimensions[3]][0],Range[dimensions[3]][1])]
                     elif LenD == 5:
-                        Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])][slice(Range[dimensions[1]][0],Range[dimensions[1]][1])][slice(Range[dimensions[2]][0],Range[dimensions[2]][1])][slice(Range[dimensions[3]][0],Range[dimensions[3]][1])][slice(Range[dimensions[4]][0],Range[dimensions[4]][1])]
+                        Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1]),slice(Range[dimensions[1]][0],Range[dimensions[1]][1]),slice(Range[dimensions[2]][0],Range[dimensions[2]][1]),slice(Range[dimensions[3]][0],Range[dimensions[3]][1]),slice(Range[dimensions[4]][0],Range[dimensions[4]][1])]
 
 
             dataset.close()

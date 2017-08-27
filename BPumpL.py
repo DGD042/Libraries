@@ -4606,3 +4606,45 @@ class Scatter_Gen(object):
             print('No se tiene información de precipitación para realizar los diagramas')
         return
 
+    def PRoTVvDP(self,Mar=0.8,MarT=0.8,FechaEvst_Aft=0,FechaEvend_Aft=0,flagAf=False,flagEv_Pres=False,flagEv_T=False,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+        '''
+            DESCRIPTION:
+
+        Función para obtener los valores de Duración, tasas y cambios de presión
+        y de temperatura.
+        _________________________________________________________________________
+
+            INPUT:
+        + Mar: Valor del cambio de presión mínimo para calcular las tasas antes
+               del evento de precipitación.
+        + FechaEvst_Aft: Fecha de comienzo del evento, en el mismo formato que FechaEv.
+        + FechaEvend_Aft: Fecha de finalización del evento, en el mismo formato que FechaEv.
+        + flagAf: Bandera para ver si se incluye un treshold durante el evento.
+        + flagEV: Bandera para graficar los eventos.
+        + flagIng: Bander para saber si se lleva a inglés los ejes.
+        + ImgFolder_Scatter: Ruta donde se guardará el documento.
+        _________________________________________________________________________
+
+            OUTPUT:
+        Se generan diferentes variables o se cambian las actuales.
+        '''
+
+        self.ImgFolder_Scatter = ImgFolder_Scatter
+        ImgFolder_Scatter_Specific_Pres = ImgFolder_Scatter+'Pres/'+Specific_Folder+'/'
+        ImgFolder_Scatter_Specific_Temp = ImgFolder_Scatter+'Temp/'+Specific_Folder+'/'
+        if self.PrecC:
+            if self.PresC:
+                self.f['DurPrec'], self.f['PresRateA'], self.f['PresRateB'], self.f['DurPresA'], self.f['DurPresB'], self.f['PresChangeA'], \
+                    self.f['PresChangeB'], self.f['TotalPrec'], self.f['MaxPrec'], self.f['FechaEvst'] = \
+                    BP.PRvDP_C(self.f['PrecC'],self.f['PresC'],self.f['FechaEv'],FechaEvst_Aft,FechaEvend_Aft,Mar,flagAf,int(self.dtm),self.Middle,flagEv_Pres,PathImg+ImgFolder_Scatter_Specific_Pres,self.NamesArch[self.irow],flagIng)
+            else:
+                print('No se tiene información de presión')
+            if self.TC:
+                self.f['DurPrecT'], self.f['TempRateA'], self.f['TempRateB'], self.f['TempChangeA'], self.f['TempChangeB'] \
+                    = BP.TvDP_C(self.f['PrecC'],self.f['TC'],self.f['FechaEv'],FechaEvst_Aft,FechaEvend_Aft,MarT,flagAf,int(self.dtm),self.Middle,flagEv_T,PathImg+ImgFolder_Scatter_Specific_Temp,self.NamesArch[self.irow],flagIng)
+            else:
+                print('No se tiene información de temperatura')
+        else:
+            print('No se tiene información de precipitación para generar los conteos')
+        self.var = self.f.keys()
+        return
