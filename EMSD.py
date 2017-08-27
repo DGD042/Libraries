@@ -115,7 +115,6 @@ def perdelta(start, end, delta):
 # ------------------------
 
 class EMSD(object):
-
     '''
     ____________________________________________________________________________
     
@@ -1952,17 +1951,25 @@ class EMSD(object):
         for iL,L in enumerate(Dates):
             # Headers
             if iL == 0 and flagHeader:
-                wr = deli.join(Headers)+'\r\n'
+                wr = deli.join(Headers)+'\n'
                 f.write(wr)
             f.write(L+deli)
             # Change nan values to empty
             Line = []
             for Head in Headers[1:]:
                 Line.append(str(Values[Head][iL]))
-            Line = np.array(Line)
-            Line[Line == 'nan'] = NaNdata
+
+            for iL,L in enumerate(Line):
+                if L == 'nan':
+                    Line[iL] = NaNdata
+                elif L == '':
+                    Line[iL] = NaNdata
+
+            # Line = np.array(Line).astype('>U4')
+            # Line[Line == 'nan'] = NaNdata
+            # Line[Line == ''] = NaNdata
             
-            wr = deli.join(Line)+'\r\n'
+            wr = deli.join(Line)+'\n'
             f.write(wr)
 
         f.close()
@@ -2101,6 +2108,23 @@ class EMSD(object):
             St_Info_Dict = self.St_Info     
 
         keys = ['CODE','NAME','ELEVATION','LATITUDE','LONGITUDE']
+
+
+        St_Info_Dict['LATITUDE'] = list(St_Info_Dict['LATITUDE'])
+        St_Info_Dict['LONGITUDE'] = list(St_Info_Dict['LONGITUDE'])
+
+        for i in range(len(St_Info_Dict['LATITUDE'])):
+            if St_Info_Dict['LATITUDE'][i][-1] == 'N':
+                St_Info_Dict['LATITUDE'][i] = float(St_Info_Dict['LATITUDE'][i][:5])
+            elif St_Info_Dict['LATITUDE'][i][-1] == 'S':
+                St_Info_Dict['LATITUDE'][i] = float('-'+St_Info_Dict['LATITUDE'][i][:5])
+
+        for i in range(len(St_Info_Dict['LONGITUDE'])):
+            if St_Info_Dict['LONGITUDE'][i][-1] == 'E':
+                St_Info_Dict['LONGITUDE'][i] = float(St_Info_Dict['LONGITUDE'][i][:5])
+            elif St_Info_Dict['LONGITUDE'][i][-1] == 'W':
+                St_Info_Dict['LONGITUDE'][i] = float('-'+St_Info_Dict['LONGITUDE'][i][:5])
+
         Nameout = Pathout+Name+'.xlsx'
         W = xlsxwl.Workbook(Nameout)
         # Stations Sheet
@@ -2121,8 +2145,8 @@ class EMSD(object):
         WS.write(1,1,'CODE',Title)
         WS.write(1,2,'NAME',Title)
         WS.write(1,3,'ELEVATION',Title)
-        WS.write(1,4,'LONGITUDE',Title)
-        WS.write(1,5,'LATITUDE',Title)
+        WS.write(1,4,'LATITUDE (N)',Title)
+        WS.write(1,5,'LONGITUDE (E)',Title)
 
         Col = 1
         for key in keys:
@@ -2168,7 +2192,7 @@ class EMSD(object):
         else:
             return self.Dates,self.DatesN, self.Values
             
-    def Ca_EC(self,Date=None,V1=None,op='mean',key=None,dtm=None):
+    def Ca_EC(self,Date=None,V1=None,op='mean',key=None,dtm=None,op2=None):
         '''
         DESCRIPTION:
 
@@ -2238,7 +2262,10 @@ class EMSD(object):
         VC[VLab[4]] = VmaxD
         VC[VLab[5]] = VminD
 
-        DateM, DateMN, VM,VmaxM,VminM,VNF,VNNF = self.Ca_E(DateD,VD,dt,2,op=op,flagMa=True,flagDF=True)
+        if op2 == None:
+            op2 = op
+
+        DateM, DateMN, VM,VmaxM,VminM,VNF,VNNF = self.Ca_E(DateD,VD,dt,2,op=op2,flagMa=True,flagDF=True)
         DatesC[DateLab[2]] = DateM
         DatesNC[DateNLab[2]] = DateMN
         VC[VLab[6]] = VM
@@ -2248,8 +2275,6 @@ class EMSD(object):
         VC[VLab[10]] = VNNF
 
         return DatesC, DatesNC, VC
-
-        
 
 
 

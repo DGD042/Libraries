@@ -44,7 +44,6 @@ utl = Utilities()
 # ------------------------
 
 class DatesUtil(object):
-
     '''
     ____________________________________________________________________________
     
@@ -334,13 +333,17 @@ class DatesUtil(object):
                                 # DifM = Dif/60
                                 for M in range(0,60):
                                     if Date <= DateI or Date > DateE+dtm:
+                                        DatesC.append(Date)
                                         Date += dtm
+                                        DatesC.pop()
                                     else:
                                         DatesC.append(Date)
                                         Date += dtm
                             else:
                                 if Date <= DateI or Date > DateE+dtm:
+                                    DatesC.append(Date)
                                     Date += dtm
+                                    DatesC.pop()
                                 else:
                                     DatesC.append(Date)
                                     Date += dtm
@@ -353,6 +356,8 @@ class DatesUtil(object):
                             DatesC.append(Date)
                             Date += dtm
 
+        if isinstance(DatesC[0],datetime):
+            DatesC.pop()
         DatesC = np.array(DatesC)
 
         return DatesC
