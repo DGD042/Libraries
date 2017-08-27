@@ -76,7 +76,6 @@ anet = AnET()
 EMSD = EMSD()
 
 class BPumpL:
-
     def __init__(self):
 
         '''
@@ -206,23 +205,23 @@ class BPumpL:
 
     def ExEv(self,Prec,V,Fecha,Ci=60,Cf=60,m=0.8,M=100):
         '''
-            DESCRIPTION:
+        DESCRIPTION:
         
-        Con esta función se pretende realizar los diferentes diagramas de
-        compuestos.
+            Con esta función se pretende realizar los diferentes diagramas de
+            compuestos.
         _________________________________________________________________________
 
-            INPUT:
-        + Prec: Precipitación
-        + V: Variable que se quiere tener en el diagrama de compuestos.
-        + Ci: Minutos atrás.
-        + Cf: Minutos adelante.
-        + m: Valor mínimo para extraer los datos.
+        INPUT:
+            + Prec: Precipitación
+            + V: Variable que se quiere tener en el diagrama de compuestos.
+            + Ci: Minutos atrás.
+            + Cf: Minutos adelante.
+            + m: Valor mínimo para extraer los datos.
         _________________________________________________________________________
         
-            OUTPUT:
-        - PrecC: Precipitación en compuestos.
-        - VC: Diagrama de la variable.
+        OUTPUT:
+            - PrecC: Precipitación en compuestos.
+            - VC: Diagrama de la variable.
         '''
         # Se inicializan las variables
         FechaEv = []
@@ -250,6 +249,75 @@ class BPumpL:
             x += 1
 
         return PrecC, VC, np.array(FechaEv)
+
+    def ExEvGen(self,VE,V,Fecha,Ci=60,Cf=60,m=0.8,M=100,MaxMin='min'):
+        '''
+        DESCRIPTION:
+        
+            Con esta función se pretende realizar los diferentes diagramas de
+            compuestos a partir de cualquier información.
+        _________________________________________________________________________
+
+        INPUT:
+            + VE: Variable for the composite.
+            + V: Variable que se quiere tener en el diagrama de compuestos.
+            + Ci: Minutos atrás.
+            + Cf: Minutos adelante.
+            + m: Valor mínimo para extraer los datos.
+            + M: Valor máximo para extraer los datos.
+            + MaxMin: max or min en la extracción de los eventos.
+        _________________________________________________________________________
+        
+        OUTPUT:
+            - VCC : Precipitación en compuestos.
+            - VC: Diagrama de la variable.
+        '''
+        operDict = {'min':np.nanmin,'max':np.nanmax}
+        # Se inicializan las variables
+        FechaEv = []
+        VE2 = VE.copy()
+        VEM = operDict[MaxMin.lower()](VE2)
+        
+        x = 0
+        xx = 0
+        if MaxMin.lower() == 'max':
+            while VEM > m:
+                if VEM <= M:
+                    q = np.where(VE2 == VEM)[0]
+                    if xx == 0:
+                        VEC = VE[q[0]-Ci:q[0]+Cf]
+                        VC = V[q[0]-Ci:q[0]+Cf]
+                    else:
+                        VEC = np.vstack((VEC,VE[q[0]-Ci:q[0]+Cf]))
+                        VC = np.vstack((VC,V[q[0]-Ci:q[0]+Cf]))
+                    FechaEv.append(Fecha[q[0]-Ci:q[0]+Cf])
+                    xx += 1
+                else:
+                    q = np.where(VE2 == VEM)[0]
+
+                VE2[q[0]-Ci:q[0]+Cf] = np.nan
+                VEM = operDict[MaxMin.lower()](VE2)
+                x += 1
+        elif MaxMin.lower() == 'min':
+            while VEM < M:
+                if VEM >= m:
+                    q = np.where(VE2 == VEM)[0]
+                    if xx == 0:
+                        VEC = VE[q[0]-Ci:q[0]+Cf]
+                        VC = V[q[0]-Ci:q[0]+Cf]
+                    else:
+                        VEC = np.vstack((VEC,VE[q[0]-Ci:q[0]+Cf]))
+                        VC = np.vstack((VC,V[q[0]-Ci:q[0]+Cf]))
+                    FechaEv.append(Fecha[q[0]-Ci:q[0]+Cf])
+                    xx += 1
+                else:
+                    q = np.where(VE2 == VEM)[0]
+
+                VE2[q[0]-Ci:q[0]+Cf] = np.nan
+                VEM = operDict[MaxMin.lower()](VE2)
+                x += 1
+
+        return VEC, VC, np.array(FechaEv)
 
     def ExEvSea(self,PrecC,VC,FechaEv):
         '''
@@ -4015,10 +4083,13 @@ class Proc(object):
         Var = self.Variables
         PrecC = dict()
         Variable = dict()
+        Variable2 = dict()
         for iv,v in enumerate(Var[1:]):
+            print(v)
+            aaa
             if self.flag[v]:
                 PrecC, Variable[v], FechaEv = BP.ExEv(self.f[Var2['PrecC']],self.f[Var2[v]],self.f['FechaC'],Ci=Ci,Cf=Cf,m=m,M=M)
-        
+
         xx = 0
         FechaEv2=[]
         # Se realiza una limpeza de los datos adicional
