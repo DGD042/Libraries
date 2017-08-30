@@ -1261,6 +1261,7 @@ class Hydro_Analysis(object):
         if not(isinstance(DatesEv[0][0],str)) and not(isinstance(DatesEv[0][0],datetime)):
             E = utl.ShowError('PrecCount','Hydro_Analysis','Not dates given, review format')
             raise E
+
         
         # --------------------------------------
         # Dates
@@ -1270,14 +1271,18 @@ class Hydro_Analysis(object):
         DatesEvst_Aft = []
         DatesEvend_Aft = []
         for i in range(len(DatesEv)):
-            x = [M]
+            if isinstance(M,list):
+                MP = M[i]
+            else:
+                MP = M
+            x = [MP]
             # Minimum of precipitation
             if dt == 1:
                 MinPrec = 0.001
             else:
                 MinPrec = 0.10
             # Precipitation beginning
-            xm = np.where(Prec[i,:M]<=MinPrec)[0]
+            xm = np.where(Prec[i,:MP]<=MinPrec)[0]
             k = 1
             a = len(xm)-1
             I = 10
