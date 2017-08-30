@@ -39,7 +39,10 @@ Thumbs.db
 ######
 # Data Not allowed in
 *.pyc
+*.swp
+*.sop
 M1RecLi.py
 Anglo_GOTTA_Li.py
 Interception_Model.py
 Evap_Models.py
+

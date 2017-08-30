@@ -284,6 +284,11 @@ class BPumpL:
             while VEM > m:
                 if VEM <= M:
                     q = np.where(VE2 == VEM)[0]
+                    if q[0]-Ci <= 0:
+                        VE2[q[0]] = np.nan
+                        VEM = operDict[MaxMin.lower()](VE2)
+                        x += 1
+                        continue
                     if xx == 0:
                         VEC = VE[q[0]-Ci:q[0]+Cf]
                         VC = V[q[0]-Ci:q[0]+Cf]
@@ -298,10 +303,16 @@ class BPumpL:
                 VE2[q[0]-Ci:q[0]+Cf] = np.nan
                 VEM = operDict[MaxMin.lower()](VE2)
                 x += 1
+
         elif MaxMin.lower() == 'min':
             while VEM < M:
                 if VEM >= m:
                     q = np.where(VE2 == VEM)[0]
+                    if q[0]-Ci <= 0:
+                        VE2[q[0]] = np.nan
+                        VEM = operDict[MaxMin.lower()](VE2)
+                        x += 1
+                        continue
                     if xx == 0:
                         VEC = VE[q[0]-Ci:q[0]+Cf]
                         VC = V[q[0]-Ci:q[0]+Cf]
@@ -3601,6 +3612,385 @@ class BPumpL:
 
         return DurPrec, TempRateA, TempRateB, TempChangeA, TempChangeB
 
+    def C_Rates_Changes(self,VC,dt=1,M=60*4,MaxMin='min'):
+        '''
+        DESCRIPTION:
+    
+        Con esta función se pretende encontrar la tasa de cambio de una variable
+        junto con la duración de las diferentes diagramas de compuestos.
+        _________________________________________________________________________
+
+            INPUT:
+        + VC: Diagrama de compuestos de la variable a estudiar.
+        + dt: delta de tiempo que se tienen en los diagramas de compuestos.
+        + M: Mitad en donde se encuentran los datos.
+        + MinMax: Valor que se encuentra en el centro de los datos.
+        _________________________________________________________________________
+
+            OUTPUT:
+        - VRateB: Tasa de cambio de la variable antes.
+        - VRateA: Tasa de cambio de la variable durante.
+        - VChangeB: Cambio de la variable antes.
+        - VChangeA: Cambio de la variable durante.
+        '''
+        
+        # Se filtran las alertas
+        warnings.filterwarnings('ignore')
+        
+        # Se inicializan las variables
+        ResVar = ['DurVA','DurVB','VRateA','VRateB','VChangeA','VChangeB','PosB','PosA']
+        Results = dict()
+        ResFlag = dict()
+        for Lab in ResVar:
+            Results[Lab] = []
+
+        # --------------------------------------
+        # Se verifican datos faltantes
+        # --------------------------------------
+        for iC in range(len(VC)):
+            qNaN = sum(~np.isnan(VC[iC][M-2*(60/dt):M+2*(60/dt)]))
+            qT = len(VC[iC][M-2*(60/dt):M+2*(60/dt)])
+
+            if qNaN < qT*0.60:
+                for Lab in ResVar:
+                    Results[Lab].append(np.nan)
+            else:
+                for Lab in ResVar:
+                    Results[Lab].append(-9999)
+
+
+        # --------------------------------------
+        # Valores mínimos o máximos
+        # --------------------------------------
+        if MaxMin.lower() == 'min':
+            # Ciclo para los datos
+            for iC in range(len(VC)):
+                if not(np.isnan(Results['DurVA'][iC])):
+                    # Se encuentra el valor máximo antes
+                    # Se utiliza como referencia 2 horas antes 
+                    MaxVarB = np.nanmax(VC[iC][M-2*(60/dt):M])
+                    PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
+                    if MaxVarB < -0.2:
+                        MaxVarB = np.nanmax(VC[iC][M-3*(60/dt):M])
+                        PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
+
+                    # Se guarda la posición
+                    Results['PosB'][iC] = PosB
+                    # Se obtiene el cambio de la variable
+                    Results['VChangeB'][iC] = MaxVarB-VC[iC][M]
+                    # Se obtiene la duración en horas
+                    Results['DurVB'][iC] = (M-PosB)*dt/60
+                    # Se obtiene la tasa de cambio
+                    Results['VRateB'][iC] = Results['VChangeB'][iC]/Results['DurVB'][iC]
+
+                    # Se encuentra el valor máximo después
+                    # Se utiliza como referencia 2 horas antes 
+                    MaxVarA = np.nanmax(VC[iC][M:M+2*(60/dt)])
+                    PosA = np.where(VC[iC][M:] == MaxVarA)[0][0]
+                    if MaxVarA < -0.2:
+                        MaxVarA = np.nanmax(VC[iC][M:M+3*(60/dt)])
+                        PosA = np.where(VC[iC][M:] == MaxVarA)[0][0]
+
+                    # Se guarda la posición
+                    Results['PosA'][iC] = PosA
+                    # Se obtiene el cambio de la variable
+                    Results['VChangeA'][iC] = MaxVarA-VC[iC][M]
+                    # Se obtiene la duración en horas
+                    Results['DurVA'][iC] = (PosA-M)*dt/60
+                    # Se obtiene la tasa de cambio
+                    Results['VRateA'][iC] = Results['VChangeA'][iC]/Results['DurVA'][iC]
+        elif MaxMin.lower() == 'max':
+            # Ciclo para los datos
+            for iC in range(len(VC)):
+                if not(np.isnan(Results['DurVA'][iC])):
+                    # Se encuentra el valor máximo antes
+                    # Se utiliza como referencia 2 horas antes 
+                    MinVarB = np.nanmin(VC[iC][M-2*(60/dt):M])
+                    PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
+                    if MinVarB < -0.2:
+                        MinVarB = np.nanmin(VC[iC][M-3*(60/dt):M])
+                        PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
+
+                    # Se guarda la posición
+                    Results['PosB'][iC] = PosB
+                    # Se obtiene el cambio de la variable
+                    Results['VChangeB'][iC] = VC[iC][M]-MinVarB
+                    # Se obtiene la duración en horas
+                    Results['DurVB'][iC] = (M-PosB)*dt/60
+                    # Se obtiene la tasa de cambio
+                    Results['VRateB'][iC] = Results['VChangeB'][iC]/Results['DurVB'][iC]
+
+                    # Se encuentra el valor máximo después
+                    # Se utiliza como referencia 2 horas antes 
+                    MinVarA = np.nanmin(VC[iC][M:M+2*(60/dt)])
+                    PosA = np.where(VC[iC][M:] == MinVarA)[0][0]
+                    if MinVarA < -0.2:
+                        MinVarA = np.nanmin(VC[iC][M:M+3*(60/dt)])
+                        PosA = np.where(VC[iC][M:] == MinVarA)[0][0]
+
+                    # Se guarda la posición
+                    Results['PosA'][iC] = PosA
+                    # Se obtiene el cambio de la variable
+                    Results['VChangeA'][iC] = VC[iC][M]-MinVarA
+                    # Se obtiene la duración en horas
+                    Results['DurVA'][iC] = (PosA-M)*dt/60
+                    # Se obtiene la tasa de cambio
+                    Results['VRateA'][iC] = Results['VChangeA'][iC]/Results['DurVA'][iC]
+
+        return Results
+
+    def EventsScatter(self,DatesEv,Data,DataScatter,PathImg='',Name='',flagIng=False):
+        '''
+        DESCRIPTION:
+
+            Esta función realiza los gráficos de los diferentes eventos.
+        _______________________________________________________________________
+        INPUT:
+            + DatesEv: Dates of the events.
+            + Data: diccionario con los compuestos de las variables.
+            + DataScatter: Diccionario con los datos que se van a graficar, deben tener
+                    los datos que se generan de las funciones BP.C_Rates_Changes
+                    y HA.Count_Prec.
+
+
+        '''
+        # Se organizan las fechas
+        if not(isinstance(DatesEvv[0][0],datetime)):
+            FechaEvv = np.empty(DatesEv.shape)*np.nan
+            for iF in range(len(DatesEv)):
+                FechaEvv[iF] = DUtil.Dates_str2datetime(DatesEv)
+        else:
+            FechaEvv = DatesEv
+
+
+
+        # Eventos que se graficarán
+        Pii2 = np.arange(0,len(DataScatter['DurVB']))
+        Pii = Pii2[~np.isnan(DataScatter['DurVB'])]
+                        
+        # -------------------------
+        # Se grafican los eventos
+        # -------------------------
+        for i in Pii:
+
+            Nameout = PathImg + Name + '/' + Name + '_Ev_'+str(i)
+
+            # Se grafican las dos series
+            fH=30 # Largo de la Figura
+            fV = fH*(2/3) # Ancho de la Figura
+
+            # Se crea la carpeta para guardar la imágen
+            utl.CrFolder(PathImg + Name + '/')
+
+            plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+                ,'font.sans-serif': 'Arial Narrow'\
+                ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
+
+            # Se crea el gráfico
+            f, ((ax22,ax23), (ax12,ax13)) = plt.subplots(2, 2, figsize=utl.cm2inch(fH,fV))
+            ax12.tick_params(axis='x',which='both',bottom='on',top='off',\
+                labelbottom='on',direction='out')
+            ax12.tick_params(axis='y',which='both',left='on',right='off',\
+                labelleft='on')
+            ax12.tick_params(axis='y',which='major',direction='inout') 
+
+            # -------------------
+            # Antes del evento
+            # -------------------
+            ax12.scatter(DataScatter['DurPrec'],DataScatter['VRateB'],color='dodgerblue',alpha=0.6)
+            ax12.scatter(DataScatter['DurPrec'][i],DataScatter['VRateB'][i],color='red',alpha=0.6)
+
+            # Títulos
+            if flagIng:
+                # Inglés
+                ax12.set_title('Surface Pressure Changes Before the Event in '+ Name,fontsize=16)
+                ax12.set_xlabel(u'Duration [h]',fontsize=15)
+                ax12.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
+            else:
+                # Español
+                ax12.set_title('Cambios en Presión Atmosférica Antes del Evento',fontsize=16)
+                ax12.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
+                ax12.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
+            ax12.grid()
+            
+            xTL = ax12.xaxis.get_ticklocs() # List of Ticks in x
+            MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+            plt.xlim([0,np.nanmax(DurPrec)+2*MxL])
+
+            # ------------------------
+            # Se realiza la regresión
+            # ------------------------
+            FitB = CF.FF(DataScatter['DurPrec'],DataScatter['VRateB'],F='')
+
+            # Se toman los datos para ser comparados posteriormente
+            DD,PP = utl.NoNaN(DataScatter['DurPrec'],DataScatter['VRateB'],False)
+
+            # Se garda la variable
+            CC = np.array([N,a,b,desv_a,desv_b,R2])
+            # Se realiza el ajuste a ver que tal dió
+            x = np.linspace(np.nanmin(DataScatter['DurPrec']),np.nanmax(DataScatter['DurPrec']),100)
+            DataAdj = FitB['Function'](x, *FitB['Coef'])
+            Label = FitB['FunctionEq']+'\n'+r'$R^2=%.3f$'
+            ax12.plot(x,PresRateC,'k--',label=Label %tuple(list(FitB['Coef'])+[FitB['R2']]))
+            ax12.legend(loc=1,fontsize=12)
+
+
+            xTL = ax12.xaxis.get_ticklocs() # List of Ticks in x
+            MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+            minorLocatorx = MultipleLocator(MxL)
+            yTL = ax12.yaxis.get_ticklocs() # List of Ticks in y
+            MyL = np.abs(np.abs(yTL[0])-np.abs(yTL[1]))/5 # minorLocatory value
+            minorLocatory = MultipleLocator(MyL)
+            ax12.xaxis.set_minor_locator(minorLocatorx)
+            ax12.yaxis.set_minor_locator(minorLocatory)
+            
+            # ____________________________
+            # --------------------
+            # Se grafica después
+            # --------------------
+            ax13.tick_params(axis='x',which='both',bottom='on',top='off',\
+                labelbottom='on',direction='out')
+            ax13.tick_params(axis='y',which='both',left='on',right='off',\
+                labelleft='on')
+            ax13.tick_params(axis='y',which='major',direction='inout') 
+            # -------------------
+            # Durante del evento
+            # -------------------
+            ax13.scatter(DataScatter['DurPrec'],DataScatter['VRateA'],color='dodgerblue',alpha=0.6)
+            ax13.scatter(DataScatter['DurPrec'][i],DataScatter['VRateA'][i],color='red',alpha=0.6)
+
+            if flagIng:
+                # Inglés
+                ax13.set_title('Surface Pressure Changes After the Event in '+ Name,fontsize=16)
+                ax13.set_xlabel(u'Duration [h]',fontsize=15)
+                # ax13.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
+            else:
+                # Español
+                ax13.set_title('Cambios en Presión Atmosférica Durante el Evento',fontsize=16)
+                ax13.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
+                # ax13.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
+            ax13.grid()
+
+            xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
+            MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+            plt.xlim([0,np.nanmax(DurPrec)+2*MxL])
+
+            # ------------------------
+            # Se realiza la regresión
+            # ------------------------
+            FitA = CF.FF(DataScatter['DurPrec'],DataScatter['VRateA'],F='')
+
+            # Se toman los datos para ser comparados posteriormente
+            DD,PP = utl.NoNaN(DataScatter['DurPrec'],DataScatter['VRateA'],False)
+
+            # Se garda la variable
+            CC = np.array([N,a,b,desv_a,desv_b,R2])
+            # Se realiza el ajuste a ver que tal dió
+            x = np.linspace(np.nanmin(DataScatter['DurPrec']),np.nanmax(DataScatter['DurPrec']),100)
+            DataAdj = FitA['Function'](x, *FitA['Coef'])
+            Label = FitA['FunctionEq']+'\n'+r'$R^2=%.3f$'
+            ax13.plot(x,PresRateC,'k--',label=Label %tuple(list(FitA['Coef'])+[FitA['R2']]))
+            ax13.legend(loc=1,fontsize=12)
+
+            xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
+            MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+            minorLocatorx = MultipleLocator(MxL)
+            yTL = ax13.yaxis.get_ticklocs() # List of Ticks in y
+            MyL = np.abs(yTL[1]-yTL[0])/5 # minorLocatory value
+            minorLocatory = MultipleLocator(MyL)
+            ax13.xaxis.set_minor_locator(minorLocatorx)
+            ax13.yaxis.set_minor_locator(minorLocatory)
+
+            # _________________________
+            # -----------------------------------
+            # Se realiza el gráfico de los datos
+            # -----------------------------------
+            ax21 = plt.subplot(211)
+            ax21.tick_params(axis='x',which='both',bottom='on',top='off',\
+                labelbottom='on',direction='out')
+            ax21.tick_params(axis='y',which='both',left='on',right='off',\
+                labelleft='on')
+            ax21.tick_params(axis='y',which='major',direction='inout') 
+            
+            if flagIng:
+                # Inglés
+                a11 = ax21.plot(FechaEvv[i],PresC[i],'-k', label = 'Pressure')
+                ax21.set_title(Name+r" Event "+FechaEvst_Aft[i],fontsize=16)
+                ax21.set_xlabel("Time [LT]",fontsize=15)
+                ax21.set_ylabel('Pressure [hPa]',fontsize=15)
+            else:
+                # Español
+                a11 = ax21.plot(FechaEvv[i],PresC[i],'-k', label = 'Presión')
+                ax21.set_title(Name+r" Evento "+FechaEvst_Aft[i],fontsize=16)
+                ax21.set_xlabel("Tiempo",fontsize=15)
+                ax21.set_ylabel('Presión [hPa]',fontsize=15)
+            try:
+                p = len(Data['Prec'])
+                axx11 = ax21.twinx()
+                if flagIng:
+                    # Inglés
+                    a12 = axx11.plot(FechaEvv[i],Data['Prec'][i],'-b', label = 'Precipitation')
+                    axx11.set_ylabel('Precipitation [mm]',fontsize=15)
+                else:
+                    # Español
+                    a12 = axx11.plot(FechaEvv[i],Data['Prec'],'-b', label = 'Precipitación')
+                    axx11.set_ylabel('Precipitación [mm]',fontsize=15)
+            except:
+                a12 = 0             
+
+            if ~np.isnan(PCxii[i]):
+                if flagIng:
+                    L1 = ax21.plot([FechaEvv[i,PCxii[i]],FechaEvv[i,PCxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--b', label = 'Minimum Pressure') # Punto mínimo
+                    if ~np.isnan(PCxfBf[i]):
+                        L2 = ax21.plot([FechaEvv[i,PCxfBf[i]],FechaEvv[i,PCxfBf[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--r', label = 'Maximum Pressure Before') # Punto máximo B
+                    L3 = ax21.plot([FechaEvv[i,PCxff[i]],FechaEvv[i,PCxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--g', label = 'Maximum Pressure After') # Punto máximo A
+                else:
+                    L1 = ax21.plot([FechaEvv[i,PCxii[i]],FechaEvv[i,PCxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--b', label = 'Mínimo de Presión') # Punto mínimo
+                    if ~np.isnan(PCxfBf[i]):
+                        L2 = ax21.plot([FechaEvv[i,PCxfBf[i]],FechaEvv[i,PCxfBf[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--r', label = 'Máximo de Presión Antes') # Punto máximo B
+                    L3 = ax21.plot([FechaEvv[i,PCxff[i]],FechaEvv[i,PCxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'--g', label = 'Máximo de presión Durante') # Punto máximo A
+
+            # Líneas para la precipitación
+            if flagIng:
+                L4 = ax21.plot([FechaEvv[i,Dxii[i]],FechaEvv[i,Dxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.b', label = 'Beginning Precipitation Event') # Inicio del aguacero
+                L5 = ax21.plot([FechaEvv[i,Dxff[i]],FechaEvv[i,Dxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.g', label = 'Ending Precipitation Event') # Fin del aguacero
+            else:
+                L4 = ax21.plot([FechaEvv[i,Dxii[i]],FechaEvv[i,Dxii[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.b', label = 'Comienzo del Evento') # Inicio del aguacero
+                L5 = ax21.plot([FechaEvv[i,Dxff[i]],FechaEvv[i,Dxff[i]]],[np.nanmin(PresC[i]),np.nanmax(PresC[i])],'-.g', label = 'Finalización del Evento') # Fin del aguacero
+
+            xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
+            MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+            minorLocatorx = MultipleLocator(MxL)
+            yTL = ax13.yaxis.get_ticklocs() # List of Ticks in y
+            MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+            minorLocatory = MultipleLocator(MyL)
+            ax13.yaxis.set_minor_locator(minorLocatory)
+
+            # added these three lines
+            try:
+                p = len(PrecC)
+                if ~np.isnan(PCxfB):
+                    lns = a11+a12+L1+L2+L3+L4+L5
+                else:
+                    lns = a11+a12+L1+L3+L4+L5
+            except:
+                if ~np.isnan(PCxfB):
+                    lns = a11+L1+L2+L3+L4+L5
+                else:
+                    lns = a11+L1+L3+L4+L5
+            labs = [l.get_label() for l in lns]
+            plt.legend(lns, labs, loc=3,fontsize=13)
+            
+            plt.grid()
+            plt.tight_layout()
+            plt.savefig(Nameout + '.png',format='png',dpi=300 )
+            plt.close('all')
+
     def MapEvents(self,elevation,ElCor,Est,Points,V1,V2,vmax1,vmin1,vmax2,vmin2,Fecha,xlim=[-75.55,-75.46],ylim=[5.02,5.09],flagsmall=True,VarL1='',VarL2='',PathImg='',Name=''):
         '''
         DESCRIPTION:
@@ -3797,12 +4187,14 @@ class Proc(object):
             self.Variables4[v] = v[:-1]+'4'
             self.VariablesF[v] = v[:-1]+'_F'
             self.VariablesComp[v] = v[:-1]+'Comp'
+            self.VariablesComp[v+'_Pres'] = v[:-1]+'Comp_Pres'
+            self.VariablesComp[v+'_Temp'] = v[:-1]+'Comp_Temp'
             self.LabelV[v] = LabelV[iv]
             self.LabelVU[v] = LabelVU[iv]
         # Información para gráficos
         LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica']
         LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]']
-        self.DatesDoc = ['FechaEv','FechaC']
+        self.DatesDoc = ['FechaEv','FechaEv_Pres','FechaEv_Temp','FechaC']
         # Flags
         self.flag = dict()
         self.flag['Variables1'] = False
@@ -4065,7 +4457,7 @@ class Proc(object):
                     self.f[Var2[v]] = anet.AnomGen(self.f[Var2[v]],h24)
         return
 
-    def EventSeparation(self,Ci=60,Cf=60,m=0.8,M=100):
+    def EventSeparation(self,Ci=60,Cf=60,m=0.8,M=100,mP=-1,MP=-0.5,mT=0.5,MT=1):
         '''
         DESCRIPTION:
 
@@ -4081,15 +4473,22 @@ class Proc(object):
             Var2 = self.Variables_N
 
         Var = self.Variables
-        PrecC = dict()
         Variable = dict()
-        Variable2 = dict()
+        VariablePres = dict()
+        VariableTemp = dict()
         for iv,v in enumerate(Var[1:]):
-            print(v)
-            aaa
             if self.flag[v]:
                 PrecC, Variable[v], FechaEv = BP.ExEv(self.f[Var2['PrecC']],self.f[Var2[v]],self.f['FechaC'],Ci=Ci,Cf=Cf,m=m,M=M)
 
+        for iv,v in enumerate(Var):
+            if v != 'PresC':
+                if self.flag[v]:
+                    PresC, VariablePres[v], FechaEvPres = BP.ExEvGen(self.f[Var2['PresC']],self.f[Var2[v]],self.f['FechaC'],Ci=Ci,Cf=Cf,m=mP,M=MP,MaxMin='min')
+
+        for iv,v in enumerate(Var):
+            if v != 'TC':
+                if self.flag[v]:
+                    TC, VariableTemp[v], FechaEvTemp = BP.ExEvGen(self.f[Var2['TC']],self.f[Var2[v]],self.f['FechaC'],Ci=Ci,Cf=Cf,m=mT,M=MT,MaxMin='max')
         xx = 0
         FechaEv2=[]
         # Se realiza una limpeza de los datos adicional
@@ -4123,7 +4522,77 @@ class Proc(object):
         self.f[self.VariablesComp['HRC']] = HRC2
         self.f[self.VariablesComp['qC']] = qC2
         self.f['FechaEv'] = FechaEv2
+
+        xx = 0
+        FechaEv2=[]
+        # Se realiza una limpeza de los datos adicional de presión
+        for i in range(len(PresC)):
+            q = ~np.isnan(PresC[i])
+            N = np.sum(q)
+            q2 = ~np.isnan(VariablePres['PrecC'][i])
+            N2 = np.sum(q2)
+            q3 = ~np.isnan(VariablePres['TC'][i])
+            N3 = np.sum(q3)
+            a = len(q)*0.70
+            if N >= a and N2 >= a and N3 >= a:
+                if xx == 0:
+                    PresC2 = PresC[i]
+                    PrecC2 = VariablePres['PrecC'][i]
+                    TC2 = VariablePres['TC'][i]
+                    HRC2 = VariablePres['HRC'][i]
+                    qC2 = VariablePres['qC'][i]
+                    xx += 1
+                else:
+                    PresC2 = np.vstack((PresC2,PresC[i]))
+                    PrecC2 = np.vstack((PrecC2,VariablePres['PrecC'][i]))
+                    TC2 = np.vstack((TC2,VariablePres['TC'][i]))
+                    HRC2 = np.vstack((HRC2,VariablePres['HRC'][i]))
+                    qC2 = np.vstack((qC2,VariablePres['qC'][i]))
+                FechaEv2.append(FechaEvPres[i])
+                xx += 1
+        self.f[self.VariablesComp['PrecC_Pres']] = PrecC2
+        self.f[self.VariablesComp['PresC_Pres']] = PresC2
+        self.f[self.VariablesComp['TC_Pres']] = TC2
+        self.f[self.VariablesComp['HRC_Pres']] = HRC2
+        self.f[self.VariablesComp['qC_Pres']] = qC2
+        self.f['FechaEv_Pres'] = FechaEv2
+
+
+        xx = 0
+        FechaEv2=[]
+        # Se realiza una limpeza de los datos adicional de presión
+        for i in range(len(TC)):
+            q = ~np.isnan(TC[i])
+            N = np.sum(q)
+            q2 = ~np.isnan(VariableTemp['PresC'][i])
+            N2 = np.sum(q2)
+            q3 = ~np.isnan(VariableTemp['PrecC'][i])
+            N3 = np.sum(q3)
+            a = len(q)*0.70
+            if N >= a and N2 >= a and N3 >= a:
+                if xx == 0:
+                    TC2 = TC[i]
+                    PrecC2 = VariableTemp['PrecC'][i]
+                    PresC2 = VariableTemp['PresC'][i]
+                    HRC2 = VariableTemp['HRC'][i]
+                    qC2 = VariableTemp['qC'][i]
+                    xx += 1
+                else:
+                    TC2 = np.vstack((TC2 ,TC[i]))
+                    PrecC2 = np.vstack((PrecC2,VariableTemp['PrecC'][i]))
+                    PresC2 = np.vstack((PresC2,VariableTemp['PresC'][i]))
+                    HRC2 = np.vstack((HRC2,VariableTemp['HRC'][i]))
+                    qC2 = np.vstack((qC2,VariableTemp['qC'][i]))
+                FechaEv2.append(FechaEvTemp[i])
+                xx += 1
+        self.f[self.VariablesComp['PrecC_Temp']] = PrecC2
+        self.f[self.VariablesComp['PresC_Temp']] = PresC2
+        self.f[self.VariablesComp['TC_Temp']] = TC2
+        self.f[self.VariablesComp['HRC_Temp']] = HRC2
+        self.f[self.VariablesComp['qC_Temp']] = qC2
+        self.f['FechaEv_Temp'] = FechaEv2
         self.flag['VariablesComp'] = True
+
         return
 
     def SaveInf(self,pathout='',endingmat=''):
@@ -4151,7 +4620,9 @@ class Proc(object):
         Dates = dict()
         Dates['FechaC'] = self.f['FechaC']
         Dates['FechaEv'] = self.f['FechaEv']
-        savingkeys = ['FechaEv','FechaC']
+        Dates['FechaEv_Pres'] = self.f['FechaEv_Pres']
+        Dates['FechaEv_Temp'] = self.f['FechaEv_Temp']
+        savingkeys = ['FechaEv','FechaEv_Pres','FechaEv_Temp','FechaC']
         Data = dict()
         # Datos completos
         for iv,v in enumerate(Var):
@@ -4167,7 +4638,11 @@ class Proc(object):
             if self.flag[v]:
                 savingkeys.append(v[:-1]+'C')
                 Data[v[:-1]+'C'] = self.f[VarComp[v]]
-        EMSD.Writemat(Dates,Data,savingkeys,datekeys=self.DatesDoc,datakeys=savingkeys[2:],pathout=pathout,Names=self.NamesArch[self.irow]+endingmat)
+                savingkeys.append(v[:-1]+'C_Pres')
+                Data[v[:-1]+'C_Pres'] = self.f[VarComp[v+'_Pres']]
+                savingkeys.append(v[:-1]+'C_Temp')
+                Data[v[:-1]+'C_Temp'] = self.f[VarComp[v+'_Temp']]
+        EMSD.Writemat(Dates,Data,savingkeys,datekeys=self.DatesDoc,datakeys=savingkeys[4:],pathout=pathout,Names=self.NamesArch[self.irow]+endingmat)
 
 
 class MapSeriesGen(object): 
@@ -4647,6 +5122,105 @@ class Scatter_Gen(object):
         self.var = self.f.keys()
         return
 
+    def EventsPrecDetection(self):
+        '''
+            DESCRIPTION:
+
+        Función para detectar si llovió en el evento encontrado en el diagrama
+        de compuestos.
+        _________________________________________________________________________
+
+            INPUT:
+        _________________________________________________________________________
+
+            OUTPUT:
+        '''
+
+        self.EvDYes = dict()
+        self.EvDNo = dict()
+        xP1 = 0
+        xP2 = 0
+        xT1 = 0
+        xT2 = 0
+
+        if self.dtm == '1':
+           MaxPrec = 0.2 
+        else:
+           MaxPrec = 0.5 
+
+        if self.PrecC:
+            if self.PresC and self.TC:
+                # Se intenta primero con presión
+                for i in range(len(self.f['PrecC_Pres'])):
+                    if np.nanmax(self.f['PrecC_Pres'][i][self.Middle:self.Middle+(60/int(self.dtm)*2)+1]) >= MaxPrec:
+                        if xP1 == 0:
+                            self.EvDYes['PrecC_Pres'] = self.f['PrecC_Pres'][i]
+                            self.EvDYes['TC_Pres'] = self.f['TC_Pres'][i]
+                            self.EvDYes['PresC_Pres'] = self.f['PresC_Pres'][i]
+                            self.EvDYes['HRC_Pres'] = self.f['HRC_Pres'][i]
+                            self.EvDYes['qC_Pres'] = self.f['qC_Pres'][i]
+                            self.EvDYes['FechaEv_Pres'] = self.f['FechaEv_Pres'][i]
+                            xP1 += 1
+                        else:
+                            self.EvDYes['PrecC_Pres']   = np.vstack((self.EvDYes['PrecC_Pres'],self.f['PrecC_Pres'][i]))
+                            self.EvDYes['TC_Pres']      = np.vstack((self.EvDYes['TC_Pres'],self.f['TC_Pres'][i]))
+                            self.EvDYes['PresC_Pres']   = np.vstack((self.EvDYes['PresC_Pres'],self.f['PresC_Pres'][i]))
+                            self.EvDYes['HRC_Pres']     = np.vstack((self.EvDYes['HRC_Pres'],self.f['HRC_Pres'][i]))
+                            self.EvDYes['qC_Pres']      = np.vstack((self.EvDYes['qC_Pres'],self.f['qC_Pres'][i]))
+                            self.EvDYes['FechaEv_Pres']      = np.vstack((self.EvDYes['FechaEv_Pres'],self.f['FechaEv_Pres'][i]))
+                    else:
+                        if xP2 == 0:
+                            self.EvDNo['PrecC_Pres'] = self.f['PrecC_Pres'][i]
+                            self.EvDNo['TC_Pres'] = self.f['TC_Pres'][i]
+                            self.EvDNo['PresC_Pres'] = self.f['PresC_Pres'][i]
+                            self.EvDNo['HRC_Pres'] = self.f['HRC_Pres'][i]
+                            self.EvDNo['qC_Pres'] = self.f['qC_Pres'][i]
+                            self.EvDNo['FechaEv_Pres'] = self.f['FechaEv_Pres'][i]
+                            xP2 += 1
+                        else:
+                            self.EvDNo['PrecC_Pres']   = np.vstack((self.EvDNo['PrecC_Pres'],self.f['PrecC_Pres'][i]))
+                            self.EvDNo['TC_Pres']      = np.vstack((self.EvDNo['TC_Pres'],self.f['TC_Pres'][i]))
+                            self.EvDNo['PresC_Pres']   = np.vstack((self.EvDNo['PresC_Pres'],self.f['PresC_Pres'][i]))
+                            self.EvDNo['HRC_Pres']     = np.vstack((self.EvDNo['HRC_Pres'],self.f['HRC_Pres'][i]))
+                            self.EvDNo['qC_Pres']      = np.vstack((self.EvDNo['qC_Pres'],self.f['qC_Pres'][i]))
+                            self.EvDNo['FechaEv_Pres']      = np.vstack((self.EvDNo['FechaEv_Pres'],self.f['FechaEv_Pres'][i]))
+
+                # Se intenta primero con presión
+                for i in range(len(self.f['PrecC_Temp'])):
+                    if np.nanmax(self.f['PrecC_Temp'][i][self.Middle:self.Middle+(60/int(self.dtm)*2)+1]) >= MaxPrec:
+                        if xT1 == 0:
+                            self.EvDYes['PrecC_Temp'] = self.f['PrecC_Temp'][i]
+                            self.EvDYes['TC_Temp'] = self.f['TC_Temp'][i]
+                            self.EvDYes['PresC_Temp'] = self.f['PresC_Temp'][i]
+                            self.EvDYes['HRC_Temp'] = self.f['HRC_Temp'][i]
+                            self.EvDYes['qC_Temp'] = self.f['qC_Temp'][i]
+                            self.EvDYes['FechaEv_Temp'] = self.f['FechaEv_Temp'][i]
+                            xT1 += 1
+                        else:
+                            self.EvDYes['PrecC_Temp']   = np.vstack((self.EvDYes['PrecC_Temp'],self.f['PrecC_Temp'][i]))
+                            self.EvDYes['TC_Temp']      = np.vstack((self.EvDYes['TC_Temp'],self.f['TC_Temp'][i]))
+                            self.EvDYes['PresC_Temp']   = np.vstack((self.EvDYes['PresC_Temp'],self.f['PresC_Temp'][i]))
+                            self.EvDYes['HRC_Temp']     = np.vstack((self.EvDYes['HRC_Temp'],self.f['HRC_Temp'][i]))
+                            self.EvDYes['qC_Temp']      = np.vstack((self.EvDYes['qC_Temp'],self.f['qC_Temp'][i]))
+                            self.EvDYes['FechaEv_Temp']      = np.vstack((self.EvDYes['FechaEv_Temp'],self.f['FechaEv_Temp'][i]))
+                    else:
+                        if xT2 == 0:
+                            self.EvDNo['PrecC_Temp'] = self.f['PrecC_Temp'][i]
+                            self.EvDNo['TC_Temp'] = self.f['TC_Temp'][i]
+                            self.EvDNo['PresC_Temp'] = self.f['PresC_Temp'][i]
+                            self.EvDNo['HRC_Temp'] = self.f['HRC_Temp'][i]
+                            self.EvDNo['qC_Temp'] = self.f['qC_Temp'][i]
+                            self.EvDNo['FechaEv_Temp'] = self.f['FechaEv_Temp'][i]
+                            xT2 += 1
+                        else:
+                            self.EvDNo['PrecC_Temp']   = np.vstack((self.EvDNo['PrecC_Temp'],self.f['PrecC_Temp'][i]))
+                            self.EvDNo['TC_Temp']      = np.vstack((self.EvDNo['TC_Temp'],self.f['TC_Temp'][i]))
+                            self.EvDNo['PresC_Temp']   = np.vstack((self.EvDNo['PresC_Temp'],self.f['PresC_Temp'][i]))
+                            self.EvDNo['HRC_Temp']     = np.vstack((self.EvDNo['HRC_Temp'],self.f['HRC_Temp'][i]))
+                            self.EvDNo['qC_Temp']      = np.vstack((self.EvDNo['qC_Temp'],self.f['qC_Temp'][i]))
+                            self.EvDNo['FechaEv_Temp']      = np.vstack((self.EvDNo['FechaEv_Temp'],self.f['FechaEv_Temp'][i]))
+        return
+
     def EventsGraphSeries(self,ImgFolder='Manizales/Events/'):
         '''
             DESCRIPTION:
@@ -4667,12 +5241,88 @@ class Scatter_Gen(object):
         if self.PrecC:
             if self.PresC and self.TC:
                 PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['TC'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['PresC_Pres'],self.f['TC_Pres'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['TC_Temp'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.PresC and self.HRC:
                 PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['HRC'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['PresC_Pres'],self.f['HRC_Pres'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['HRC_Temp'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.PresC and self.qC:
                 PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['qC'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['PresC_Pres'],self.f['qC_Pres'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['qC_Temp'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.PresC and self.qC:
                 PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['TC'],self.f['qC'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['TC_Pres'],self.f['qC_Pres'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['TC_Temp'],self.f['qC_Temp'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
+        else:
+            print('No se tiene información de precipitación para realizar los diagramas')
+        return
+
+    def EventsGraphSeriesEvDYes(self,ImgFolder='Manizales/Events/'):
+        '''
+            DESCRIPTION:
+
+        Función para graficar los eventos
+        _________________________________________________________________________
+
+            INPUT:
+        + ImgFolder: Carpeta donde se guardarán los datos.
+        _________________________________________________________________________
+
+            OUTPUT:
+        Se generan los gráficos
+        '''
+        self.ImgFolder = ImgFolder
+
+        # Diagramas de compuestos promedios
+        if self.PrecC:
+            if self.PresC and self.TC:
+                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.EvDYes['PrecC_Pres'],self.EvDYes['PresC_Pres'],self.EvDYes['TC_Pres'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Pres_Yes',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.EvDYes['PrecC_Temp'],self.EvDYes['PresC_Temp'],self.EvDYes['TC_Temp'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Temp_Yes',self.PathImg+self.ImgFolder,DTT=self.dtm)
+            if self.PresC and self.HRC:
+                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.EvDYes['PrecC_Pres'],self.EvDYes['PresC_Pres'],self.EvDYes['HRC_Pres'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres_Yes',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.EvDYes['PrecC_Temp'],self.EvDYes['PresC_Temp'],self.EvDYes['HRC_Temp'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp_Yes',self.PathImg+self.ImgFolder,DTT=self.dtm)
+            if self.PresC and self.qC:
+                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.EvDYes['PrecC_Pres'],self.EvDYes['PresC_Pres'],self.EvDYes['qC_Pres'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres_Yes',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.EvDYes['PrecC_Temp'],self.EvDYes['PresC_Temp'],self.EvDYes['qC_Temp'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp_Yes',self.PathImg+self.ImgFolder,DTT=self.dtm)
+            if self.PresC and self.qC:
+                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.EvDYes['PrecC_Pres'],self.EvDYes['TC_Pres'],self.EvDYes['qC_Pres'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Pres_Yes',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.EvDYes['PrecC_Temp'],self.EvDYes['TC_Temp'],self.EvDYes['qC_Temp'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Temp_Yes',self.PathImg+self.ImgFolder,DTT=self.dtm)
+        else:
+            print('No se tiene información de precipitación para realizar los diagramas')
+        return
+
+    def EventsGraphSeriesEvDNo(self,ImgFolder='Manizales/Events/'):
+        '''
+            DESCRIPTION:
+
+        Función para graficar los eventos
+        _________________________________________________________________________
+
+            INPUT:
+        + ImgFolder: Carpeta donde se guardarán los datos.
+        _________________________________________________________________________
+
+            OUTPUT:
+        Se generan los gráficos
+        '''
+        self.ImgFolder = ImgFolder
+
+        # Diagramas de compuestos promedios
+        if self.PrecC:
+            if self.PresC and self.TC:
+                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.EvDNo['PrecC_Pres'],self.EvDNo['PresC_Pres'],self.EvDNo['TC_Pres'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Pres_No',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.EvDNo['PrecC_Temp'],self.EvDNo['PresC_Temp'],self.EvDNo['TC_Temp'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Temp_No',self.PathImg+self.ImgFolder,DTT=self.dtm)
+            if self.PresC and self.HRC:
+                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.EvDNo['PrecC_Pres'],self.EvDNo['PresC_Pres'],self.EvDNo['HRC_Pres'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres_No',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.EvDNo['PrecC_Temp'],self.EvDNo['PresC_Temp'],self.EvDNo['HRC_Temp'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp_No',self.PathImg+self.ImgFolder,DTT=self.dtm)
+            if self.PresC and self.qC:
+                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.EvDNo['PrecC_Pres'],self.EvDNo['PresC_Pres'],self.EvDNo['qC_Pres'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres_No',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.EvDNo['PrecC_Temp'],self.EvDNo['PresC_Temp'],self.EvDNo['qC_Temp'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp_No',self.PathImg+self.ImgFolder,DTT=self.dtm)
+            if self.PresC and self.qC:
+                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.EvDNo['PrecC_Pres'],self.EvDNo['TC_Pres'],self.EvDNo['qC_Pres'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Pres_No',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.EvDNo['PrecC_Temp'],self.EvDNo['TC_Temp'],self.EvDNo['qC_Temp'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Temp_No',self.PathImg+self.ImgFolder,DTT=self.dtm)
         else:
             print('No se tiene información de precipitación para realizar los diagramas')
         return
@@ -4718,4 +5368,54 @@ class Scatter_Gen(object):
         else:
             print('No se tiene información de precipitación para generar los conteos')
         self.var = self.f.keys()
+        return
+
+    def VC_VR_DP(self,DatesEv,Prec,Pres,MP=None,MPres=None,flagEv_Pres=False,flagEv_T=False,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+        '''
+        DESCRIPTION:
+
+            Función para obtener los valores de Duración, tasas y cambios de presión
+            y de temperatura.
+        _________________________________________________________________________
+
+        INPUT:
+            + DatesEv: Fechas de los diagramas de compuestos.
+            + Prec: Compuestos de precipitación.
+            + Pres: Compuestos de presión.
+            + MP: Valor donde comienza a buscar para los datos de
+                  precipitación.
+            + MPres: Valor medio donde comienza a buscar presión.
+            + flagEV: Bandera para graficar los eventos.
+            + flagIng: Bander para saber si se lleva a inglés los ejes.
+            + ImgFolder_Scatter: Ruta donde se guardará el documento.
+        _________________________________________________________________________
+
+            OUTPUT:
+        Se generan diferentes variables o se cambian las actuales.
+        '''
+
+        # Información para hacer el gráfico
+        self.ImgFolder_Scatter = ImgFolder_Scatter
+        ImgFolder_Scatter_Specific_Pres = ImgFolder_Scatter+'Pres/'+Specific_Folder+'/'
+        ImgFolder_Scatter_Specific_Temp = ImgFolder_Scatter+'Temp/'+Specific_Folder+'/'
+
+        # Se incluyen los valores de la clase
+        dt = int(self.dtm)
+        if MP == None:
+            MP = list()
+            for iC in range(len(Prec)):
+                MP.append(np.where(Prec[iC][self.Middle:]==
+                    np.nanmax(Prec[iC][self.Middle:]))[0][0]+self.Middle)
+        if MPres == None:
+            MPres = self.Middle
+
+        # Se calcula la duración de la tormenta
+        if self.PrecC:
+            self.Res_Pres = HA.PrecCount(Prec,DatesEv,dt=dt,M=MP)
+
+        if self.PresC:
+            Results = BP.C_Rates_Changes(Pres,dt=dt,M=MPres,MaxMin='min')
+
+        self.Res_Pres.update(Results)
+
         return
