@@ -28,11 +28,8 @@ import warnings
 # Personal Modules
 # ------------------
 # Path to the Modules
-sys.path.append('/Users/DGD042/Google Drive/Im_Codes/03_Python/01_Libraries/')
 # Importing Modules
-from Utilities import Utilities
-# Data
-utl = Utilities()
+from Utilities.Utilities import Utilities as ult
 
 # ------------------------
 # Functions

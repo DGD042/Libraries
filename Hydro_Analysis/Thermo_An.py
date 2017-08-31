@@ -31,13 +31,14 @@ import mpl_toolkits.axisartist as AA
 from mpl_toolkits.mplot3d import Axes3D
 import os
 from datetime import date, datetime, timedelta
-
 import warnings
 
-# Import the created libraries
-from UtilitiesDGD import UtilitiesDGD
+# ------------------
+# Personal Modules
+# ------------------
+# Importing Modules
+from Utilities import Utilities as utl
 
-utl = UtilitiesDGD()
 
 class Thermo_An:
 

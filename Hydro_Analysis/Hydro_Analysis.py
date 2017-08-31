@@ -44,13 +44,9 @@ import warnings
 # Personal Modules
 # ------------------
 # Importing Modules
-from Utilities import Utilities
-from Hydro_Plotter import Hydro_Plotter
-from DatesUtil import DatesUtil
-# Aliases
-utl = Utilities()
-HyPl = Hydro_Plotter()
-DUtil = DatesUtil()
+from Utilities import Utilities as utl
+from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter as HyPl
+from Utilities import DatesUtil as DUtil
 
 # ---------------
 # Funciones

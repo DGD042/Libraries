@@ -18,9 +18,12 @@ import numpy as np
 from scipy import linalg as la # Eigen valores
 import matplotlib.pyplot as plt
 from scipy import stats as st
-
-from UtilitiesDGD import UtilitiesDGD
-utl = UtilitiesDGD()
+# ------------------
+# Personal Modules
+# ------------------
+# Importing Modules
+from Utilities import Utilities as utl
+from Utilities import DatesUtil as DUtil
 
 class CorrSt:
 

@@ -31,11 +31,13 @@ import warnings
 # Se importan los paquetes para manejo de fechas
 from datetime import date, datetime, timedelta
 
-from UtilitiesDGD import UtilitiesDGD
-from CorrSt import CorrSt
-
-utl = UtilitiesDGD()
-cr = CorrSt()
+# ------------------
+# Personal Modules
+# ------------------
+# Importing Modules
+from Utilities import Utilities as utl
+from Utilities import DatesUtil as DUtil
+from AnET.CorrSt import CorrSt as cr
 
 class ODE_S:
 

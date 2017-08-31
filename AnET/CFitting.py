@@ -22,10 +22,11 @@ import sys
 import os
 import warnings
 
-# This classes that are needed
-from Utilities import Utilities
-# Aliases
-utl = Utilities()
+# ------------------
+# Personal Modules
+# ------------------
+# Importing Modules
+from Utilities import Utilities as utl
 
 
 # The functions are defined

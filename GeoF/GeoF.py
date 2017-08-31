@@ -32,8 +32,11 @@ from osgeo.gdalconst import *
 # Se importan los paquetes para manejo de fechas
 from datetime import date, datetime, timedelta
 
-from UtilitiesDGD import UtilitiesDGD
-utl = UtilitiesDGD()
+# ------------------
+# Personal Modules
+# ------------------
+# Importing Modules
+from Utilities import Utilities as utl
 
 class GeoF:
 

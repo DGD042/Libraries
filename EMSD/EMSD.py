@@ -3,7 +3,7 @@
 #______________________________________________________________________________
 #
 #                       Coded by Daniel González Duque
-#                           Last revised 22/05/2017
+#                           Last revised 31/08/2017
 #______________________________________________________________________________
 #______________________________________________________________________________
 # ------------------------
@@ -29,11 +29,9 @@ import platform
 # Personal Modules
 # ------------------
 # Importing Modules
-from Utilities import Utilities
-from DatesUtil import DatesUtil
-# Aliases
-utl = Utilities()
-DUtil = DatesUtil()
+from Utilities import Utilities as utl
+from Utilities import DatesUtil as DUtil
+
 
 # ------------------------
 # Funciones

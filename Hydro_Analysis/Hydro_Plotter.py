@@ -26,15 +26,14 @@ import sys
 import warnings
 from scipy import stats as st
 from scipy.signal import butter, lfilter, freqz
-
-
 # Se importan los paquetes para manejo de fechas
 from datetime import date, datetime, timedelta
 
-from Utilities import Utilities
-
-utl = Utilities()
-
+# ------------------
+# Personal Modules
+# ------------------
+# Importing Modules
+from Utilities import Utilities as utl
 
 
 class Hydro_Plotter:
