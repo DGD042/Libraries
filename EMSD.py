@@ -1250,6 +1250,42 @@ class EMSD(object):
 
         return DateP_Dict, Value_Dict, Flags_Dict, Flag_Meaning, Stations_Information
 
+    def EDWundergrounds(self,File):
+        '''
+        DESCRIPTION:
+
+            This function extract information from the Wundergrounds type
+            file.
+        _______________________________________________________________________
+
+        INPUT:
+            + File: File that is going to be extracted.
+        _______________________________________________________________________
+        
+        OUTPUT:
+        '''
+        # -----------------------
+        # Extraction Parameters
+        # -----------------------
+        self.LabelsWund = ['Time','TemperatureC','DewpointC','PressurehPa','WindDirection',
+                'WindDirectionDegrees','WindSpeedKMH','WindSpeedGustKMH','Humidity',
+                'HourlyPrecipMM','Conditions','Clouds','dailyrainMM','SoftwareType','DateUTC']
+
+        self.DataTypes = {'Time':str,'TemperatureC':float,'DewpointC':float,'PressurehPa':float,
+                'WindDirection':str,'WindDirectionDegrees':float,'WindSpeedKMH':float,
+                'WindSpeedGustKMH':float, 'Humidity':float,'HourlyPrecipMM':float,
+                'Conditions':str,'Clouds':str,'dailyrainMM':float,'SoftwareType':str,'DateUTC':str}
+        # Variables 
+        Data = dict()
+        for lab in self.LabelsWund:
+            Data[Lab] = [-9999]
+
+        # -----------------------
+        # Data Extraction
+        # -----------------------
+        # Headers
+        Headers = np.genfromtxt(File,skip_header=0,dtype=str,delimiter=',',max_rows=1)
+
     def EDnetCDFFile(self,File,VarDict=None,VarRangeDict=None):
         '''
         DESCRIPTION:
