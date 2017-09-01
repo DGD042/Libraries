@@ -7,15 +7,6 @@
 #______________________________________________________________________________
 #______________________________________________________________________________
 
-#______________________________________________________________________________
-#
-# DESCRIPCIÓN DE LA CLASE:
-#   En esta clase se incluyen las rutinas para realizar el estudio relacioneado
-#   con la Bomba biótica de humedad.
-#
-#   Estos códigos serán utilizados para el desarrollo de la Tesis de Maestría
-#   del estudiante Daniel González Duque.
-#______________________________________________________________________________
 
 # ----------------------------
 # Se importan las librerias
@@ -53,27 +44,15 @@ import time
 # ----------------------------
 # Librerías personales
 # ----------------------------
-# from UtilitiesDGD import UtilitiesDGD
-from Utilities import Utilities
-from CorrSt import CorrSt
-from CFitting import CFitting
-from Hydro_Plotter import Hydro_Plotter
-from Hydro_Analysis import Hydro_Analysis
-from Thermo_An import Thermo_An
-from DatesUtil import DatesUtil
-from AnET import AnET
+from Utilities import Utilities as utl
+from Utilities import DatesUtil as DUtil
+from AnET import CorrSt as cr
+from AnET import CFitting as CF
+from Hydro_Analysis import Hydro_Plotter as HyPL
+from Hydro_Analysis import Hydro_Analysis as HA
+from Hydro_Analysis import Thermo_An as TA
+from AnET import AnET as anet
 from EMSD import EMSD
-
-# utl = UtilitiesDGD()
-utl = Utilities()
-cr = CorrSt()
-HyPl = Hydro_Plotter()
-HA = Hydro_Analysis()
-CF = CFitting()
-TA = Thermo_An()
-DUtil = DatesUtil()
-anet = AnET()
-EMSD = EMSD()
 
 class BPumpL:
     def __init__(self):

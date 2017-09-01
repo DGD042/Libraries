@@ -6,5 +6,14 @@
 #______________________________________________________________________________
 #______________________________________________________________________________
 
+'''
 
-from BPumpL import BPumpL
+En esta clase se incluyen las rutinas para realizar el estudio relacioneado
+con la Bomba biótica de humedad.
+
+Estos códigos serán utilizados para el desarrollo de la Tesis de Maestría
+del estudiante Daniel González Duque.
+______________________________________________________________________________
+'''
+
+from BPumpL.BPumpL import BPumpL
