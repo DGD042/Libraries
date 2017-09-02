@@ -34,11 +34,11 @@ from datetime import date, datetime, timedelta
 # ------------------
 # Importing Modules
 from Utilities import Utilities as utl
+from Utilities import Data_Man as DM
 
 
 class Hydro_Plotter:
     def __init__(self):
-
         '''
             DESCRIPTION:
 
@@ -113,7 +113,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -188,7 +188,7 @@ class Hydro_Plotter:
         N = np.array(NF)*100
 
         # Parámetros de la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -255,7 +255,7 @@ class Hydro_Plotter:
         N = np.array(NF)*100
 
         # Parámetros de la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -321,7 +321,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -392,7 +392,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -528,7 +528,7 @@ class Hydro_Plotter:
             ,'ytick.major.width': 1,'ytick.minor.width': 1\
             ,'axes.linewidth':1\
             ,'grid.alpha':0.1,'grid.linestyle':'-'})
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         plt.tick_params(axis='x',which='both',bottom='on',top='off',\
             labelbottom='on',direction='out')
         plt.tick_params(axis='x',which='major',direction='out')
@@ -613,7 +613,7 @@ class Hydro_Plotter:
             MesE2 = MesE
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -686,7 +686,7 @@ class Hydro_Plotter:
         MesMM = np.reshape(MesM2,(-1,12))
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -776,7 +776,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -839,7 +839,7 @@ class Hydro_Plotter:
         N = len(CP)
 
         # Parámetros de la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -909,7 +909,7 @@ class Hydro_Plotter:
         Months2 = Months
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -977,7 +977,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -1027,7 +1027,7 @@ class Hydro_Plotter:
         ErrM = np.nanmean(Err)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -1091,7 +1091,7 @@ class Hydro_Plotter:
         fV = fH*(2.0/3.0) # Ancho de la Figura
 
         # Se incluye el histograma y el diagrama de dispersión
-        fig, axs = plt.subplots(1,2, figsize=utl.cm2inch(fH,fV), facecolor='w', edgecolor='k')
+        fig, axs = plt.subplots(1,2, figsize=DM.cm2inch(fH,fV), facecolor='w', edgecolor='k')
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
             ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
@@ -1181,7 +1181,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Parámetros de la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -1258,7 +1258,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -1365,7 +1365,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -1478,7 +1478,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -1592,7 +1592,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -1704,7 +1704,7 @@ class Hydro_Plotter:
         utl.CrFolder(PathImg)
 
         # Parámetros de la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -1792,7 +1792,7 @@ class Hydro_Plotter:
         if PathImg != '':
             utl.CrFolder(PathImg)
         # Se genera la gráfica
-        F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
@@ -1859,7 +1859,7 @@ class Hydro_Plotter:
             ,'grid.alpha':0.1,'grid.linestyle':'-'})
 
         # Se genera la gráfica
-        fig, axs = plt.subplots(2,1, figsize=utl.cm2inch(fH,fV))
+        fig, axs = plt.subplots(2,1, figsize=DM.cm2inch(fH,fV))
         axs = axs.ravel() # Para hacer un loop con los subplots
 
         axs[0].plot(dates[a:b],Data[a:b],'k-')
@@ -1887,7 +1887,7 @@ class Hydro_Plotter:
             ,'ytick.major.width': 1,'ytick.minor.width': 1\
             ,'axes.linewidth':1\
             ,'grid.alpha':0.1,'grid.linestyle':'-'})
-        fig= plt.figure(figsize=utl.cm2inch(fH,fV))
+        fig= plt.figure(figsize=DM.cm2inch(fH,fV))
 
         plt.plot(dates[a:b],Data[a:b],'b-',label='Sin filtrar')
         plt.plot(dates[a:b],DataF[a:b],'r--',label='Filtrada')

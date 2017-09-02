@@ -29,12 +29,7 @@ import warnings
 # ------------------
 # Path to the Modules
 # Importing Modules
-from Utilities.Utilities import Utilities as ult
-
-# ------------------------
-# Functions
-# ------------------------
-
+from Utilities import Utilities as ult
 
 # ------------------------
 # Class
@@ -263,14 +258,14 @@ class DatesUtil(object):
         _______________________________________________________________________
 
         INPUT:
-            + DateI: Initial Date in date or datetime.
-            + DateE: Ending Date in date or datetime.
-            + dtm: Time delta.
+            :param DateI: A datetime value, Initial Date in date or datetime.
+            :param DateE: A datetime value, Ending Date in date or datetime.
+            :param dtm:   A timedelta, Time delta.
         _______________________________________________________________________
         
         OUTPUT:
         
-            - DatesC: Complete Python date or datetime vector.
+            :return DatesC: A ndarray, Complete date or datetime vector.
         '''
         # ---------------------
         # Constants
@@ -282,23 +277,23 @@ class DatesUtil(object):
         # ---------------------
         if isinstance(dtm,timedelta) == False:
             Er = utl.ShowError('Dates_Comp','DatesUtil','Bad dtm format')
-            return Er
+            raise Er
 
         if isinstance(DateI,datetime) and dtm.seconds == 0:
             Er = utl.ShowError('Dates_Comp','DatesUtil','Bad time delta given')
-            return Er
+            raise Er
 
         if isinstance(DateI,date) == False or isinstance(DateE,date) == False:
             Er = utl.ShowError('Dates_Comp','DatesUtil','Bad DateI and DateE format')
-            return Er
+            raise Er
 
         if isinstance(DateI,datetime) and isinstance(DateE,datetime) == False:
             Er = utl.ShowError('Dates_Comp','DatesUtil','Bad DateI and DateE format')
-            return Er
+            raise Er
 
         if isinstance(DateI,datetime) == False and isinstance(DateE,datetime):
             Er = utl.ShowError('Dates_Comp','DatesUtil','Bad DateI and DateE format')
-            return Er
+            raise Er
         # ---------------------
         # Generate series
         # ---------------------     
@@ -325,36 +320,31 @@ class DatesUtil(object):
                         Dif = dtm.seconds
                         if Dif < 3600:
                             flagM = True
-                        for h in range(24):
+                        if int(Dif/60/60) == 0:
+                            dtt = 1
+                        else:
+                            dtt = int(Dif/60/60)
+                        for h in range(0,24,dtt):
                             if flagM:
                                 # DifM = Dif/60
-                                for M in range(0,60):
+                                for M in range(0,60,int(Dif/60)):
                                     if Date <= DateI or Date > DateE+dtm:
-                                        DatesC.append(Date)
                                         Date += dtm
-                                        DatesC.pop()
                                     else:
                                         DatesC.append(Date)
                                         Date += dtm
                             else:
                                 if Date <= DateI or Date > DateE+dtm:
-                                    DatesC.append(Date)
                                     Date += dtm
-                                    DatesC.pop()
                                 else:
                                     DatesC.append(Date)
                                     Date += dtm
                     else:
                         if Date <= DateI or Date >= DateE+dtm:
-                            DatesC.append(Date)
                             Date += dtm
-                            DatesC.pop()
                         else:
                             DatesC.append(Date)
                             Date += dtm
-
-        if isinstance(DatesC[0],datetime):
-            DatesC.pop()
         DatesC = np.array(DatesC)
 
         return DatesC

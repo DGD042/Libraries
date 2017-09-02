@@ -7,17 +7,18 @@
 #______________________________________________________________________________
 #______________________________________________________________________________
 
-#______________________________________________________________________________
-#
-# CLASS DESCRIPTION:
-#   This class have different routines for hydrological analysis. 
-#
-#   This class do not use Pandas in any function, it uses directories and save
-#   several images in different folders. It is important to include the path 
-#   to save the images.
-#   
-#______________________________________________________________________________
+'''
 
+
+ CLASS DESCRIPTION:
+   This class have different routines for hydrological analysis. 
+
+   This class do not use Pandas in any function, it uses directories and save
+   several images in different folders. It is important to include the path 
+   to save the images.
+   
+______________________________________________________________________________
+'''
 # ------------------------
 # Importing Modules
 # ------------------------ 
@@ -45,37 +46,11 @@ import warnings
 # ------------------
 # Importing Modules
 from Utilities import Utilities as utl
-from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter as HyPl
-from Utilities import DatesUtil as DUtil
-
-# ---------------
-# Funciones
-# ---------------
-def MeanError(VM,axis=0):
-    # Mean
-    MM = np.nanmean(VM,axis=axis)
-    # Std
-    MD = np.nanstd(VM,axis=axis)
-    if axis == 0:
-        # Data number
-        DataN = np.array([sum(~np.isnan(VM[:,j])) for j in range(len(VM[0]))])
-        # Error
-        ME = np.array([MD[j]/(np.sqrt(DataN[j])) for j in range(len(MD))])
-    elif axis == 1:
-        # Data number
-        DataN = np.array([sum(~np.isnan(VM[j,:])) for j in range(len(VM))])
-        # Error
-        ME = np.array([MD[j]/(np.sqrt(DataN[j])) for j in range(len(MD))])
-    
-    return MM, MD, ME
-
-def PrecPor(VM):
-    VP = np.empty(VM.shape) * np.nan
-    for i in range(len(VM)):
-        VS = np.nansum(VM[i])
-        for j in range(len(VM[i])):
-            VP[i,j] = VM[i,j]/VS
-    return VP
+from Utilities import Data_Man as DM
+from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter as HyPl; HyPl=HyPl()
+from Utilities import DatesUtil as DUtil; DUtil=DUtil()
+from Hydro_Analysis.Gen_Functions.Functions import *
+from Hydro_Analysis.Meteo import Cycles as MCy
 
 class Hydro_Analysis(object):
     '''
@@ -83,43 +58,68 @@ class Hydro_Analysis(object):
     
     CLASS DESCRIPTION:
         
-        This class have different routines for hydrological analysis. 
-    
-        This class is of free use and can be modify, if you have some 
-        problem please contact the programmer to the following e-mails:
-    
-        - danielgondu@gmail.com 
-        - dagonzalezdu@unal.edu.co
-        - daniel.gonzalez17@eia.edu.co
-    
-        --------------------------------------
-         How to use the library
-        --------------------------------------
+        This class makes different hydrological analysis, such as:
+        - Diurnal Cycle
+        - Diurnal-Annual Cycle
+        - Annual Cycle
+    _________________________________________________________________________
 
-    ____________________________________________________________________________
+    INPUT:
+        :param DateH:    A ndarray or list, Vector with hourly dates.
+        :param VarH:     A ndarray or list, Vector with houtly or less that 
+                                            hour data.
+        :param DateM:    A ndarray or list, Vector with monthly dates.
+        :param VarM:     A ndarray or list, Vector with monthly data.
+        :param DTH:      A int, Determine the number of data that 
+                                takes to complete a day it is 
+                                defaulted to 24.
+        :param PathImg:  A str, Ruta para guardar las imágenes.
+        :param Info:     A list, Información para realizar los gráficos,
+                                 la lista debe incluir:
+                                 [<Nombre_Archivo>,<Nombre Estación>,
+                                 <Variable a medir>,<Variable con unidades>,
+                                 <Color de la línea>]
+    _________________________________________________________________________
 
     '''
 
-    def __init__(self):
-        self.operations = utl.operations
-        # Define Variables 
-        self.flagmat = False
-        self.Date_Formats = ['%Y/%m/%d','%Y-%m-%d','%Y%m%d',\
-                             '%d/%m/%Y','%d-%m-%Y','%d%m%Y',\
-                             '%m/%d/%Y','%m-%d-%Y','%m%d%Y',\
-                             '%Y/%d/%m','%Y-%d-%m''%Y%d%m']
-        Hour = [' %H%M','-%H%M',' %H:%M','-%H:%M','_%H%M']
-        self.DateTime_Formats = [i + j for i in self.Date_Formats for j in Hour]
+    def __init__(self,DateH=None,VarH=None,DateM=None,VarM=None,DTH=24,PathImg='',Info=['Image','Nombre','Precipitación','Precipitación [mm]','b']):
+        # Parameters
+        self.operations = DM.operations
+        if DateH != None:
+            if isinstance(DateH[0],str):
+                self.DateH = DUtil.Dates_str2datetime(DateH)
+            elif isinstance(DateH[0],datetime):
+                self.DateH = DateH
+            else:
+                self.DateH = None
+        else:
+            self.DateH = None
+        if VarH != None:
+            self.VarH = np.array(VarH)
+        else:
+            self.VarH = None
+        if VarM != None:
+            self.VarM = np.array(VarM)
+        else:
+            self.VarM = None
+
+        self.DTH = DTH
+        # Parameters for calculus
+        self.flagZeros = False
+
+        # Parameters for Graphs
+        self.FlagG = True
+        self.PathImg = PathImg
+        self.NameA = Info[0]
+        self.Name = Info[1]
+        self.VarLL = Info[2]
+        self.VarL = Info[3]
+        self.color = Info[4]
+
         return
 
-    def Open_Data(self,File):
-        EMSD.Open_File(File)
-        if File[:-3] == 'mat':
-            self.flagmat = True
-            self.f = EMSD.GetValues()
-        return
-
-    def CiclD(self,Var,Years=None,Dates=None,FlagG=True,PathImg='',NameA='',VarL='',VarLL='',C='k',Name='',flagTri=False,flagTriP=False,PathImgTri='',DTH=24,flagZeros=False):
+    def CiclD(self,Var=None,Years=None,Dates=None,DTH=None,flagZeros=None,FlagG=None,PathImg=None,NameA=None,VarL=None,VarLL=None,C=None,Name=None):
         '''
         DESCRIPTION:
         
@@ -127,105 +127,88 @@ class Hydro_Analysis(object):
             hourly data of a time series, it would obtain the monthly diurnal 
             cycle from all the different months and the total.
 
-            Grpahs can be added if the user wants to.
+            Graphs can be added if the user wants to.
         _____________________________________________________________________
 
         INPUT:
-            + Var: Variable that need to be treated.
-            + Years: Vector with the begining year and the ending year.
-            + Dates: Vector with the dates in string format yyyy/mm/dd HHMM.
-            + FalgG: Flag for Graph indicator
-            + PathImg: Path to save the images.
-            + NameA: Name of the Image.
-            + VarL:  Variable Label.
-            + VarLL: Name of the variable
-            + C: Line Color.
-            + Name: Name of the Station.
-            + flagTri: Activation for trimestral values.
-            + flagTriP: Activation for trimestral graphs.
-            + PathImgTri: Path to the trimestral graphs.
-            + DTH: Determine the number of data that takes to complete a day
-                   it is defaulted to 24.
-            + flagZeros: flag to know if the zeros are taking into account.
+
+            :param Var:       A list or ndarray, Variable that need to be 
+                                                 treated.
+            :param Years:     A list or ndarray, Vector with the begining year and the ending year.
+            :param Dates:     A list or ndarray, Vector with the dates in string 
+                                                 format yyyy/mm/dd HHMM.
+            :param DTH:       A int, Determine the number of data that 
+                                     takes to complete a day it is 
+                                     defaulted to 24.
+            :param flagZeros: A boolean, flag to know if the zeros are taking
+                                         into account.
+            :param FalgG:     A boolean, Flag for Graph indicator
+            :param PathImg:   A str, Path to save the images.
+            :param NameA:     A str, Name of the Image.
+            :param VarL:      A str, Variable Label with units.
+            :param VarLL:     A str, Name of the variable
+            :param C:         A str, Line Color.
+            :param Name:      A str, Name of the Station.
         _____________________________________________________________________
         
         OUTPUT:
-            
+
             This code outputs 2 to 4 graphs, 1 for the diurnal cycle 
             in all the data and other for the diurnal cycle for per month.
 
-            This functions gives Results dictionary with the following results:
-            - MonthsM: Dictionary with the Months data.
-            - MonthsMM: Dictionary with the results per month.
-            - CiDT: Mean complete diurnal cycle.
+            :return Resutls: A dict, The dictionary has:
+                :return MonthsM:  A dict, Dictionary with the Monthly data.
+                :return MonthsMM: A dict, Dictionary with the results 
+                                          per month.
+                :return MonthsME: A dict, Dictionary with the mean errors 
+                                          per month.
+                :return CiDT:     A ndarray, Mean complete diurnal cycle.
+                :return ErrT:     A ndarray, Mean Errors.
+
         '''
         # Graph warnings ignored
         warnings.filterwarnings('ignore')
 
-        # Errors
+        # ----------------
+        # Error Managmet
+        # ----------------
+        if Var == None and self.VarH == None:
+            raise utl.ShowError('CiclD','Hydro_Analysis','No Data added')
+        if Years == None and self.DateH == None:
+            raise utl.ShowError('CiclD','Hydro_Analysis','No Dates added')
         if Years == None and Dates == None:
-            Er = utl.ShowError('CicloD','An_Hydro','No dates nor years were added')
-            return
-        elif Dates == None:
-            FlagYears = True
-        else:
-            FlagYears = False
+            Dates = self.DateH
+        if Var == None:
+            Var = self.VarH
+        if DTH == None:
+            DTH = self.DTH
+        if FlagG == None:
+            FlagG = self.FlagG
+        if PathImg == None:
+            PathImg = self.PathImg
+        if NameA == None:
+            NameA = self.NameA
+        if Name == None:
+            Name = self.Name
+        if VarLL == None:
+            VarLL = self.VarLL
+        if VarL == None:
+            VarL = self.VarL
+        if C == None:
+            C = self.color
 
-        # Variables
-        # Months
-        MonthsM = dict() # Data
-        MonthsMM = dict() # Mean Data
-        MonthsMMM = dict() 
-        MonthsMD = dict() # Standard deviation
-        MonthsME = dict() # Median Error
-        TriM = dict() # Data trimestrales
-        TriMM = dict() # Mean trimestral
-        TriMD = dict() # Standard Deviation trimestral
-        TriME = dict() # Median Error trimestral
-
-        # Dates
-        if FlagYears:
-            Yi = int(Years[0])
-            Yf = int(Years[1])
-            dt = 24/DTH
-            Fi = datetime(Yi,1,1,0,0)
-            Fin = datetime(Yi,1,1,int(dt),int((int(dt)-dt)*60))
-            DifT = Fin-Fi
-            Date = [Fi]
-            for y in range(Yi,Yf+1):
-                for m in range(1,13):
-                    Fi = date(y,m,1)
-                    if m == 12:
-                        Ff = date(y+1,1,1)
-                    else:
-                        Ff = date(y,m+1,1)
-                    DifD = (Ff-Fi).days
-                    for d in range(DifD):
-                        for h in range(DTH):
-                            Date.append(Date[-1]+DifT)
-            Date.pop()
-        else:
-            Date = DUtil.Dates_str2datetime(self,Dates)
-            # Date = [datetime.strptime(i,self.DateTime_Formats[0]) for i in Dates]
-
-        Months = np.array([i.month for i in Date])
-        if flagZeros:
-            q = np.where(Var == 0)
-            Var[q] = np.nan
-
-        # Months
+        # Calculus
+        Results = MCy.CiclD(Var=Var,Years=Years,Dates=Dates,DTH=DTH,flagZeros=flagZeros) 
+        CiDT = Results['CiDT']
+        ErrT = Results['ErrT']
+        MonthsMM = Results['MonthsMM']
+        MonthsME = Results['MonthsME']
         MaxV = []
         MinV = []
         for i in range(1,13):
-            x = np.where(Months == i)
-            MonthsM[i] = np.reshape(np.copy(Var)[x],(-1,DTH))
-            MonthsMM[i], MonthsMD[i], MonthsME[i] =  MeanError(MonthsM[i],axis=0)
             MaxV.append(np.nanmax(MonthsMM[i])+np.nanmax(MonthsME[i]*1.2))
             MinV.append(np.nanmin(MonthsMM[i])-np.abs(np.nanmin(MonthsME[i]*1.2)))
-        
-        # Reshaped variable
-        VarM = np.reshape(np.copy(Var),(-1,DTH))
-        CiDT, DesT, ErrT =  MeanError(VarM,axis=0)
+
 
         if FlagG:
             # Se realizan los labels para las horas
@@ -255,7 +238,7 @@ class Hydro_Analysis(object):
                 ,'ytick.major.width': 1,'ytick.minor.width': 1\
                 ,'axes.linewidth':1\
                 ,'grid.alpha':0.1,'grid.linestyle':'-'})
-            fig, axs = plt.subplots(4,3, figsize=utl.cm2inch(fH,fV))
+            fig, axs = plt.subplots(4,3, figsize=DM.cm2inch(fH,fV))
             axs = axs.ravel() # Para hacer un loop con los subplots
 
             for ii,i in enumerate(range(1,13)):
@@ -284,8 +267,6 @@ class Hydro_Analysis(object):
             plt.tight_layout()
             plt.savefig(PathImg + 'CMErr_' + NameA +'.png',format='png',dpi=300 )
             plt.close('all')
-
-        Results = {'MonthsM':MonthsM,'MonthsMM':MonthsMM,'CiDT':CiDT}
 
         return Results
 
@@ -550,7 +531,7 @@ class Hydro_Analysis(object):
         #   ,'ytick.major.width': 1,'ytick.minor.width': 1\
         #   ,'axes.linewidth':1\
         #   ,'grid.alpha':0.1,'grid.linestyle':'-'})
-        # F = plt.figure(figsize=utl.cm2inch(fH,fV))
+        # F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # plt.tick_params(axis='x',which='both',bottom='on',top='off',\
         #   labelbottom='on',direction='out')
         # plt.tick_params(axis='x',which='major',direction='out')
