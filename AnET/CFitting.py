@@ -27,6 +27,7 @@ import warnings
 # ------------------
 # Importing Modules
 from Utilities import Utilities as utl
+from Utilities import Data_Man as DM
 
 
 # The functions are defined
@@ -126,7 +127,7 @@ class CFitting:
         # -----------------
         # Calculations
         # -----------------
-        X,Y = utl.NoNaN(xdata,ydata,False)
+        X,Y = DM.NoNaN(xdata,ydata,False)
         Results = dict()
 
         if flagfitbest:

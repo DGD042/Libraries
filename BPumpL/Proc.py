@@ -45,18 +45,20 @@ import time
 # Librerías personales
 # ----------------------------
 from Utilities import Utilities as utl
-from Utilities import DatesUtil as DUtil
-from AnET import CorrSt as cr
-from AnET import CFitting as CF
-from Hydro_Analysis import Hydro_Plotter as HyPL
-from Hydro_Analysis import Hydro_Analysis as HA
-from Hydro_Analysis import Thermo_An as TA
-from AnET import AnET as anet
-from EMSD import EMSD
-from BPumpL.BPumpL import BPumpL as BP
+from Utilities import DatesUtil as DUtil;DUtil=DUtil()
+from Utilities import Data_Man as DM
+from AnET import CorrSt as cr;cr=cr()
+from AnET import CFitting as CF; CF=CF()
+from Hydro_Analysis import Hydro_Plotter as HyPl;HyPl=HyPl()
+from Hydro_Analysis import Hydro_Analysis as HA; HA=HA()
+from Hydro_Analysis import Thermo_An as TA; TA=TA()
+from AnET import AnET as anet;anet=anet()
+from EMSD import EMSD;EMSD=EMSD()
+from BPumpL.BPumpL import BPumpL as BP;BP=BP()
+from BPumpL.Data_Man import Load_Data as LD
 
 class Proc(object): 
-    def __init__(self,PathDataImp='',PathData='',DataImp='Data_Imp',endingmat='',TipoD='IDEA'):
+    def __init__(self,DataBase='Manizales',endingmat='',PathImg='Tesis_MscR/02_Docs/01_Tesis_Doc/Kap3/Img/'):
         '''
         DESCRIPTION:
 
@@ -118,56 +120,16 @@ class Proc(object):
         # ------------------
         # Archivos a abrir
         # ------------------
+        StInfo,Arch = LD.LoadStationsInfo(endingmatR=endingmat)
+        self.StInfo = StInfo
 
-        # Se carga la información de las estaciones
-        Tot = PathDataImp + DataImp + '.xlsx'
-        book = xlrd.open_workbook(Tot) # Se carga el archivo
-        SS = book.sheet_by_index(0) # Datos para trabajar
-        # Datos de las estaciones
-        Hoja = int(SS.cell(2,2).value)
-        S = book.sheet_by_index(Hoja) # Datos para trabajar
-        NEst = int(S.cell(1,0).value) # Número de estaciones y sensores que se van a extraer
+        self.Arch = Arch[DataBase]['Original']
+        self.Names = np.array(StInfo[DataBase]['Name'])
+        self.NamesArch = StInfo[DataBase]['Name_Arch'] 
+        self.ID = np.array(StInfo[DataBase]['ID'])
+        self.Latitude = np.array(StInfo[DataBase]['Latitud'])
+        self.Longitude = np.array(StInfo[DataBase]['Longitud'])
 
-        # Se inicializan las variables que se tomarán del documento
-        x = 3 # Contador
-        self.ID = []
-        Names = [] # Nombre de las estaciones para las gráficas
-        NamesArch = [] # Nombre de los archivos
-        Tipo = [] # Tipo de datos - Se utiliza para encontrar la localización
-        ET = [] # Tipo de información 0: Horaria, 1: Diaria
-        self.ZT = [] # Alturas de las estaciones
-
-        # Ciclo para tomar los datos
-        for i in range(NEst):
-            self.ID.append(str(int(S.cell(x,0).value)))
-            Names.append(S.cell(x,1).value)
-            NamesArch.append(S.cell(x,2).value)
-            Tipo.append(S.cell(x,3).value)
-            ET.append(int(S.cell(x,4).value))
-            try:
-                self.ZT.append(int(S.cell(x,5).value))
-            except:
-                self.ZT.append(float('nan'))
-            x += 1
-
-        # En esta sección se extraerá la información 
-        self.Arch = []
-        self.Names = []
-        self.NamesArch = []
-
-        x = 0
-        for i in range(NEst): # Ciclo para las estaciones
-            if Tipo[i] == TipoD:
-                if ET[i] == -1:
-                    # Se extrae la información horaria
-                    Tot = PathData + NamesArch[i] + endingmat +'.mat'
-                    self.Arch.append(Tot)
-                    self.Names.append(Names[i])
-                    self.NamesArch.append(NamesArch[i])
-            x += 1
-
-        self.ID = np.array(self.ID)
-        self.Names = np.array(self.Names)           
         return
     
     def LoadData(self,irow=0):
