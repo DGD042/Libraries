@@ -106,7 +106,7 @@ def LoadStationsInfo(endingmatR='_CBF_MR'):
             'Amazon_LBA/ATTO/02_mat/']
     Filt_DataBases = ['02_Col_Data/01_Manizales/01_mat/01_CFilt/',
             '02_Col_Data/02_Medellin/01_mat/01_CFilt/',
-            '04_Amazonas/01_mat/01_CFilt/']
+            '03_Amazonas/01_mat/01_CFilt/']
 
     # ---------------------
     # Original

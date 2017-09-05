@@ -3749,7 +3749,6 @@ class BPumpL:
         # Se grafican los eventos
         # -------------------------
         for i in Pii:
-
             Nameout = PathImg + Name + '/' + Name + '_Ev_'+str(i)
 
             # Se grafican las dos series
@@ -3802,7 +3801,7 @@ class BPumpL:
             # ------------------------
             # Se realiza la regresión
             # ------------------------
-            FitB = CF.FF(DataScatter['DurPrec'],DataScatter['VRateB'],F='')
+            FitB = CF.FF(DataScatter['DurPrec'],DataScatter['VRateB'],F='potential')
 
             # Se toman los datos para ser comparados posteriormente
             DD,PP = DM.NoNaN(DataScatter['DurPrec'],DataScatter['VRateB'],False)
@@ -3860,7 +3859,7 @@ class BPumpL:
             # ------------------------
             # Se realiza la regresión
             # ------------------------
-            FitA = CF.FF(DataScatter['DurPrec'],DataScatter['VRateA'],F='')
+            FitA = CF.FF(DataScatter['DurPrec'],DataScatter['VRateA'],F='potential')
 
             # Se toman los datos para ser comparados posteriormente
             DD,PP = DM.NoNaN(DataScatter['DurPrec'],DataScatter['VRateA'],False)
