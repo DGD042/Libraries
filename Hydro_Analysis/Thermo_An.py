@@ -38,6 +38,8 @@ import warnings
 # ------------------
 # Importing Modules
 from Utilities import Utilities as utl
+from Utilities import Data_Man as DM
+
 
 
 class Thermo_An:
@@ -76,7 +78,7 @@ class Thermo_An:
         - M1: Values of altitude for the line.
         '''
         
-        XX,YY,NminD = utl.NoNaN(Z,T)
+        XX,YY,NminD = DM.NoNaN(Z,T)
         slope, intercept, r_value, p_value, std_err = st.linregress(XX,YY)
         if Flagline:
             M0 = [(slope*Zmax+intercept),(slope*Zmin+intercept)]
@@ -142,7 +144,6 @@ class Thermo_An:
         q = (epsilon*e)/(p-(1-epsilon)*e)
 
         return q
-
 
     def Eeq(self,q,p):
         '''
