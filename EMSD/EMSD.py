@@ -30,7 +30,7 @@ import platform
 # ------------------
 # Importing Modules
 from Utilities import Utilities as utl
-from Utilities import DatesUtil as DUtil
+from Utilities import DatesUtil as DUtil; DUtil=DUtil()
 
 
 # ------------------------
