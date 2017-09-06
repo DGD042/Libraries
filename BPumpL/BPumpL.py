@@ -3648,12 +3648,24 @@ class BPumpL:
             for iC in range(len(VC)):
                 if not(np.isnan(Results['DurVA'][iC])):
                     # Se encuentra el valor máximo antes
+                    # ---------------
+                    # Metodología 1
+                    # ---------------
                     # Se utiliza como referencia 2 horas antes 
-                    MaxVarB = np.nanmax(VC[iC][M-2*(60/dt):M])
-                    PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
-                    if MaxVarB < -0.2:
-                        MaxVarB = np.nanmax(VC[iC][M-3*(60/dt):M])
-                        PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
+                    # MaxVarB = np.nanmax(VC[iC][M-2*(60/dt):M])
+                    # PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
+                    # if MaxVarB < -0.2:
+                    #     MaxVarB = np.nanmax(VC[iC][M-3*(60/dt):M])
+                    #     PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
+                    # ---------------
+                    # Metodología 2
+                    # ---------------
+                    # Se encuentra el primer máximo
+                    for P in range(M,int(M-2*(60/dt))-1,-1):
+                        if VC[iC][P-1] < VC[iC][P] and MaxVarB >= -0.2:
+                            MaxVarB = VC[iC][P]
+                            PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
+                            break
 
                     # Se guarda la posición
                     Results['PosB'][iC] = PosB
@@ -3664,6 +3676,7 @@ class BPumpL:
                     # Se obtiene la tasa de cambio
                     Results['VRateB'][iC] = Results['VChangeB'][iC]/Results['DurVB'][iC]
 
+                    # ----
                     # Se encuentra el valor máximo después
                     # Se utiliza como referencia 2 horas antes 
                     MaxVarA = np.nanmax(VC[iC][M:M+2*(60/dt)])
@@ -3677,14 +3690,14 @@ class BPumpL:
                     # Se obtiene el cambio de la variable
                     Results['VChangeA'][iC] = MaxVarA-VC[iC][M]
                     # Se obtiene la duración en horas
-                    Results['DurVA'][iC] = (PosA-M)*dt/60
+                    Results['DurVA'][iC] = (PosA)*dt/60
                     # Se obtiene la tasa de cambio
                     Results['VRateA'][iC] = Results['VChangeA'][iC]/Results['DurVA'][iC]
         elif MaxMin.lower() == 'max':
             # Ciclo para los datos
             for iC in range(len(VC)):
                 if not(np.isnan(Results['DurVA'][iC])):
-                    # Se encuentra el valor máximo antes
+                    # Se encuentra el valor mínimo antes
                     # Se utiliza como referencia 2 horas antes 
                     MinVarB = np.nanmin(VC[iC][M-2*(60/dt):M])
                     PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
@@ -3701,7 +3714,8 @@ class BPumpL:
                     # Se obtiene la tasa de cambio
                     Results['VRateB'][iC] = Results['VChangeB'][iC]/Results['DurVB'][iC]
 
-                    # Se encuentra el valor máximo después
+                    # ----
+                    # Se encuentra el valor mínimo después
                     # Se utiliza como referencia 2 horas antes 
                     MinVarA = np.nanmin(VC[iC][M:M+2*(60/dt)])
                     PosA = np.where(VC[iC][M:] == MinVarA)[0][0]
@@ -3714,13 +3728,16 @@ class BPumpL:
                     # Se obtiene el cambio de la variable
                     Results['VChangeA'][iC] = VC[iC][M]-MinVarA
                     # Se obtiene la duración en horas
-                    Results['DurVA'][iC] = (PosA-M)*dt/60
+                    Results['DurVA'][iC] = (PosA)*dt/60
                     # Se obtiene la tasa de cambio
                     Results['VRateA'][iC] = Results['VChangeA'][iC]/Results['DurVA'][iC]
 
         return Results
 
-    def EventsScatter(self,DatesEv,Data,DataScatter,PathImg='',Name='',flagIng=False):
+    def EventsScatter(self,DatesEv,Data,DataScatter,PathImg='',Name='',flagIng=False,
+            Scatter_Info=['Cambios en Presión Atmosférica Antes del Evento',
+                'Duration [h]','Tasa de Cambio de Presión [hPa/h]',
+                'Cambios en Presión Atmosférica Durante el Evento']):
         '''
         DESCRIPTION:
 

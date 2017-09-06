@@ -226,7 +226,7 @@ class Scatter_Gen(object):
             if self.flag['PresC'] and self.flag['TC']:
                 # Presión
                 for i in range(len(self.f['PrecC_Pres'])):
-                    if np.nanmax(self.f['PrecC_Pres'][i][self.Middle:self.Middle+(60/int(self.dtm)*2)+1]) >= MaxPrec:
+                    if np.nanmax(self.f['PrecC_Pres'][i][self.Middle:self.Middle+(60/int(self.dtm)*2)+1]) >= MaxPrec and np.nanmax(self.f['PrecC_Pres'][i][self.Middle-(60/int(self.dtm)*2)+1]:self.Middle) <= MaxPrec:
                         if xP1 == 0:
                             self.EvDYes['PrecC_Pres'] = self.f['PrecC_Pres'][i]
                             self.EvDYes['TC_Pres'] = self.f['TC_Pres'][i]
@@ -259,9 +259,12 @@ class Scatter_Gen(object):
                             self.EvDNo['qC_Pres']      = np.vstack((self.EvDNo['qC_Pres'],self.f['qC_Pres'][i]))
                             self.EvDNo['FechaEv_Pres']      = np.vstack((self.EvDNo['FechaEv_Pres'],self.f['FechaEv_Pres'][i]))
 
+                self.Statistics = {'Perc_Pres_Yes':len(self.EvDYes['PrecC_Pres'])/len(self.f['PrecC_Pres'])
+                        'Perc_Pres_No':len(self.EvDNo['PrecC_Pres'])/len(self.f['PrecC_Pres'])}
+
                 # Temperatura
                 for i in range(len(self.f['PrecC_Temp'])):
-                    if np.nanmax(self.f['PrecC_Temp'][i][self.Middle:self.Middle+(60/int(self.dtm)*2)+1]) >= MaxPrec:
+                    if np.nanmax(self.f['PrecC_Temp'][i][self.Middle:self.Middle+(60/int(self.dtm)*2)+1]) >= MaxPrec and np.nanmax(self.f['PrecC_Temp'][i][self.Middle-(60/int(self.dtm)*2)+1]:self.Middle) <= MaxPrec:
                         if xT1 == 0:
                             self.EvDYes['PrecC_Temp'] = self.f['PrecC_Temp'][i]
                             self.EvDYes['TC_Temp'] = self.f['TC_Temp'][i]
@@ -293,6 +296,9 @@ class Scatter_Gen(object):
                             self.EvDNo['HRC_Temp']     = np.vstack((self.EvDNo['HRC_Temp'],self.f['HRC_Temp'][i]))
                             self.EvDNo['qC_Temp']      = np.vstack((self.EvDNo['qC_Temp'],self.f['qC_Temp'][i]))
                             self.EvDNo['FechaEv_Temp']      = np.vstack((self.EvDNo['FechaEv_Temp'],self.f['FechaEv_Temp'][i]))
+
+                self.Statistics = {'Perc_Temp_Yes':len(self.EvDYes['PrecC_Temp'])/len(self.f['PrecC_Temp'])
+                        'Perc_Temp_No':len(self.EvDNo['PrecC_Temp'])/len(self.f['PrecC_Temp'])}
         return
 
     def EventsGraphSeries(self,ImgFolder='Manizales/Events/'):
