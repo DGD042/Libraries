@@ -3638,7 +3638,7 @@ class BPumpL:
                     Results[Lab].append(np.nan)
             else:
                 for Lab in ResVar:
-                    Results[Lab].append(np.nan)
+                    Results[Lab].append(-9999.0)
 
         for Lab in ResVar:
             Results[Lab] = np.array(Results[Lab]).astype(float)

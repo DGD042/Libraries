@@ -510,6 +510,9 @@ class Scatter_Gen(object):
                 'IntPrec': 'Intensidad del Evento [mm/h]',
                 'MaxPrec': 'Máximo de Precipitación [mm]',
                 'TotalPrec': 'Total de Precipitación [mm]',
+                'IntPrecMax': 'Intensidad Máxima del Evento [mm/h]',
+                'Pindex': 'Relación de Intensidades',
+                'TasaPrec': 'Tasa de Cambio de Precipitación [mm/h]',
                 'VRateB': 'Tasa de Cambio de Presión Antes [hPa/h]',
                 'VRateA':'Tasa de Cambio de Presión Durante [hPa/h]',
                 'VChangeB':'Cambio de Presión Antes [hPa]',
@@ -519,13 +522,16 @@ class Scatter_Gen(object):
                 'IntPrec': 'IP',
                 'MaxPrec': 'MP',
                 'TotalPrec': 'TP',
+                'IntPrecMax':'IPM',
+                'Pindex':'Pi',
+                'TasaPrec':'RPr',
                 'VRateB': 'RPB',
                 'VRateA':'RPA',
                 'VChangeB':'CPB',
                 'VChangeA':'CPA'}
 
 
-        V1 = ['DurPrec','IntPrec','MaxPrec','TotalPrec']
+        V1 = ['DurPrec','IntPrec','MaxPrec','TotalPrec','IntPrecMax','Pindex','TasaPrec']
         V2 = ['VRateB','VRateA','VChangeB','VChangeA']
         for Vi1 in V1:
             for Vi2 in V2:
@@ -615,6 +621,9 @@ class Scatter_Gen(object):
                 'IntPrec': 'Intensidad del Evento [mm/h]',
                 'MaxPrec': 'Máximo de Precipitación [mm]',
                 'TotalPrec': 'Total de Precipitación [mm]',
+                'IntPrecMax': 'Intensidad Máxima del Evento [mm/h]',
+                'Pindex': 'Relación de Intensidades',
+                'TasaPrec': 'Tasa de Cambio de Precipitación [mm/h]',
                 'VRateB': 'Tasa de Cambio de Presión Antes [hPa/h]',
                 'VRateA':'Tasa de Cambio de Presión Durante [hPa/h]',
                 'VChangeB':'Cambio de Presión Antes [hPa]',
@@ -624,13 +633,16 @@ class Scatter_Gen(object):
                 'IntPrec': 'IP',
                 'MaxPrec': 'MP',
                 'TotalPrec': 'TP',
+                'IntPrecMax':'IPM',
+                'Pindex':'Pi',
+                'TasaPrec':'RPr',
                 'VRateB': 'RPB',
                 'VRateA':'RPA',
                 'VChangeB':'CPB',
                 'VChangeA':'CPA'}
 
 
-        V1 = ['DurPrec','IntPrec','MaxPrec','TotalPrec']
+        V1 = ['DurPrec','IntPrec','MaxPrec','TotalPrec','IntPrecMax','Pindex','TasaPrec']
         V2 = ['VRateB','VRateA','VChangeB','VChangeA']
         for Vi1 in V1:
             for Vi2 in V2:
