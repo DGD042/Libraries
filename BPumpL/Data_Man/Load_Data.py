@@ -113,7 +113,7 @@ def LoadStationsInfo(endingmatR='_CBF_MR'):
     # ---------------------
     # Parametros
     DataBasesP = ['Manizales','Medellin','Amazonas']
-    TimeScale = ['Original','Horarios','Diarios','CFilt']
+    TimeScale = ['Original','Horarios','Diarios','CFilt','Paths']
     StationInfo = ['ID','Name','Name_Arch','Altura','Latitud','Longitud']
     StationInfoType = {'ID':str,'Name':str,'Name_Arch':str,'Altura':float,
             'Latitud':float,'Longitud':float}
@@ -180,6 +180,14 @@ def LoadStationsInfo(endingmatR='_CBF_MR'):
             Arch[DataBasesP[iar]]['CFilt'].append(PathDataResults
                 +Filt_DataBases[iar]+St+endingmatR+'.mat')
 
+
+        Arch[DataBasesP[iar]]['Paths'].append(PathDataOriginal
+                +Original_DataBases[iar])
+        Arch[DataBasesP[iar]]['Paths'].append(PathDataOriginal
+                +Original_DataBases[iar]+'02_Diario/')
+        Arch[DataBasesP[iar]]['Paths'].append(PathDataOriginal
+                +Original_DataBases[iar]+'01_Horario/')
+        Arch[DataBasesP[iar]]['Paths'].append(PathDataResults+Filt_DataBases[iar])
     return StationsInfo,Arch
 
 def LoadData(ArchP,DataBase,irow=0,TimeScale='Diarios'):

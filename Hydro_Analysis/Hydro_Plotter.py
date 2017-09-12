@@ -1426,21 +1426,21 @@ class Hydro_Plotter:
         if FlagA:
             return CC
 
-    def SPvDPPotGen(self,DurPrec,PresRate,Title='',xLabel='',yLabel='',Name='',PathImg='',FlagA=True,FlagAn=False):
+    def SPvDPPotGen(self,V1,V2,Fit='',Title='',xLabel='',yLabel='',Name='',PathImg='',FlagA=True,FlagAn=False):
         '''
-            DESCRIPTION:
+        DESCRIPTION:
         
-        Esta función permite hacer las scatter.
-
+            This function allows the user to create a Scatter plot and adjust
+            the best line to the data.
         _________________________________________________________________________
 
-            INPUT:
-        + DurPrec: Vector de duración de las tormentas en horas.
-        + PresRate: Vector de valores tasa de cambio de presión.
-        + Name: Nombre de la estación para el título.
-        + PathImg: Ruta donde se quiere guardar el archivo.
-        + FlagA: Indicador si se quiere realizar el ajuste.
-        + FlagAn: Indicador para anotar el número del punto.
+        INPUT:
+            :param V1:       a ndarray, Vector with the X values. 
+            :param V2: a ndarray, Vector With the Y values.
+            :param Name:     a str, Title of the graph.
+            :param PathImg:  a str, Ruta donde se quiere guardar el archivo.
+            :param FlagA:    a bolean, Indicador si se quiere realizar el ajuste.
+            :param FlagAn:   a bolean, Indicador para anotar el número del punto.
         _________________________________________________________________________
         
             OUTPUT:
@@ -1450,26 +1450,19 @@ class Hydro_Plotter:
         # Se calcula el ajuste
         if FlagA:
             # Se importa el paquete de Fit
-            from CFitting import CFitting
+            from AnET import CFitting
             CF = CFitting()
-
-            # Se realiza la regresión
-            Coef, perr,R2 = CF.FF(DurPrec,PresRate,2)
+            # Se ajusta la curva
+            FitC = CF.FF(V1,V2,F=Fit)
 
             # Se toman los datos para ser comparados posteriormente
-            DD,PP = utl.NoNaN(DurPrec,PresRate,False)
+            DD,PP = DM.NoNaN(V1,V2,False)
             N = len(DD)
-            a = Coef[0]
-            b = Coef[1]
-            desv_a = perr[0]
-            desv_b = perr[1]
-            # Se garda la variable
-            CC = np.array([N,a,b,desv_a,desv_b,R2])
-            
+            # Se guarda la variable
             
             # Se realiza el ajuste a ver que tal dió
-            x = np.linspace(np.nanmin(DurPrec),np.nanmax(DurPrec),100)
-            PresRateC = Coef[0]*x**Coef[1]
+            x = np.linspace(np.nanmin(V1),np.nanmax(V1),100)
+            VC = FitC['Function'](x, *FitC['Coef'])
 
         # Tamaño de la Figura
         fH = self.fH # Largo de la Figura
@@ -1495,22 +1488,22 @@ class Hydro_Plotter:
         plt.tick_params(axis='y',which='major',direction='inout') 
         plt.grid()
         # Precipitación
-        plt.scatter(DurPrec,PresRate)
+        plt.scatter(V1,V2,color='dodgerblue',alpha=0.7)
         plt.title(Title,fontsize=16)
         plt.xlabel(xLabel,fontsize=16)
         plt.ylabel(yLabel,fontsize=16)
 
         if FlagAn:
             # Número de cada punto
-            n = np.arange(0,len(DurPrec))
+            n = np.arange(0,len(V1))
             for i, txt in enumerate(n):
-                plt.annotate(txt, (DurPrec[i],PresRate[i]),fontsize=8)
+                plt.annotate(txt, (V1[i],V2[i]),fontsize=8)
 
         # Axes
         ax = plt.gca()
         xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
         MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-        plt.xlim([0,np.nanmax(DurPrec)+2*MxL])
+        plt.xlim([0,np.nanmax(V1)+2*MxL])
 
         xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
         MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
@@ -1523,14 +1516,9 @@ class Hydro_Plotter:
 
         # Se incluye el ajuste
         if FlagA:
-            plt.plot(x,PresRateC,'k--')
-            # Se incluye la ecuación
-            if np.nanmin(PresRate) < 0:
-                plt.text(xTL[-4],yTL[2]+2*MyL, r'$y = %sx^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
-                plt.text(xTL[-4],yTL[2], r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
-            else:
-                plt.text(xTL[-4],yTL[-2], r'$y = %sx^{%s}$' %(round(a,3),round(b,3)), fontsize=15)
-                plt.text(xTL[-4],yTL[-2]-2*MyL, r'$R^2 = %s$' %(round(R2,4)), fontsize=14)
+            Label = FitC['FunctionEq']+'\n'+r'$R^2=%.3f$'
+            plt.plot(x,VC,'k--',label=Label %tuple(list(FitC['Coef'])+[FitC['R2']]))
+            plt.legend(loc=1,fontsize=12)
 
         plt.tight_layout()
         Nameout = PathImg+Name
@@ -1538,7 +1526,7 @@ class Hydro_Plotter:
         plt.close('all')
 
         if FlagA:
-            return CC
+            return 
 
     def SPAvPD(self,PresRateB,PresRateA,Name='',PathImg='',Nameout='',FlagA=False,FEn=False):
         '''

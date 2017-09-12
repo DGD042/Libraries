@@ -262,7 +262,7 @@ class BPumpL:
             while VEM > m:
                 if VEM <= M:
                     q = np.where(VE2 == VEM)[0]
-                    if q[0]-Ci <= 0:
+                    if q[0]-Ci <= 0 or q[0]+Cf >= len(VE):
                         VE2[q[0]] = np.nan
                         VEM = operDict[MaxMin.lower()](VE2)
                         x += 1
@@ -286,7 +286,7 @@ class BPumpL:
             while VEM < M:
                 if VEM >= m:
                     q = np.where(VE2 == VEM)[0]
-                    if q[0]-Ci <= 0:
+                    if q[0]-Ci <= 0 or q[0]+Cf >= len(VE):
                         VE2[q[0]] = np.nan
                         VEM = operDict[MaxMin.lower()](VE2)
                         x += 1
@@ -3590,7 +3590,7 @@ class BPumpL:
 
         return DurPrec, TempRateA, TempRateB, TempChangeA, TempChangeB
 
-    def C_Rates_Changes(self,VC,dt=1,M=60*4,MaxMin='min'):
+    def C_Rates_Changes(self,VC,dt=1,MP=60*4,MaxMin='min'):
         '''
         DESCRIPTION:
     
@@ -3601,7 +3601,7 @@ class BPumpL:
             INPUT:
         + VC: Diagrama de compuestos de la variable a estudiar.
         + dt: delta de tiempo que se tienen en los diagramas de compuestos.
-        + M: Mitad en donde se encuentran los datos.
+        + M: Lugar donde se encuentra el mínimo o el máximo central.
         + MinMax: Valor que se encuentra en el centro de los datos.
         _________________________________________________________________________
 
@@ -3626,6 +3626,10 @@ class BPumpL:
         # Se verifican datos faltantes
         # --------------------------------------
         for iC in range(len(VC)):
+            if isinstance(MP,list):
+                M = MP[iC]
+            else:
+                M = MP
             qNaN = sum(~np.isnan(VC[iC][M-2*(60/dt):M+2*(60/dt)]))
             qT = len(VC[iC][M-2*(60/dt):M+2*(60/dt)])
 
@@ -3634,10 +3638,12 @@ class BPumpL:
                     Results[Lab].append(np.nan)
             else:
                 for Lab in ResVar:
-                    Results[Lab].append(-9999.0)
+                    Results[Lab].append(np.nan)
 
         for Lab in ResVar:
             Results[Lab] = np.array(Results[Lab]).astype(float)
+
+        
 
 
         # --------------------------------------
@@ -3646,6 +3652,10 @@ class BPumpL:
         if MaxMin.lower() == 'min':
             # Ciclo para los datos
             for iC in range(len(VC)):
+                if isinstance(MP,list):
+                    M = MP[iC]
+                else:
+                    M = MP
                 if not(np.isnan(Results['DurVA'][iC])):
                     # Se encuentra el valor máximo antes
                     # ---------------
@@ -3661,20 +3671,33 @@ class BPumpL:
                     # Metodología 2
                     # ---------------
                     # Se encuentra el primer máximo
-                    for P in range(M,int(M-2*(60/dt))-1,-1):
-                        if VC[iC][P-1] < VC[iC][P] and MaxVarB >= -0.2:
+                    for P in range(M-1,int(M-2*(60/dt))-1,-1):
+                        if VC[iC][P-1] < VC[iC][P] and VC[iC][P] >= -0.2:
                             MaxVarB = VC[iC][P]
+                            # print('---')
+                            # print(M)
+                            # print(MaxVarB)
+                            # print(VC[iC][:M])
+                            # print(P)
                             PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
                             break
 
                     # Se guarda la posición
-                    Results['PosB'][iC] = PosB
+                    try:
+                        Results['PosB'][iC] = PosB
+                    except: 
+                        continue
                     # Se obtiene el cambio de la variable
                     Results['VChangeB'][iC] = MaxVarB-VC[iC][M]
                     # Se obtiene la duración en horas
                     Results['DurVB'][iC] = (M-PosB)*dt/60
                     # Se obtiene la tasa de cambio
                     Results['VRateB'][iC] = Results['VChangeB'][iC]/Results['DurVB'][iC]
+                    if Results['VRateB'][iC] < 0:
+                        Results['PosB'][iC] = np.nan
+                        Results['VRateB'][iC] = np.nan
+                        Results['VChangeB'][iC] = np.nan
+                        Results['DurVB'][iC] = np.nan
 
                     # ----
                     # Se encuentra el valor máximo después
@@ -3693,9 +3716,18 @@ class BPumpL:
                     Results['DurVA'][iC] = (PosA)*dt/60
                     # Se obtiene la tasa de cambio
                     Results['VRateA'][iC] = Results['VChangeA'][iC]/Results['DurVA'][iC]
+                    if Results['VRateA'][iC] < 0:
+                        Results['PosA'][iC] = np.nan
+                        Results['VRateA'][iC] = np.nan
+                        Results['VChangeA'][iC] = np.nan
+                        Results['DurVA'][iC] = np.nan
         elif MaxMin.lower() == 'max':
             # Ciclo para los datos
             for iC in range(len(VC)):
+                if isinstance(MP,list):
+                    M = MP[iC]
+                else:
+                    M = MP
                 if not(np.isnan(Results['DurVA'][iC])):
                     # Se encuentra el valor mínimo antes
                     # Se utiliza como referencia 2 horas antes 
@@ -3734,7 +3766,9 @@ class BPumpL:
 
         return Results
 
-    def EventsScatter(self,DatesEv,Data,DataScatter,PathImg='',Name='',flagIng=False,
+    def EventsScatter(self,DatesEv,Data,DataScatter,
+            LabelsScatter=['DurPrec','VRateB','VRateA'],
+            PathImg='',Name='',flagIng=False,LimitEv=1000,Fit='potential',
             Scatter_Info=['Cambios en Presión Atmosférica Antes del Evento',
                 'Duration [h]','Tasa de Cambio de Presión [hPa/h]',
                 'Cambios en Presión Atmosférica Durante el Evento']):
@@ -3765,7 +3799,9 @@ class BPumpL:
         # -------------------------
         # Se grafican los eventos
         # -------------------------
-        for i in Pii:
+        for ii,i in enumerate(Pii):
+            if ii == LimitEv:
+                break
             Nameout = PathImg + Name + '/' + Name + '_Ev_'+str(i)
 
             # Se grafican las dos series
@@ -3795,38 +3831,31 @@ class BPumpL:
             # -------------------
             # Antes del evento
             # -------------------
-            ax12.scatter(DataScatter['DurPrec'],DataScatter['VRateB'],color='dodgerblue',alpha=0.6)
-            ax12.scatter(DataScatter['DurPrec'][i],DataScatter['VRateB'][i],color='red',alpha=0.6)
+            ax12.scatter(DataScatter[LabelsScatter[0]],DataScatter[LabelsScatter[1]],color='dodgerblue',alpha=0.7)
+            ax12.scatter(DataScatter[LabelsScatter[0]][i],DataScatter[LabelsScatter[1]][i],color='red',alpha=0.9)
 
             # Títulos
-            if flagIng:
-                # Inglés
-                ax12.set_title('Surface Pressure Changes Before the Event in '+ Name,fontsize=16)
-                ax12.set_xlabel(u'Duration [h]',fontsize=15)
-                ax12.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
-            else:
-                # Español
-                ax12.set_title('Cambios en Presión Atmosférica Antes del Evento',fontsize=16)
-                ax12.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
-                ax12.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
+            ax12.set_title(Scatter_Info[0],fontsize=16)
+            ax12.set_xlabel(Scatter_Info[1],fontsize=15)
+            ax12.set_ylabel(Scatter_Info[2],fontsize=15)
             ax12.grid()
             
             xTL = ax12.xaxis.get_ticklocs() # List of Ticks in x
             MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-            plt.xlim([0,np.nanmax(DataScatter['DurPrec'])+2*MxL])
+            plt.xlim([0,np.nanmax(DataScatter[LabelsScatter[0]])+2*MxL])
 
             # ------------------------
             # Se realiza la regresión
             # ------------------------
-            FitB = CF.FF(DataScatter['DurPrec'],DataScatter['VRateB'],F='potential')
+            FitB = CF.FF(DataScatter[LabelsScatter[0]],DataScatter[LabelsScatter[1]],F=Fit)
 
             # Se toman los datos para ser comparados posteriormente
-            DD,PP = DM.NoNaN(DataScatter['DurPrec'],DataScatter['VRateB'],False)
+            DD,PP = DM.NoNaN(DataScatter[LabelsScatter[0]],DataScatter[LabelsScatter[1]],False)
 
             # Se garda la variable
             # CC = np.array([N,a,b,desv_a,desv_b,R2])
             # Se realiza el ajuste a ver que tal dió
-            x = np.linspace(np.nanmin(DataScatter['DurPrec']),np.nanmax(DataScatter['DurPrec']),100)
+            x = np.linspace(np.nanmin(DataScatter[LabelsScatter[0]]),np.nanmax(DataScatter[LabelsScatter[0]]),100)
             PresRateC = FitB['Function'](x, *FitB['Coef'])
             Label = FitB['FunctionEq']+'\n'+r'$R^2=%.3f$'
             ax12.plot(x,PresRateC,'k--',label=Label %tuple(list(FitB['Coef'])+[FitB['R2']]))
@@ -3854,37 +3883,30 @@ class BPumpL:
             # -------------------
             # Durante del evento
             # -------------------
-            ax13.scatter(DataScatter['DurPrec'],DataScatter['VRateA'],color='dodgerblue',alpha=0.6)
-            ax13.scatter(DataScatter['DurPrec'][i],DataScatter['VRateA'][i],color='red',alpha=0.6)
+            ax13.scatter(DataScatter[LabelsScatter[0]],DataScatter[LabelsScatter[2]],color='dodgerblue',alpha=0.7)
+            ax13.scatter(DataScatter[LabelsScatter[0]][i],DataScatter[LabelsScatter[2]][i],color='red',alpha=0.9)
 
-            if flagIng:
-                # Inglés
-                ax13.set_title('Surface Pressure Changes After the Event in '+ Name,fontsize=16)
-                ax13.set_xlabel(u'Duration [h]',fontsize=15)
-                # ax13.set_ylabel('Pressure Rate [hPa/h]',fontsize=15)
-            else:
-                # Español
-                ax13.set_title('Cambios en Presión Atmosférica Durante el Evento',fontsize=16)
-                ax13.set_xlabel(u'Duración de la Tormenta [h]',fontsize=15)
-                # ax13.set_ylabel('Tasa de Cambio de Presión [hPa/h]',fontsize=15)
+            ax13.set_title(Scatter_Info[3],fontsize=16)
+            ax13.set_xlabel(Scatter_Info[1],fontsize=15)
+            # ax13.set_ylabel(Scatter_Info[2],fontsize=15)
             ax13.grid()
 
             xTL = ax13.xaxis.get_ticklocs() # List of Ticks in x
             MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-            plt.xlim([0,np.nanmax(DataScatter['DurPrec'])+2*MxL])
+            plt.xlim([0,np.nanmax(DataScatter[LabelsScatter[0]])+2*MxL])
 
             # ------------------------
             # Se realiza la regresión
             # ------------------------
-            FitA = CF.FF(DataScatter['DurPrec'],DataScatter['VRateA'],F='potential')
+            FitA = CF.FF(DataScatter[LabelsScatter[0]],DataScatter[LabelsScatter[2]],F=Fit)
 
             # Se toman los datos para ser comparados posteriormente
-            DD,PP = DM.NoNaN(DataScatter['DurPrec'],DataScatter['VRateA'],False)
+            DD,PP = DM.NoNaN(DataScatter[LabelsScatter[0]],DataScatter[LabelsScatter[2]],False)
 
             # Se garda la variable
             # CC = np.array([N,a,b,desv_a,desv_b,R2])
             # Se realiza el ajuste a ver que tal dió
-            x = np.linspace(np.nanmin(DataScatter['DurPrec']),np.nanmax(DataScatter['DurPrec']),100)
+            x = np.linspace(np.nanmin(DataScatter[LabelsScatter[0]]),np.nanmax(DataScatter[LabelsScatter[0]]),100)
             PresRateC = FitA['Function'](x, *FitA['Coef'])
             Label = FitA['FunctionEq']+'\n'+r'$R^2=%.3f$'
             ax13.plot(x,PresRateC,'k--',label=Label %tuple(list(FitA['Coef'])+[FitA['R2']]))

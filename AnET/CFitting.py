@@ -52,7 +52,7 @@ class CFitting:
                     'logaritmic':Log}
 
         self.AdjF = {'lineal':r'$y=%.4fx+%.4f$','potential':r'$y=%.4fx^{%.4f}$',
-                    'parabolic':r'$y=%.4fx^2+%.4fx+%.4f$','exponential':r'$y = %.4fe{%.4fx}$',
+                    'parabolic':r'$y=%.4fx^2+%.4fx+%.4f$','exponential':r'$y = %.4fe^{%.4fx}$',
                     'logaritmic':r'$y = %.4f \log(%.4fx) + %.4f$'}
         return
 
@@ -74,7 +74,7 @@ class CFitting:
         self.AdjF[key] = funeq
         return
 
-    def FF(self,xdata,ydata,F='lineal'):
+    def FF(self,xdata,ydata,F='lineal',flagParabolic=False):
         '''
         DESCRIPTION:
         
@@ -135,25 +135,32 @@ class CFitting:
             perrT = dict()
             keysT = []
             R2T = []
+            keys2 = []
 
             for ikey,key in enumerate(keys):
-                fun = self.Adj[key]
-                # Fitting
-                Coef, pcov = curve_fit(fun,X,Y)
-                # R2 calculations
-                ss_res = np.dot((Y - fun(X, *Coef)),(Y - fun(X, *Coef)))
-                ymean = np.mean(Y)
-                ss_tot = np.dot((Y-ymean),(Y-ymean))
-                R2T.append(1-(ss_res/ss_tot))
+                if not(flagParabolic) and key == 'parabolic':
+                    continue
+                try:
+                    keys2.append(key)
+                    fun = self.Adj[key]
+                    # Fitting
+                    Coef, pcov = curve_fit(fun,X,Y)
+                    # R2 calculations
+                    ss_res = np.dot((Y - fun(X, *Coef)),(Y - fun(X, *Coef)))
+                    ymean = np.mean(Y)
+                    ss_tot = np.dot((Y-ymean),(Y-ymean))
+                    R2T.append(1-(ss_res/ss_tot))
 
-                perrT[key] = np.sqrt(np.diag(pcov))
-                CoefT[key] = Coef
+                    perrT[key] = np.sqrt(np.diag(pcov))
+                    CoefT[key] = Coef
+                except RuntimeError:
+                    continue
 
             # Verify the maximum R^2
             x = np.where(np.array(R2T) == np.nanmax(np.array(R2T)))[0]
             if len(x) > 1:
                 x = x[0]
-            key = np.array(keys)[x][0]
+            key = np.array(keys2)[x][0]
             Results['Coef'] = CoefT[key]
             Results['perr'] = perrT[key]
             Results['R2'] = np.array(R2T)[x][0]

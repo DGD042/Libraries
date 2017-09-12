@@ -124,6 +124,7 @@ class Proc(object):
         self.StInfo = StInfo
 
         self.Arch = Arch[DataBase]['Original']
+        self.Paths = Arch[DataBase]['Paths']
         self.Names = np.array(StInfo[DataBase]['Name'])
         self.NamesArch = StInfo[DataBase]['Name_Arch'] 
         self.ID = np.array(StInfo[DataBase]['ID'])

@@ -225,46 +225,50 @@ class Scatter_Gen(object):
         if self.flag['PrecC']:
             if self.flag['PresC'] and self.flag['TC']:
                 # Presión
+                NoAn = 0
                 for i in range(len(self.f['PrecC_Pres'])):
-                    if np.nanmax(self.f['PrecC_Pres'][i][self.Middle:self.Middle+(60/int(self.dtm)*2)+1]) >= MaxPrec and np.nanmax(self.f['PrecC_Pres'][i][self.Middle-(60/int(self.dtm)*2)+1]:self.Middle) <= MaxPrec:
-                        if xP1 == 0:
-                            self.EvDYes['PrecC_Pres'] = self.f['PrecC_Pres'][i]
-                            self.EvDYes['TC_Pres'] = self.f['TC_Pres'][i]
-                            self.EvDYes['PresC_Pres'] = self.f['PresC_Pres'][i]
-                            self.EvDYes['HRC_Pres'] = self.f['HRC_Pres'][i]
-                            self.EvDYes['qC_Pres'] = self.f['qC_Pres'][i]
-                            self.EvDYes['FechaEv_Pres'] = self.f['FechaEv_Pres'][i]
-                            xP1 += 1
+                    if sum(np.isnan(self.f['PrecC_Pres'][i][self.Middle:self.Middle+(60/int(self.dtm)*1)+1])) < 0.30*(60/int(self.dtm)*1):
+                        if np.nanmax(self.f['PrecC_Pres'][i][self.Middle:self.Middle+(60/int(self.dtm)*1)+1]) >= MaxPrec and np.nanmax(self.f['PrecC_Pres'][i][self.Middle-(60/int(self.dtm)*1)+1:self.Middle]) <= MaxPrec:
+                            if xP1 == 0:
+                                self.EvDYes['PrecC_Pres'] = self.f['PrecC_Pres'][i]
+                                self.EvDYes['TC_Pres'] = self.f['TC_Pres'][i]
+                                self.EvDYes['PresC_Pres'] = self.f['PresC_Pres'][i]
+                                self.EvDYes['HRC_Pres'] = self.f['HRC_Pres'][i]
+                                self.EvDYes['qC_Pres'] = self.f['qC_Pres'][i]
+                                self.EvDYes['FechaEv_Pres'] = self.f['FechaEv_Pres'][i]
+                                xP1 += 1
+                            else:
+                                self.EvDYes['PrecC_Pres']   = np.vstack((self.EvDYes['PrecC_Pres'],self.f['PrecC_Pres'][i]))
+                                self.EvDYes['TC_Pres']      = np.vstack((self.EvDYes['TC_Pres'],self.f['TC_Pres'][i]))
+                                self.EvDYes['PresC_Pres']   = np.vstack((self.EvDYes['PresC_Pres'],self.f['PresC_Pres'][i]))
+                                self.EvDYes['HRC_Pres']     = np.vstack((self.EvDYes['HRC_Pres'],self.f['HRC_Pres'][i]))
+                                self.EvDYes['qC_Pres']      = np.vstack((self.EvDYes['qC_Pres'],self.f['qC_Pres'][i]))
+                                self.EvDYes['FechaEv_Pres']      = np.vstack((self.EvDYes['FechaEv_Pres'],self.f['FechaEv_Pres'][i]))
                         else:
-                            self.EvDYes['PrecC_Pres']   = np.vstack((self.EvDYes['PrecC_Pres'],self.f['PrecC_Pres'][i]))
-                            self.EvDYes['TC_Pres']      = np.vstack((self.EvDYes['TC_Pres'],self.f['TC_Pres'][i]))
-                            self.EvDYes['PresC_Pres']   = np.vstack((self.EvDYes['PresC_Pres'],self.f['PresC_Pres'][i]))
-                            self.EvDYes['HRC_Pres']     = np.vstack((self.EvDYes['HRC_Pres'],self.f['HRC_Pres'][i]))
-                            self.EvDYes['qC_Pres']      = np.vstack((self.EvDYes['qC_Pres'],self.f['qC_Pres'][i]))
-                            self.EvDYes['FechaEv_Pres']      = np.vstack((self.EvDYes['FechaEv_Pres'],self.f['FechaEv_Pres'][i]))
+                            if xP2 == 0:
+                                self.EvDNo['PrecC_Pres'] = self.f['PrecC_Pres'][i]
+                                self.EvDNo['TC_Pres'] = self.f['TC_Pres'][i]
+                                self.EvDNo['PresC_Pres'] = self.f['PresC_Pres'][i]
+                                self.EvDNo['HRC_Pres'] = self.f['HRC_Pres'][i]
+                                self.EvDNo['qC_Pres'] = self.f['qC_Pres'][i]
+                                self.EvDNo['FechaEv_Pres'] = self.f['FechaEv_Pres'][i]
+                                xP2 += 1
+                            else:
+                                self.EvDNo['PrecC_Pres']   = np.vstack((self.EvDNo['PrecC_Pres'],self.f['PrecC_Pres'][i]))
+                                self.EvDNo['TC_Pres']      = np.vstack((self.EvDNo['TC_Pres'],self.f['TC_Pres'][i]))
+                                self.EvDNo['PresC_Pres']   = np.vstack((self.EvDNo['PresC_Pres'],self.f['PresC_Pres'][i]))
+                                self.EvDNo['HRC_Pres']     = np.vstack((self.EvDNo['HRC_Pres'],self.f['HRC_Pres'][i]))
+                                self.EvDNo['qC_Pres']      = np.vstack((self.EvDNo['qC_Pres'],self.f['qC_Pres'][i]))
+                                self.EvDNo['FechaEv_Pres']      = np.vstack((self.EvDNo['FechaEv_Pres'],self.f['FechaEv_Pres'][i]))
                     else:
-                        if xP2 == 0:
-                            self.EvDNo['PrecC_Pres'] = self.f['PrecC_Pres'][i]
-                            self.EvDNo['TC_Pres'] = self.f['TC_Pres'][i]
-                            self.EvDNo['PresC_Pres'] = self.f['PresC_Pres'][i]
-                            self.EvDNo['HRC_Pres'] = self.f['HRC_Pres'][i]
-                            self.EvDNo['qC_Pres'] = self.f['qC_Pres'][i]
-                            self.EvDNo['FechaEv_Pres'] = self.f['FechaEv_Pres'][i]
-                            xP2 += 1
-                        else:
-                            self.EvDNo['PrecC_Pres']   = np.vstack((self.EvDNo['PrecC_Pres'],self.f['PrecC_Pres'][i]))
-                            self.EvDNo['TC_Pres']      = np.vstack((self.EvDNo['TC_Pres'],self.f['TC_Pres'][i]))
-                            self.EvDNo['PresC_Pres']   = np.vstack((self.EvDNo['PresC_Pres'],self.f['PresC_Pres'][i]))
-                            self.EvDNo['HRC_Pres']     = np.vstack((self.EvDNo['HRC_Pres'],self.f['HRC_Pres'][i]))
-                            self.EvDNo['qC_Pres']      = np.vstack((self.EvDNo['qC_Pres'],self.f['qC_Pres'][i]))
-                            self.EvDNo['FechaEv_Pres']      = np.vstack((self.EvDNo['FechaEv_Pres'],self.f['FechaEv_Pres'][i]))
+                        NoAn += 1
 
-                self.Statistics = {'Perc_Pres_Yes':len(self.EvDYes['PrecC_Pres'])/len(self.f['PrecC_Pres'])
-                        'Perc_Pres_No':len(self.EvDNo['PrecC_Pres'])/len(self.f['PrecC_Pres'])}
+                self.Statistics = {'Perc_Pres_Yes':len(self.EvDYes['PrecC_Pres'])/(len(self.f['PrecC_Pres'])-NoAn),
+                        'Perc_Pres_No':len(self.EvDNo['PrecC_Pres'])/(len(self.f['PrecC_Pres'])-NoAn)}
 
                 # Temperatura
                 for i in range(len(self.f['PrecC_Temp'])):
-                    if np.nanmax(self.f['PrecC_Temp'][i][self.Middle:self.Middle+(60/int(self.dtm)*2)+1]) >= MaxPrec and np.nanmax(self.f['PrecC_Temp'][i][self.Middle-(60/int(self.dtm)*2)+1]:self.Middle) <= MaxPrec:
+                    if np.nanmax(self.f['PrecC_Temp'][i][self.Middle:self.Middle+(60/int(self.dtm)*1)+1]) >= MaxPrec and np.nanmax(self.f['PrecC_Temp'][i][self.Middle-(60/int(self.dtm)*1)+1:self.Middle]) <= MaxPrec:
                         if xT1 == 0:
                             self.EvDYes['PrecC_Temp'] = self.f['PrecC_Temp'][i]
                             self.EvDYes['TC_Temp'] = self.f['TC_Temp'][i]
@@ -297,8 +301,8 @@ class Scatter_Gen(object):
                             self.EvDNo['qC_Temp']      = np.vstack((self.EvDNo['qC_Temp'],self.f['qC_Temp'][i]))
                             self.EvDNo['FechaEv_Temp']      = np.vstack((self.EvDNo['FechaEv_Temp'],self.f['FechaEv_Temp'][i]))
 
-                self.Statistics = {'Perc_Temp_Yes':len(self.EvDYes['PrecC_Temp'])/len(self.f['PrecC_Temp'])
-                        'Perc_Temp_No':len(self.EvDNo['PrecC_Temp'])/len(self.f['PrecC_Temp'])}
+                self.Statistics.update({'Perc_Temp_Yes':len(self.EvDYes['PrecC_Temp'])/len(self.f['PrecC_Temp']),
+                        'Perc_Temp_No':len(self.EvDNo['PrecC_Temp'])/len(self.f['PrecC_Temp'])})
         return
 
     def EventsGraphSeries(self,ImgFolder='Manizales/Events/'):
@@ -450,7 +454,7 @@ class Scatter_Gen(object):
         self.var = self.f.keys()
         return
 
-    def VC_VR_DP(self,DatesEv,Prec,Pres,MP=None,MPres=None,flagEv_Pres=False,flagEv_T=False,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+    def VC_VR_DP(self,DatesEv,Prec,Pres,MP=None,MPres=None,flagEv_Pres=False,LimitEvP=1000,flagEv_T=False,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
         '''
         DESCRIPTION:
 
@@ -484,8 +488,8 @@ class Scatter_Gen(object):
         if MP == None:
             MP = list()
             for iC in range(len(Prec)):
-                MP.append(np.where(Prec[iC][self.Middle:]==
-                    np.nanmax(Prec[iC][self.Middle:]))[0][0]+self.Middle)
+                MP.append(np.where(Prec[iC][self.Middle:self.Middle+int(60/int(self.dtm)*1)+1]==
+                    np.nanmax(Prec[iC][self.Middle:self.Middle+int(60/int(self.dtm)*1)+1]))[0][0]+self.Middle)
         if MPres == None:
             MPres = self.Middle
 
@@ -494,13 +498,163 @@ class Scatter_Gen(object):
             self.Res_Pres = HyMF.PrecCount(Prec,DatesEv,dt=dt,M=MP)
 
         if self.flag['PresC']:
-            Results = BP.C_Rates_Changes(Pres,dt=dt,M=MPres,MaxMin='min')
+            Results = BP.C_Rates_Changes(Pres,dt=dt,MP=MPres,MaxMin='min')
 
         self.Res_Pres.update(Results)
         Data = {'Prec':Prec,'Pres':Pres}
         self.Res_Pres['VminPos'] = np.ones(self.Res_Pres['DurPrec'].shape)*self.Middle
-        BP.EventsScatter(DatesEv,Data,self.Res_Pres,
-                PathImg=self.PathImg+ImgFolder_Scatter_Specific_Pres,
-                Name=self.Names[self.irow],flagIng=False)
 
+
+        # Datos para los gráficos
+        Variables = {'DurPrec': 'Duración del Evento [h]',
+                'IntPrec': 'Intensidad del Evento [mm/h]',
+                'MaxPrec': 'Máximo de Precipitación [mm]',
+                'TotalPrec': 'Total de Precipitación [mm]',
+                'VRateB': 'Tasa de Cambio de Presión Antes [hPa/h]',
+                'VRateA':'Tasa de Cambio de Presión Durante [hPa/h]',
+                'VChangeB':'Cambio de Presión Antes [hPa]',
+                'VChangeA':'Cambio de Presión Durante [hPa]'}
+
+        Abre = {'DurPrec': 'DP',
+                'IntPrec': 'IP',
+                'MaxPrec': 'MP',
+                'TotalPrec': 'TP',
+                'VRateB': 'RPB',
+                'VRateA':'RPA',
+                'VChangeB':'CPB',
+                'VChangeA':'CPA'}
+
+
+        V1 = ['DurPrec','IntPrec','MaxPrec','TotalPrec']
+        V2 = ['VRateB','VRateA','VChangeB','VChangeA']
+        for Vi1 in V1:
+            for Vi2 in V2:
+                HyPl.SPvDPPotGen(self.Res_Pres[Vi1],self.Res_Pres[Vi2],
+                        Fit='',Title='Diagrama de Dispersión',
+                        xLabel=Variables[Vi1],
+                        yLabel=Variables[Vi2],
+                        Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'v'+Abre[Vi2],
+                        PathImg=self.PathImg+ImgFolder_Scatter+'Pres/'+'Adjusted/',
+                        FlagA=True,FlagAn=False)
+
+
+        if flagEv_Pres:
+            BP.EventsScatter(DatesEv,Data,self.Res_Pres,
+                    PathImg=self.PathImg+ImgFolder_Scatter_Specific_Pres,
+                    Name=self.Names[self.irow]+'_DPvRP',flagIng=False,LimitEv=LimitEvP)
+
+            BP.EventsScatter(DatesEv,Data,self.Res_Pres,
+                    PathImg=self.PathImg+ImgFolder_Scatter_Specific_Pres,
+                    Name=self.Names[self.irow]+'DP_CP',flagIng=False,
+                    LimitEv=LimitEvP,Fit ='',
+                    LabelsScatter=['DurPrec','VChangeB','VChangeA'],
+                    Scatter_Info=['Cambios de Presión Antes del Evento',
+                    'Duration [h]','Cambio de Presión [hPa]',
+                    'Cambios en Presión Atmosférica Durante el Evento'])
+        return
+
+    def VC_DP_VR(self,DatesEv,Prec,Pres,MP=None,MPres=None,flagEv_Pres=False,LimitEvP=1000,flagEv_T=False,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+        '''
+        DESCRIPTION:
+
+            Función para obtener los valores de Duración, tasas y cambios de presión
+            y de temperatura.
+        _________________________________________________________________________
+
+        INPUT:
+            + DatesEv: Fechas de los diagramas de compuestos.
+            + Prec: Compuestos de precipitación.
+            + Pres: Compuestos de presión.
+            + MP: Valor donde comienza a buscar para los datos de
+                  precipitación.
+            + MPres: Valor medio donde comienza a buscar presión.
+            + flagEV: Bandera para graficar los eventos.
+            + flagIng: Bander para saber si se lleva a inglés los ejes.
+            + ImgFolder_Scatter: Ruta donde se guardará el documento.
+        _________________________________________________________________________
+
+            OUTPUT:
+        Se generan diferentes variables o se cambian las actuales.
+        '''
+
+        # Información para hacer el gráfico
+        self.ImgFolder_Scatter = ImgFolder_Scatter
+        ImgFolder_Scatter_Specific_Pres = ImgFolder_Scatter+'Pres_Prec/'+Specific_Folder+'/'
+        ImgFolder_Scatter_Specific_Temp = ImgFolder_Scatter+'Temp/'+Specific_Folder+'/'
+
+        # Se incluyen los valores de la clase
+        dt = int(self.dtm)
+        if MP == None:
+            MP = self.Middle
+        # Se calcula la duración de la tormenta
+        if self.flag['PrecC']:
+            self.Res_Prec = HyMF.PrecCount(Prec,DatesEv,dt=dt,M=MP)
+
+        DatesEvP = self.f['FechaEvP']
+        if MPres == None:
+            MPres = list()
+            for iC in range(len(Pres)):
+                xEv = np.where(DatesEvP[iC] == self.Res_Prec['DatesEvst'][iC])[0][0]
+                Bef = xEv-int(60/int(self.dtm)*2)
+                Aft = xEv+int(60/int(self.dtm)*0.5) 
+                Min = np.nanmin(Pres[iC][Bef:Aft])
+                xMin1 = np.where(Pres[iC][:Aft]==Min)[0][-1]
+                MPres.append(xMin1)
+
+
+        if self.flag['PresC']:
+            Results = BP.C_Rates_Changes(Pres,dt=dt,MP=MPres,MaxMin='min')
+
+        self.Res_Prec.update(Results)
+        Data = {'Prec':Prec,'Pres':Pres}
+        self.Res_Prec['VminPos'] = np.array(MPres)
+
+
+        # Datos para los gráficos
+        Variables = {'DurPrec': 'Duración del Evento [h]',
+                'IntPrec': 'Intensidad del Evento [mm/h]',
+                'MaxPrec': 'Máximo de Precipitación [mm]',
+                'TotalPrec': 'Total de Precipitación [mm]',
+                'VRateB': 'Tasa de Cambio de Presión Antes [hPa/h]',
+                'VRateA':'Tasa de Cambio de Presión Durante [hPa/h]',
+                'VChangeB':'Cambio de Presión Antes [hPa]',
+                'VChangeA':'Cambio de Presión Durante [hPa]'}
+
+        Abre = {'DurPrec': 'DP',
+                'IntPrec': 'IP',
+                'MaxPrec': 'MP',
+                'TotalPrec': 'TP',
+                'VRateB': 'RPB',
+                'VRateA':'RPA',
+                'VChangeB':'CPB',
+                'VChangeA':'CPA'}
+
+
+        V1 = ['DurPrec','IntPrec','MaxPrec','TotalPrec']
+        V2 = ['VRateB','VRateA','VChangeB','VChangeA']
+        for Vi1 in V1:
+            for Vi2 in V2:
+                HyPl.SPvDPPotGen(self.Res_Prec[Vi1],self.Res_Prec[Vi2],
+                        Fit='',Title='Diagrama de Dispersión',
+                        xLabel=Variables[Vi1],
+                        yLabel=Variables[Vi2],
+                        Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'v'+Abre[Vi2],
+                        PathImg=self.PathImg+ImgFolder_Scatter+'Pres_Prec/'+'Adjusted/',
+                        FlagA=True,FlagAn=False)
+
+        if flagEv_Pres:
+            BP.EventsScatter(DatesEv,Data,self.Res_Prec,
+                    PathImg=self.PathImg+ImgFolder_Scatter_Specific_Pres,
+                    Fit ='',
+                    Name=self.NamesArch[self.irow]+'_DPvRP',
+                    flagIng=False,LimitEv=LimitEvP)
+
+            BP.EventsScatter(DatesEv,Data,self.Res_Prec,
+                    PathImg=self.PathImg+ImgFolder_Scatter_Specific_Pres,
+                    Name=self.NamesArch[self.irow]+'DP_CP',flagIng=False,
+                    LimitEv=LimitEvP,Fit ='',
+                    LabelsScatter=['DurPrec','VChangeB','VChangeA'],
+                    Scatter_Info=['Cambios de Presión Antes del Evento',
+                    'Duration [h]','Cambio de Presión [hPa]',
+                    'Cambios en Presión Atmosférica Durante el Evento'])
         return
