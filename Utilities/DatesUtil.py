@@ -29,7 +29,11 @@ import warnings
 # ------------------
 # Path to the Modules
 # Importing Modules
-from Utilities import Utilities as ult
+try:
+    from Utilities import Utilities as ult
+except ImportError:
+    import Utilities as ult
+
 
 # ------------------------
 # Class

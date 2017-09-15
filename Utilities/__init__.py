@@ -31,6 +31,13 @@ USAGE::
 
 '''
 
-from Utilities import Utilities
-from Utilities import Data_Man
-from Utilities.DatesUtil import DatesUtil 
+try:
+    import Utilities
+    from Utilities import Utilities
+    from Utilities import Data_Man
+    from Utilities.DatesUtil import DatesUtil 
+except ImportError:
+    import Utilities
+    import Data_Man
+    from DatesUtil import DatesUtil 
+

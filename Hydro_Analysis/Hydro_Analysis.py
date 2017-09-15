@@ -47,11 +47,18 @@ import warnings
 # Importing Modules
 from Utilities import Utilities as utl
 from Utilities import Data_Man as DM
-from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter as HyPl; HyPl=HyPl()
 from Utilities import DatesUtil as DUtil; DUtil=DUtil()
-from Hydro_Analysis.Gen_Functions.Functions import *
-from Hydro_Analysis.Meteo import Cycles as MCy
-from Hydro_Analysis.Climate import Cycles as CCy
+
+try:
+    from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter as HyPl; HyPl=HyPl()
+    from Hydro_Analysis.Gen_Functions.Functions import *
+    from Hydro_Analysis.Meteo import Cycles as MCy
+    from Hydro_Analysis.Climate import Cycles as CCy
+except ImportError:
+    from Hydro_Plotter import Hydro_Plotter as HyPl; HyPl=HyPl()
+    from Gen_Functions.Functions import *
+    from Meteo import Cycles as MCy
+    from Climate import Cycles as CCy
 
 class Hydro_Analysis(object):
     '''

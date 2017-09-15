@@ -37,7 +37,11 @@ from datetime import date, datetime, timedelta
 # Importing Modules
 from Utilities import Utilities as utl
 from Utilities import DatesUtil as DUtil
-from AnET.CorrSt import CorrSt as cr
+try:
+    from AnET.CorrSt import CorrSt as cr
+except ImportError:
+    from CorrSt import CorrSt as cr
+
 
 class ODE_S:
 

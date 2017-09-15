@@ -6,5 +6,8 @@
 #______________________________________________________________________________
 #______________________________________________________________________________
 
+try:
+    from GeoF.GeoF import GeoF
+except ImportError:
+    from GeoF import GeoF
 
-from GeoF.GeoF import GeoF

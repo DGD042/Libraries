@@ -26,7 +26,17 @@ ____________________________________________________________________________
 
 '''
 
-from Hydro_Analysis.Hydro_Analysis import Hydro_Analysis 
-from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter
-from Hydro_Analysis.Thermo_An import Thermo_An
-from Hydro_Analysis.Evap_Models import Evap_Models
+try:
+    from Hydro_Analysis.Hydro_Analysis import Hydro_Analysis 
+    from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter
+    from Hydro_Analysis.Thermo_An import Thermo_An
+    from Hydro_Analysis.Evap_Models import Evap_Models
+except ImportError:
+    from Hydro_Analysis import Hydro_Analysis 
+    from Hydro_Plotter import Hydro_Plotter
+    from Thermo_An import Thermo_An
+    from Evap_Models import Evap_Models
+    import Gen_Functions
+    import Meteo 
+    import Climate
+

@@ -8,34 +8,26 @@
 
 '''
 
-    
-This class replaces the ExtractD class to make a better and 
-efficient way of Extracting Manipulating and Saving Data 
-(EMSD). Functions in this class aims to manipulate times series 
-information with a preference for climate data, however you can 
-extract data from any file.
+This class have different routines for hydrological
+and thermodynamical analysis in relation with climatology.
 
+This package also graph all the different intervals requiered from the
+given data.
+
+
+____________________________________________________________________________
 This class is of free use and can be modify, if you have some 
 problem please contact the programmer to the following e-mails:
 
 - danielgondu@gmail.com 
 - dagonzalezdu@unal.edu.co
 - daniel.gonzalez17@eia.edu.co
-
---------------------------------------
- How to use the library
---------------------------------------
-
-You can use any function of the class separatley but using the 
-function Open_Data first would allow you to have a better 
-control of the full class.
-
 ____________________________________________________________________________
 
 '''
 
 try:
-    from EMSD.EMSD import EMSD
+    from Hydro_Analysis.Climate import Cycles
 except ImportError:
-    from EMSD import EMSD
+    from Climate import Cycles
 
