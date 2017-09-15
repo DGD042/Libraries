@@ -103,6 +103,19 @@ class Hydro_Analysis(object):
                 self.DateH = None
         else:
             self.DateH = None
+        if DateM != None:
+            if isinstance(DateM[0],str):
+                if len(DateM[0]) <= 7:
+                    DateM2 = [i+'/01' for i in DateM]
+                else:
+                    DateM2 = DateM
+                self.DateM = DUtil.Dates_str2datetime(DateM2)
+            elif isinstance(DateM[0],datetime):
+                self.DateM = DateM
+            else:
+                self.DateM = None
+        else:
+            self.DateM = None
         if VarH != None:
             self.VarH = np.array(VarH)
         else:
@@ -668,7 +681,7 @@ class Hydro_Analysis(object):
         plt.savefig(PathImg + 'T' + Var +'_' + Name+'.png' )
         plt.close('all')
 
-    def CiclA(self,VMes,Years,PathImg='',Name='',VarL='',VarLL='',C='k',NameArch='',flagA=False,flagAH=False,oper='mean',FlagG=True):
+    def CiclA(self,VMes=None,Years=None,PathImg=None,Name=None,VarL=None,VarLL=None,C=None,NameArch=None,flagA=False,flagAH=False,oper='mean',FlagG=True):
         '''
         DESCRIPTION:
             This function calculates the annual cycle of a variable, also
@@ -679,17 +692,24 @@ class Hydro_Analysis(object):
         _______________________________________________________________________
 
         INPUT:
-            + VMes: Variable with the monthly data.
-            + Years: Vector with the initial and final year.
-            + PathImg: Path to save the Graphs.
-            + Name: Name of the station.
-            + VarL: Label of the variable with units.
-            + VarLL: Label of the variable without units.
-            + C: Color of the line.
-            + NameArch: Name of the File of the image.
-            + flagA: flag to know if the annual series is requiered.
-            + AH: flag to know if the graph is done with the hydrological 
-                  cycle.
+
+            :param VMes:     A ndarray, Variable with the monthly data.
+            :param Years:    A list or ndarray, Vector with the initial and 
+                                                final year.
+            :param flagA:    A boolean, flag to know if the annual series 
+                                        is requiered.
+            :param oper:     A ndarray, Operation for the annual data.
+            :param PathImg:  A str, Path to save the Graphs.
+            :param Name:     A str, Name of the station.
+            :param VarL:     A str, Label of the variable with units.
+            :param VarLL:    A str, Label of the variable without units.
+            :param C:        A str, Color of the line.
+            :param NameArch: A str, Name of the File of the image.
+            :param flagA:    A boolean, flag to know if the annual series
+                                        is requiered.
+            :param flagAH:   A boolean, flag to know if the graph is done with 
+                                        the hydrological cycle.
+            :param flagG:    A boolean, flag to make the graph.
         _______________________________________________________________________
         
         OUTPUT:
@@ -699,18 +719,45 @@ class Hydro_Analysis(object):
         # --------------------
         # Error Managment
         # --------------------
-        if len(Years) > 2:
-            return utl.ShowError('CiclA','Hydro_Analysis','Years index vector larger than 2, review vector')
+        if VMes == None and self.VarM == None:
+            raise utl.ShowError('CiclA','Hydro_Analysis','No Data added')
+        if Years == None and self.DateM == None:
+            raise utl.ShowError('CiclA','Hydro_Analysis','No Dates added')
+        if Years == None: 
+            Years = [self.DateM[0].year,self.DateM[-1].year]
+        if VMes == None:
+            VMes = self.VarM
+        if FlagG == None:
+            FlagG = self.FlagG
+        if PathImg == None:
+            PathImg = self.PathImg
+        if NameArch == None:
+            NameArch = self.NameA
+        if Name == None:
+            Name = self.Name
+        if VarLL == None:
+            VarLL = self.VarLL
+        if VarL == None:
+            VarL = self.VarL
+        if C == None:
+            C = self.color
         
+        results = CCy.CiclA(VMes,Years,flagA=flagA,oper=oper)
+
         # Graph
         if FlagG:
-            HyPl.AnnualCycle(MesM,MesE,VarL,VarLL,Name,NameArch,PathImg,flagAH,color=C)
+            HyPl.AnnualCycle(results['MesM'],results['MesE'],VarL,VarLL,Name,NameArch,PathImg,flagAH,color=C)
         # --------------------
         # Annual Series
         # --------------------
         if flagA:
+            Yi = int(Years[0])
+            Yf = int(Years[1])
+            x = [date(i,1,1) for i in range(Yi,Yf+1)]
+            xx = [i for i in range(Yi,Yf+1)]
             if FlagG:
-                HyPl.AnnualS(x,AnM,AnE,VarL,VarLL,Name,NameArch,PathImg+'Anual/',color=C)
+                HyPl.AnnualS(x,results['AnM'],results['AnE'],VarL,VarLL,Name,NameArch,PathImg+'Anual/',
+                        color=C)
 
         return results
 

@@ -32,7 +32,6 @@ USAGE::
 '''
 
 try:
-    import Utilities
     from Utilities import Utilities
     from Utilities import Data_Man
     from Utilities.DatesUtil import DatesUtil 

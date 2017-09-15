@@ -64,7 +64,7 @@ def CiclA(VMes,Years,flagA=False,oper='mean'):
 
     INPUT:
         :param VMes:  A ndarray, Variable with the monthly data.
-        :param Years: A lisr or ndarray, Vector with the initial and 
+        :param Years: A list or ndarray, Vector with the initial and 
                                          final year.
         :param flagA: A boolean, flag to know if the annual series 
                                  is requiered.
@@ -72,7 +72,7 @@ def CiclA(VMes,Years,flagA=False,oper='mean'):
     _______________________________________________________________________
     
     OUTPUT:
-        This function returns a direcory with all the data.
+
     '''
 
     # --------------------
@@ -103,15 +103,12 @@ def CiclA(VMes,Years,flagA=False,oper='mean'):
     
     MesD = np.nanstd(VarM,axis=0) # annual strandard deviation.
     MesE = np.array([k/np.sqrt(VarMNT[ii]) for ii,k in enumerate(MesD)]) # annual Error
-    # Graph
-    if FlagG:
-        HyPl.AnnualCycle(MesM,MesE,VarL,VarLL,Name,NameArch,PathImg,flagAH,color=C)
     # --------------------
     # Annual Series
     # --------------------
     if flagA:
         # Determine operation
-        Operation = utl.Oper_Det(oper)
+        Operation = DM.Oper_Det(oper)
         # ----------------
         # Error managment
         # ----------------
@@ -131,12 +128,6 @@ def CiclA(VMes,Years,flagA=False,oper='mean'):
 
         AnD = np.nanstd(VarM,axis=1) # Annual deviation
         AnE = np.array([k/np.sqrt(AnMNT[ii]) for ii,k in enumerate(AnD)]) # Annual Error 
-
-        x = [date(i,1,1) for i in range(Yi,Yf+1)]
-        xx = [i for i in range(Yi,Yf+1)]
-
-        if FlagG:
-            HyPl.AnnualS(x,AnM,AnE,VarL,VarLL,Name,NameArch,PathImg+'Anual/',color=C)
 
     # Return values
     results = dict()
