@@ -196,6 +196,45 @@ class Scatter_Gen(object):
         self.var = self.f.keys()
         return
 
+    def EventsPrecPresDetection(self):
+        '''
+        DESCRIPTION:
+
+            Función para detectar los eventos que tuvieron caidas importantes
+            de presión antes del evento de precipitación.
+        _________________________________________________________________________
+
+        INPUT:
+        _________________________________________________________________________
+
+        OUTPUT:
+        '''
+        dt = int(self.dtm)
+        self.PrecCount = HyMF.PrecCount(self.f['PrecC'],self.f['FechaEv'],dt=dt,M=self.Middle)
+
+        DatesEvP = self.f['FechaEvP']
+        self.MPresYes = list()
+        self.MPresNo = list()
+        # Eventos con caidas de presión antes
+        self.EvYes = []
+        # Eventos sin caidas de presión antes
+        self.EvNo = []
+        for iC in range(len(self.f['PresC'])):
+            xEv = np.where(DatesEvP[iC] == self.PrecCount['DatesEvst'][iC])[0][0]
+            Bef = xEv-int(60/dt*1)
+            Aft = xEv+int(60/dt*0.5) 
+            Min = np.nanmin(self.f['PresC'][iC][Bef:Aft])
+            xMin1 = np.where(self.f['PresC'][iC][:Aft]==Min)[0][-1]
+            if Min < -0.3:
+                self.EvYes.append(iC)
+                self.MPresYes.append(xMin1)
+            else:
+                self.EvNo.append(iC)
+                self.MPresNo.append(xMin1)
+
+
+        return
+
     def EventsPrecDetection(self):
         '''
             DESCRIPTION:
@@ -559,7 +598,7 @@ class Scatter_Gen(object):
                     'Cambios en Presión Atmosférica Durante el Evento'])
         return
 
-    def VC_DP_VR(self,DatesEv,Prec,Pres,MP=None,MPres=None,flagEv_Pres=False,LimitEvP=1000,flagEv_T=False,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+    def VC_DP_VR(self,DatesEv,Prec,Pres,DatesEvP=None,MP=None,MPres=None,flagEv_Pres=False,LimitEvP=1000,flagEv_T=False,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
         '''
         DESCRIPTION:
 
@@ -596,12 +635,13 @@ class Scatter_Gen(object):
         if self.flag['PrecC']:
             self.Res_Prec = HyMF.PrecCount(Prec,DatesEv,dt=dt,M=MP)
 
-        DatesEvP = self.f['FechaEvP']
+        if DatesEvP == None:
+            DatesEvP = self.f['FechaEvP']
         if MPres == None:
             MPres = list()
             for iC in range(len(Pres)):
                 xEv = np.where(DatesEvP[iC] == self.Res_Prec['DatesEvst'][iC])[0][0]
-                Bef = xEv-int(60/int(self.dtm)*2)
+                Bef = xEv-int(60/int(self.dtm)*1)
                 Aft = xEv+int(60/int(self.dtm)*0.5) 
                 Min = np.nanmin(Pres[iC][Bef:Aft])
                 xMin1 = np.where(Pres[iC][:Aft]==Min)[0][-1]
@@ -661,12 +701,106 @@ class Scatter_Gen(object):
                     Name=self.NamesArch[self.irow]+'_DPvRP',
                     flagIng=False,LimitEv=LimitEvP)
 
-            BP.EventsScatter(DatesEv,Data,self.Res_Prec,
-                    PathImg=self.PathImg+ImgFolder_Scatter_Specific_Pres,
-                    Name=self.NamesArch[self.irow]+'DP_CP',flagIng=False,
-                    LimitEv=LimitEvP,Fit ='',
-                    LabelsScatter=['DurPrec','VChangeB','VChangeA'],
-                    Scatter_Info=['Cambios de Presión Antes del Evento',
-                    'Duration [h]','Cambio de Presión [hPa]',
-                    'Cambios en Presión Atmosférica Durante el Evento'])
+            # BP.EventsScatter(DatesEv,Data,self.Res_Prec,
+            #         PathImg=self.PathImg+ImgFolder_Scatter_Specific_Pres,
+            #         Name=self.NamesArch[self.irow]+'DP_CP',flagIng=False,
+            #         LimitEv=LimitEvP,Fit ='',
+            #         LabelsScatter=['DurPrec','VChangeB','VChangeA'],
+            #         Scatter_Info=['Cambios de Presión Antes del Evento',
+            #         'Duration [h]','Cambio de Presión [hPa]',
+            #         'Cambios en Presión Atmosférica Durante el Evento'])
         return
+
+    def HistGraph(self,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+        '''
+        DESCRIPTION:
+
+            Función para obtener los valores de Duración, tasas y cambios de presión
+            y de temperatura.
+        _________________________________________________________________________
+
+        INPUT:
+            + DatesEv: Fechas de los diagramas de compuestos.
+            + Prec: Compuestos de precipitación.
+            + Pres: Compuestos de presión.
+            + MP: Valor donde comienza a buscar para los datos de
+                  precipitación.
+            + MPres: Valor medio donde comienza a buscar presión.
+            + flagEV: Bandera para graficar los eventos.
+            + flagIng: Bander para saber si se lleva a inglés los ejes.
+            + ImgFolder_Scatter: Ruta donde se guardará el documento.
+        _________________________________________________________________________
+
+            OUTPUT:
+        Se generan diferentes variables o se cambian las actuales.
+        '''
+
+        # Información para hacer el gráfico
+        self.ImgFolder_Scatter = ImgFolder_Scatter
+        ImgFolder_Scatter_Specific_Pres = ImgFolder_Scatter+'Pres_Prec/'+Specific_Folder+'/'
+        ImgFolder_Scatter_Specific_Temp = ImgFolder_Scatter+'Temp/'+Specific_Folder+'/'
+
+        # Se incluyen los valores de la clase
+        dt = int(self.dtm)
+
+        # Datos para los gráficos
+        Variables = {'DurPrec': 'Duración del Evento [h]',
+                'IntPrec': 'Intensidad del Evento [mm/h]',
+                'MaxPrec': 'Máximo de Precipitación [mm]',
+                'TotalPrec': 'Total de Precipitación [mm]',
+                'IntPrecMax': 'Intensidad Máxima del Evento [mm/h]',
+                'Pindex': 'Relación de Intensidades',
+                'TasaPrec': 'Tasa de Cambio de Precipitación [mm/h]',
+                'VRateB': 'Tasa de Cambio de Presión Antes [hPa/h]',
+                'VRateA':'Tasa de Cambio de Presión Durante [hPa/h]',
+                'VChangeB':'Cambio de Presión Antes [hPa]',
+                'VChangeA':'Cambio de Presión Durante [hPa]',
+                'Hour': 'Hora del Evento [LT]'}
+
+        Abre = {'DurPrec': 'DP',
+                'IntPrec': 'IP',
+                'MaxPrec': 'MP',
+                'TotalPrec': 'TP',
+                'IntPrecMax':'IPM',
+                'Pindex':'Pi',
+                'TasaPrec':'RPr',
+                'VRateB': 'RPB',
+                'VRateA':'RPA',
+                'VChangeB':'CPB',
+                'VChangeA':'CPA',
+                'Hour': 'HEv'}
+
+        self.PrecCount['Hour'] = np.array([i.hour for i in self.PrecCount['DatesEvst']])
+
+        V1 = ['Hour','DurPrec','IntPrec','MaxPrec','TotalPrec','IntPrecMax','Pindex',
+                'TasaPrec']
+        V2 = ['VRateB','VRateA','VChangeB','VChangeA']
+        Bins=12
+        for Vi1 in V1:
+            if Vi1 == 'Hour':
+                FlagHour = True
+                flagEst = False
+            else:
+                FlagHour = False
+                flagEst = False
+            # Total
+            HyPl.HistogramNP(self.PrecCount[Vi1],Bins,Title=' Frecuencias',
+                    Var=Variables[Vi1],
+                    Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_EvT',
+                    PathImg=self.PathImg+ImgFolder_Scatter+'Histograms/',
+                    M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst)
+            # EvYes
+            HyPl.HistogramNP(self.PrecCount[Vi1][self.EvYes],
+                    Bins,Title='Frecuencias',
+                    Var=Variables[Vi1],
+                    Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_EvYes',
+                    PathImg=self.PathImg+ImgFolder_Scatter+'Histograms/',
+                    M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst)
+            # EvNo
+            HyPl.HistogramNP(self.PrecCount[Vi1][self.EvNo],
+                    Bins,Title='Frecuencias',
+                    Var=Variables[Vi1],
+                    Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_EvNo',
+                    PathImg=self.PathImg+ImgFolder_Scatter+'Histograms/',
+                    M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst)
+            

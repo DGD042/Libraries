@@ -59,7 +59,6 @@ class Hydro_Plotter:
         # Image resolution
         self.dpi = 300
 
-        
     def monthlab(self,Date):
         '''             
             DESCRIPTION:
@@ -1642,7 +1641,7 @@ class Hydro_Plotter:
         if FlagA:
             return CC
 
-    def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True):
+    def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True,FlagHour=False,flagEst=True):
         '''
             DESCRIPTION:
         
@@ -1660,6 +1659,8 @@ class Hydro_Plotter:
         + M: Metodo para hacer el histograma.
         + FEn: Flag para saber si quiere tener el histograma en inglés.
         + Left: flag para poner los estadísticos a la izquierda.
+        + FlagHour: flag para poner el eje x en horas.
+        + flagEst: flag para poner los estadísticos.
         _________________________________________________________________________
         
             OUTPUT:
@@ -1696,7 +1697,7 @@ class Hydro_Plotter:
         # Parámetros de la Figura
         plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
-            ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.labelsize': 14,'xtick.major.size': 6,'xtick.minor.size': 4\
             ,'xtick.major.width': 1,'xtick.minor.width': 1\
             ,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
             ,'ytick.major.width': 1,'ytick.minor.width': 1\
@@ -1711,6 +1712,14 @@ class Hydro_Plotter:
         p1 = plt.bar(DBin[:-1],DH,color='dodgerblue',width=widthD)#,edgecolor='none')
         # Se cambia el valor de los ejes.
         plt.xticks(centerD) # Se cambia el valor de los ejes
+        if FlagHour:
+            CCStr = []
+            for C in centerD:
+                hour = int(C)
+                minutes = int((C*60) % 60)
+                CCStr.append('%d:%02d' %(hour,minutes))
+            ax = plt.gca()
+            ax.set_xticklabels(CCStr)
         # Se arreglan los ejes
         ax = plt.gca()
         # Se cambia el label de los eje
@@ -1721,24 +1730,26 @@ class Hydro_Plotter:
         minorLocatory = MultipleLocator(MyL)
         plt.gca().yaxis.set_minor_locator(minorLocatory)
 
-        plt.plot([A,A],[0,yTL[-1]],'k-')
-        plt.plot([A+B,A+B],[0,yTL[-1]],'k--')
-        plt.plot([A-B,A-B],[0,yTL[-1]],'k--')
-        # print('DBin',DBin)
-        # print('len(DBin)',len(DBin))
-        # print('xTL',xTL)
-        # print('len',len(xTL))
-        # incluyen los valores
-        if Left:
-            plt.text(xTL[1]-2*MxL,yTL[-2], r'$\mu = %s$' %(round(A,3)), fontsize=14)
-            plt.text(xTL[1]-2*MxL,yTL[-2]-2*MyL, r'$\sigma = %s$' %(round(B,3)), fontsize=14)
-            plt.text(xTL[1]-2*MxL,yTL[-2]-4*MyL, r'$\gamma = %s$' %(round(C,3)), fontsize=14)
-            plt.text(xTL[1]-2*MxL,yTL[-2]-6*MyL, r'$\kappa = %s$' %(round(D,3)), fontsize=14)
-        else:
-            plt.text(xTL[-2]-2*MxL,yTL[-2], r'$\mu = %s$' %(round(A,3)), fontsize=14)
-            plt.text(xTL[-2]-2*MxL,yTL[-2]-2*MyL, r'$\sigma = %s$' %(round(B,3)), fontsize=14)
-            plt.text(xTL[-2]-2*MxL,yTL[-2]-4*MyL, r'$\gamma = %s$' %(round(C,3)), fontsize=14)
-            plt.text(xTL[-2]-2*MxL,yTL[-2]-6*MyL, r'$\kappa = %s$' %(round(D,3)), fontsize=14)
+        plt.xlim([DBin[0],DBin[-1]])
+        if flagEst:
+            plt.plot([A,A],[0,yTL[-1]],'k-')
+            plt.plot([A+B,A+B],[0,yTL[-1]],'k--')
+            plt.plot([A-B,A-B],[0,yTL[-1]],'k--')
+            # print('DBin',DBin)
+            # print('len(DBin)',len(DBin))
+            # print('xTL',xTL)
+            # print('len',len(xTL))
+            # incluyen los valores
+            if Left:
+                plt.text(xTL[1]-2*MxL,yTL[-2], r'$\mu = %s$' %(round(A,3)), fontsize=14)
+                plt.text(xTL[1]-2*MxL,yTL[-2]-2*MyL, r'$\sigma = %s$' %(round(B,3)), fontsize=14)
+                plt.text(xTL[1]-2*MxL,yTL[-2]-4*MyL, r'$\gamma = %s$' %(round(C,3)), fontsize=14)
+                plt.text(xTL[1]-2*MxL,yTL[-2]-6*MyL, r'$\kappa = %s$' %(round(D,3)), fontsize=14)
+            else:
+                plt.text(xTL[-2]-2*MxL,yTL[-2], r'$\mu = %s$' %(round(A,3)), fontsize=14)
+                plt.text(xTL[-2]-2*MxL,yTL[-2]-2*MyL, r'$\sigma = %s$' %(round(B,3)), fontsize=14)
+                plt.text(xTL[-2]-2*MxL,yTL[-2]-4*MyL, r'$\gamma = %s$' %(round(C,3)), fontsize=14)
+                plt.text(xTL[-2]-2*MxL,yTL[-2]-6*MyL, r'$\kappa = %s$' %(round(D,3)), fontsize=14)
         # Labels
         # Título
         if FEn:

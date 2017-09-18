@@ -420,18 +420,24 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
     # --------------------------------------
 
     if not(isinstance(DatesEv[0][0],str)) and not(isinstance(DatesEv[0][0],datetime)):
-        E = utl.ShowError('PrecCount','Hydro_Analysis','Not dates given, review format')
+        E = utl.ShowError('PrecCount','MeteoFunctions','Not dates given, review format')
         raise E
-
     
     # --------------------------------------
     # Dates
     # --------------------------------------
+    
+    # Manage Data Size
+    if len(DatesEv.shape) == 1:
+        EvN = 1 # Events number
+    else:
+        EvN = len(DatesEv) # Events number
+
 
     # Variables for benining and end of the event
     DatesEvst_Aft = []
     DatesEvend_Aft = []
-    for i in range(len(DatesEv)):
+    for i in range(EvN):
         if isinstance(M,list):
             MP = M[i]
         else:
@@ -443,7 +449,11 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
         else:
             MinPrec = 0.10
         # Precipitation beginning
-        xm = np.where(Prec[i,:MP]<=MinPrec)[0]
+        if EvN == 1:
+            xm = np.where(Prec[:MP]<=MinPrec)[0]
+        else:
+            xm = np.where(Prec[i,:MP]<=MinPrec)[0]
+
         k = 1
         a = len(xm)-1
         I = 10
@@ -478,13 +488,20 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
                         k = 2                       
         
         # Precipitation ending
-        xM = np.where(Prec[i,x[0]+1:]<=MinPrec)[0]+x[0]+1
+        if EvN == 1:
+            xM = np.where(Prec[x[0]+1:]<=MinPrec)[0]+x[0]+1
+        else:
+            xM = np.where(Prec[i,x[0]+1:]<=MinPrec)[0]+x[0]+1
+
         k = 1
         a = 0
         while k == 1:
             aa = len(xM)
             if aa == 1 or aa == 0:
-                xMM = len(Prec[i,:])-1
+                if EvN == 1:
+                    xMM = len(Prec)-1
+                else:
+                    xMM = len(Prec[i,:])-1
                 k = 2
                 break
             if dt == 1:
@@ -524,17 +541,21 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
             else:
                 xMM = xM[a]
                 k = 2
-        DatesEvst_Aft.append(DatesEv[i][xmm])
-        DatesEvend_Aft.append(DatesEv[i][xMM])
+        if EvN == 1:
+            DatesEvst_Aft.append(DatesEv[xmm+1])
+            DatesEvend_Aft.append(DatesEv[xMM])
+        else:
+            DatesEvst_Aft.append(DatesEv[i][xmm+1])
+            DatesEvend_Aft.append(DatesEv[i][xMM])
     
     DatesEvst = DUtil.Dates_str2datetime(DatesEvst_Aft,Date_Format=None)
     DatesEvend = DUtil.Dates_str2datetime(DatesEvend_Aft,Date_Format=None)
     DatesEvst_Aft = np.array(DatesEvst_Aft)
     DatesEvend_Aft = np.array(DatesEvend_Aft)
+    
     # ---------------
     # Calculations
     # ---------------
-
     # Variables
     DurPrec = []
     TotalPrec = []
@@ -545,10 +566,10 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
     TasaPrec = []
     DatesMax = []
 
-    for i in range(len(DatesEv)):
+    if EvN == 1:
         # Verify event data
-        q = sum(~np.isnan(Prec[i]))
-        if q <= len(DatesEv[i])*.60:
+        q = sum(~np.isnan(Prec))
+        if q <= len(DatesEv)*.90:
             DurPrec.append(np.nan)
             TotalPrec.append(np.nan)
             IntPrec.append(np.nan)
@@ -561,12 +582,12 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
             # ------------------------
             # Rainfall duration
             # ------------------------
-            Dxi = np.where(DatesEv[i] == DatesEvst_Aft[i])[0]
-            Dxf = np.where(DatesEv[i] == DatesEvend_Aft[i])[0]
+            Dxi = np.where(DatesEv == DatesEvst_Aft)[0]
+            Dxf = np.where(DatesEv == DatesEvend_Aft)[0]
             DurPrec.append((Dxf[0]-Dxi[0]+1)*dt/60) # Duración en horas
             # Se verifica que haya información
-            q = sum(~np.isnan(Prec[i,Dxi[0]:Dxf[0]+1]))
-            if q <= len(Prec[i,Dxi[0]:Dxf[0]+1])*.50:
+            q = sum(~np.isnan(Prec[Dxi[0]:Dxf[0]+1]))
+            if q <= len(Prec[Dxi[0]:Dxf[0]+1])*.50:
                 DurPrec[-1] = np.nan
                 TotalPrec.append(np.nan)
                 IntPrec.append(np.nan)
@@ -579,7 +600,7 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
                 # ------------------------
                 # Precipitation total
                 # ------------------------
-                TotalP = np.nansum(Prec[i,Dxi[0]:Dxf[0]+1])
+                TotalP = np.nansum(Prec[Dxi[0]:Dxf[0]+1])
                 TotalPrec.append(TotalP)
                 # -----------------------------
                 # Mean Intensity precipitation
@@ -588,7 +609,7 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
                 # ------------------------
                 # Maximum Precipitation
                 # ------------------------
-                MaxPrec.append(np.nanmax(Prec[i,Dxi[0]:Dxf[0]+1]))
+                MaxPrec.append(np.nanmax(Prec[Dxi[0]:Dxf[0]+1]))
                 # -----------------------------
                 # Max Intensity precipitation
                 # -----------------------------
@@ -600,22 +621,95 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
                 # ------------------------
                 # Dates Max 
                 # ------------------------
-                x = np.where(Prec[i,Dxi[0]:Dxf[0]]==MaxPrec[-1])[0][-1]
-                DatesMax.append(DatesEv[i,Dxi[0]+x])
+                x = np.where(Prec[Dxi[0]:Dxf[0]]==MaxPrec[-1])[0][-1]
+                DatesMax.append(DatesEv[Dxi[0]+x])
                 DatesMax[-1] = DUtil.Dates_str2datetime([DatesMax[-1]],Date_Format=None)[0]
                 # ------------------------
                 # Precipitation Rate
                 # ------------------------
-                TasaPrec.append((MaxPrec[-1]-Prec[i,Dxi[0]])/((x)*dt/60))
+                TasaPrec.append((MaxPrec[-1]-Prec[Dxi[0]])/((x)*dt/60))
 
-    DatesEvMax = np.array(DatesMax)
-    DurPrec = np.array(DurPrec)
-    TotalPrec = np.array(TotalPrec)
-    IntPrec = np.array(IntPrec)
-    IntPrecMax = np.array(IntPrecMax)
-    MaxPrec = np.array(MaxPrec)
-    Pindex = np.array(Pindex)
-    TasaPrec = np.array(TasaPrec)
+        DatesEvMax = np.array(DatesMax)[0]
+        DurPrec = np.array(DurPrec)[0]
+        TotalPrec = np.array(TotalPrec)[0]
+        IntPrec = np.array(IntPrec)[0]
+        IntPrecMax = np.array(IntPrecMax)[0]
+        MaxPrec = np.array(MaxPrec)[0]
+        Pindex = np.array(Pindex)[0]
+        TasaPrec = np.array(TasaPrec)[0]
+
+    else:
+        for i in range(len(DatesEv)):
+            # Verify event data
+            q = sum(~np.isnan(Prec[i]))
+            if q <= len(DatesEv[i])*.90:
+                DurPrec.append(np.nan)
+                TotalPrec.append(np.nan)
+                IntPrec.append(np.nan)
+                IntPrecMax.append(np.nan)
+                MaxPrec.append(np.nan)
+                Pindex.append(np.nan)
+                TasaPrec.append(np.nan)
+                DatesMax.append(np.nan)
+            else:
+                # ------------------------
+                # Rainfall duration
+                # ------------------------
+                Dxi = np.where(DatesEv[i] == DatesEvst_Aft[i])[0]
+                Dxf = np.where(DatesEv[i] == DatesEvend_Aft[i])[0]
+                DurPrec.append((Dxf[0]-Dxi[0]+1)*dt/60) # Duración en horas
+                # Se verifica que haya información
+                q = sum(~np.isnan(Prec[i,Dxi[0]:Dxf[0]+1]))
+                if q <= len(Prec[i,Dxi[0]:Dxf[0]+1])*.50:
+                    DurPrec[-1] = np.nan
+                    TotalPrec.append(np.nan)
+                    IntPrec.append(np.nan)
+                    IntPrecMax.append(np.nan)
+                    MaxPrec.append(np.nan)
+                    Pindex.append(np.nan)
+                    TasaPrec.append(np.nan)
+                    DatesMax.append(np.nan)
+                else:
+                    # ------------------------
+                    # Precipitation total
+                    # ------------------------
+                    TotalP = np.nansum(Prec[i,Dxi[0]:Dxf[0]+1])
+                    TotalPrec.append(TotalP)
+                    # -----------------------------
+                    # Mean Intensity precipitation
+                    # -----------------------------
+                    IntPrec.append(TotalP/DurPrec[-1])
+                    # ------------------------
+                    # Maximum Precipitation
+                    # ------------------------
+                    MaxPrec.append(np.nanmax(Prec[i,Dxi[0]:Dxf[0]+1]))
+                    # -----------------------------
+                    # Max Intensity precipitation
+                    # -----------------------------
+                    IntPrecMax.append(MaxPrec[-1]/(5/60))
+                    # ------------------------
+                    # P Index
+                    # ------------------------
+                    Pindex.append(IntPrecMax[-1]/IntPrec[-1])
+                    # ------------------------
+                    # Dates Max 
+                    # ------------------------
+                    x = np.where(Prec[i,Dxi[0]:Dxf[0]]==MaxPrec[-1])[0][-1]
+                    DatesMax.append(DatesEv[i,Dxi[0]+x])
+                    DatesMax[-1] = DUtil.Dates_str2datetime([DatesMax[-1]],Date_Format=None)[0]
+                    # ------------------------
+                    # Precipitation Rate
+                    # ------------------------
+                    TasaPrec.append((MaxPrec[-1]-Prec[i,Dxi[0]])/((x)*dt/60))
+
+        DatesEvMax = np.array(DatesMax)
+        DurPrec = np.array(DurPrec)
+        TotalPrec = np.array(TotalPrec)
+        IntPrec = np.array(IntPrec)
+        IntPrecMax = np.array(IntPrecMax)
+        MaxPrec = np.array(MaxPrec)
+        Pindex = np.array(Pindex)
+        TasaPrec = np.array(TasaPrec)
 
 
     Results = {'DurPrec':DurPrec,'TotalPrec':TotalPrec,'IntPrec':IntPrec,

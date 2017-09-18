@@ -354,7 +354,7 @@ class Proc(object):
         VariableTemp = dict()
         for iv,v in enumerate(Var[1:]):
             if self.flag[v]:
-                PrecC, Variable[v], FechaEv = BP.ExEv(self.f[Var2['PrecC']],self.f[Var2[v]],self.f['FechaC'],Ci=Ci,Cf=Cf,m=m,M=M)
+                PrecC, Variable[v], FechaEv = BP.ExEv(self.f[Var2['PrecC']],self.f[Var2[v]],self.f['FechaC'],Ci=Ci,Cf=Cf,m=m,M=M,dt=int(self.dtm))
 
         for iv,v in enumerate(Var):
             if v != 'PresC':

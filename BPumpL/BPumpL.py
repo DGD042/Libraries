@@ -52,10 +52,10 @@ from AnET import CFitting as CF; CF=CF()
 from Hydro_Analysis import Hydro_Plotter as HyPl;HyPl=HyPl()
 from Hydro_Analysis import Hydro_Analysis as HA;HA=HA()
 from Hydro_Analysis import Thermo_An as TA;TA=TA()
+from Hydro_Analysis.Meteo import MeteoFunctions as HyMF
 
 class BPumpL:
     def __init__(self):
-
         '''
             DESCRIPTION:
 
@@ -181,7 +181,7 @@ class BPumpL:
 
         return VV
 
-    def ExEv(self,Prec,V,Fecha,Ci=60,Cf=60,m=0.8,M=100):
+    def ExEv(self,Prec,V,Fecha,Ci=60,Cf=60,m=0.8,M=100,dt=1):
         '''
         DESCRIPTION:
         
@@ -190,39 +190,67 @@ class BPumpL:
         _________________________________________________________________________
 
         INPUT:
-            + Prec: Precipitación
-            + V: Variable que se quiere tener en el diagrama de compuestos.
-            + Ci: Minutos atrás.
-            + Cf: Minutos adelante.
-            + m: Valor mínimo para extraer los datos.
+            :param Prec: A ndarray, Precipitación
+            :param V:    A ndarray, Variable que se quiere tener en el 
+                                    diagrama de compuestos.
+            :param Fecha A ndarray, Fechas.
+            :param Ci:   An int, Minutos atrás.
+            :param Cf:   An int, Minutos adelante.
+            :param m:    An int, Valor mínimo para extraer los datos.
+            :param M:    An int, Valor máximo para extraer los datos.
+            :param dt:   An int, Delta de tiempo en minutos.
         _________________________________________________________________________
         
         OUTPUT:
-            - PrecC: Precipitación en compuestos.
-            - VC: Diagrama de la variable.
+            :return PrecC:   A ndarray, Precipitación en compuestos.
+            :return VC:      A ndarray, Diagrama de la variable.
+            :return FechaEv: A ndarray, Array con las fechas.
         '''
         # Se inicializan las variables
         FechaEv = []
         Prec2 = Prec.copy()
         maxPrec = np.nanmax(Prec2)
+        FechaP = DUtil.Dates_str2datetime(Fecha,flagQuick=True)
         
         x = 0
         xx = 0
         while maxPrec > m:
             if maxPrec <= M:
+                # Se encuentra todo el evento
                 q = np.where(Prec2 == maxPrec)[0]
+                if np.isnan(Prec2[q[0]-1]) or np.isnan(Prec2[q[0]+1]):
+                    Prec2[q[0]] = np.nan
+                    maxPrec = np.nanmax(Prec2)
+                    continue
+                # Se verifica que el evento si se pueda usar
+                xq = np.where(Prec2[q[0]-Ci:q[0]+Cf] == maxPrec)[0]
+                R = HyMF.PrecCount(Prec2[q[0]-Ci:q[0]+Cf],Fecha[q[0]-Ci:q[0]+Cf], dt=dt,M=xq[0])
+                if np.isnan(R['DurPrec']):
+                    xDateSt = np.where(FechaP == R['DatesEvst'])[0][0]
+                    xDateEnd = np.where(FechaP == R['DatesEvend'])[0][0]
+                    Prec2[xDateSt:xDateEnd] = np.nan
+                    maxPrec = np.nanmax(Prec2)
+                    continue
                 if xx == 0:
                     PrecC = Prec[q[0]-Ci:q[0]+Cf]
                     VC = V[q[0]-Ci:q[0]+Cf]
+                    xx += 1
                 else:
                     PrecC = np.vstack((PrecC,Prec[q[0]-Ci:q[0]+Cf]))
                     VC = np.vstack((VC,V[q[0]-Ci:q[0]+Cf]))
                 FechaEv.append(Fecha[q[0]-Ci:q[0]+Cf])
-                xx += 1
             else:
                 q = np.where(Prec2 == maxPrec)[0]
 
-            Prec2[q[0]-Ci:q[0]+Cf] = np.nan
+            # Se encuentra todo el evento
+            xq = np.where(Prec2[q[0]-Ci:q[0]+Cf] == maxPrec)[0]
+            R = HyMF.PrecCount(Prec2[q[0]-Ci:q[0]+Cf],Fecha[q[0]-Ci:q[0]+Cf], dt=dt,M=xq[0])
+            xDateSt = np.where(FechaP == R['DatesEvst'])[0][0]
+            xDateEnd = np.where(FechaP == R['DatesEvend'])[0][0]
+            if np.nanmax(Prec2[xDateSt:xDateEnd]) != maxPrec:
+                aaa
+            Prec2[xDateSt:xDateEnd] = np.nan
+            # Prec2[q[0]-Ci:q[0]+Cf] = np.nan
             maxPrec = np.nanmax(Prec2)
             x += 1
 
