@@ -993,8 +993,8 @@ class Hydro_Plotter:
         plt.tick_params(axis='y',which='major',direction='inout') 
         plt.grid()
         # Se realiza la figura 
-        plt.plot(Date,V1, 'r-', lw = 1,label=Lab1)
-        plt.plot(Date,V2, 'b-', lw = 1,label=Lab2)
+        plt.plot(Date,V1, 'r.', lw = 1,label=Lab1)
+        plt.plot(Date,V2, 'b.', lw = 1,label=Lab2)
         # Se arreglan los ejes
         axes = plt.gca()
         plt.xlim([min(Date),max(Date)]) # Incluyen todas las fechas
@@ -1043,7 +1043,7 @@ class Hydro_Plotter:
         plt.tick_params(axis='y',which='major',direction='inout') 
         plt.grid()
         # Se realiza la figura 
-        plt.plot(Date,Err, 'k-', lw = 1)
+        plt.plot(Date,Err, 'k.', lw = 1)
         plt.plot([Date[0],Date[1]],[ErrM,ErrM], 'k--', lw = 1)
         # Se arreglan los ejes
         axes = plt.gca()

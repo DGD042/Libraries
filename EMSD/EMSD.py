@@ -1475,9 +1475,9 @@ class EMSD(object):
         _____________________________________________________________________
         
         OUTPUT:
-            - DateC: Comlete date string vector.
+            - DatesC: Comlete date string vector.
             - V1C: Filled data values.
-            - DateN: Complete date Python datetime vector.
+            - DatesN: Complete date Python datetime vector.
         
         '''
         
@@ -1489,13 +1489,13 @@ class EMSD(object):
 
         if isinstance(Dates[0],str) == False and isinstance(Dates[0],date) == False and isinstance(Dates[0],datetime) == False:
             Er = utl.ShowError('CompD','EDSM','Bad format in dates')
-            return Er
+            raise Er
         if len(Dates) != len(V):
             Er = utl.ShowError('CompD','EDSM','Date and V are different length')
-            return Er
+            raise Er
         if dtm != None and isinstance(dtm,timedelta) == False:
             Er = utl.ShowError('CompD','EDSM','Bad dtm format')
-            return Er
+            raise Er
 
         # ---------------------
         # Dates Calculations
