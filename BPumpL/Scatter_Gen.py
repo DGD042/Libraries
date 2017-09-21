@@ -212,26 +212,35 @@ class Scatter_Gen(object):
         dt = int(self.dtm)
         self.PrecCount = HyMF.PrecCount(self.f['PrecC'],self.f['FechaEv'],dt=dt,M=self.Middle)
 
+        self.Months = np.array([i.month for i in self.PrecCount['DatesEvst']])
         DatesEvP = self.f['FechaEvP']
         self.MPresYes = list()
         self.MPresNo = list()
         # Eventos con caidas de presión antes
         self.EvYes = []
+        self.MEvYes = []
         # Eventos sin caidas de presión antes
         self.EvNo = []
+        self.MEvNo = []
         for iC in range(len(self.f['PresC'])):
             xEv = np.where(DatesEvP[iC] == self.PrecCount['DatesEvst'][iC])[0][0]
             Bef = xEv-int(60/dt*1)
-            Aft = xEv+int(60/dt*0.5) 
+            Aft = xEv+int(60/dt*(15/60)) 
             Min = np.nanmin(self.f['PresC'][iC][Bef:Aft])
             xMin1 = np.where(self.f['PresC'][iC][:Aft]==Min)[0][-1]
             if Min < -0.3:
                 self.EvYes.append(iC)
                 self.MPresYes.append(xMin1)
+                self.MEvYes.append(self.Months[iC])
             else:
                 self.EvNo.append(iC)
                 self.MPresNo.append(xMin1)
+                self.MEvNo.append(self.Months[iC])
 
+        self.EvYes = np.array(self.EvYes)
+        self.MEvYes = np.array(self.MEvYes)
+        self.EvNo =  np.array(self.EvNo)
+        self.MEvNo =  np.array(self.MEvNo)
 
         return
 
@@ -642,7 +651,7 @@ class Scatter_Gen(object):
             for iC in range(len(Pres)):
                 xEv = np.where(DatesEvP[iC] == self.Res_Prec['DatesEvst'][iC])[0][0]
                 Bef = xEv-int(60/int(self.dtm)*1)
-                Aft = xEv+int(60/int(self.dtm)*0.5) 
+                Aft = xEv+int(60/int(self.dtm)*(15/60)) 
                 Min = np.nanmin(Pres[iC][Bef:Aft])
                 xMin1 = np.where(Pres[iC][:Aft]==Min)[0][-1]
                 MPres.append(xMin1)
@@ -775,14 +784,51 @@ class Scatter_Gen(object):
         V1 = ['Hour','DurPrec','IntPrec','MaxPrec','TotalPrec','IntPrecMax','Pindex',
                 'TasaPrec']
         V2 = ['VRateB','VRateA','VChangeB','VChangeA']
-        Bins=12
-        for Vi1 in V1:
+
+        Bins2d=12
+        for iV1,Vi1 in enumerate(V1):
+            if iV1 > 0:
+                continue
             if Vi1 == 'Hour':
                 FlagHour = True
                 flagEst = False
+                Bins=np.arange(0,24)
             else:
+                Bins=12
                 FlagHour = False
                 flagEst = False
+            for iV2,Vi2 in enumerate(V1[iV1:]):
+                if Vi1 != Vi2:
+                    if Vi2 == 'IntPrec':
+                        Bins2 = np.arange(0,45,5)
+                    else:
+                        Bins2=12
+                    # Total
+                    HyPl.Histogram2d(self.PrecCount[Vi1],self.PrecCount[Vi2],
+                            [Bins,Bins2],Title='Frecuencias en 2 Dimensiones',
+                            Var1=Variables[Vi1],Var2=Variables[Vi2],
+                            Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_'+Abre[Vi2]+'_EvT',
+                            PathImg=self.PathImg+ImgFolder_Scatter+'Histograms2d/',
+                            M=True,
+                            FlagHour=False,FlagBig=True) 
+                    # EvYes
+                    HyPl.Histogram2d(self.PrecCount[Vi1][self.EvYes],
+                            self.PrecCount[Vi2][self.EvYes],
+                            [Bins,Bins2],Title='Frecuencias en 2 Dimensiones',
+                            Var1=Variables[Vi1],Var2=Variables[Vi2],
+                            Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_'+Abre[Vi2]+'_EvYes',
+                            PathImg=self.PathImg+ImgFolder_Scatter+'Histograms2d/',
+                            M=True,
+                            FlagHour=False,FlagBig=True) 
+                    # EvNo
+                    HyPl.Histogram2d(self.PrecCount[Vi1][self.EvNo],
+                            self.PrecCount[Vi2][self.EvNo],
+                            [Bins,Bins2],Title='Frecuencias en 2 Dimensiones',
+                            Var1=Variables[Vi1],Var2=Variables[Vi2],
+                            Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_'+Abre[Vi2]+'_EvNo',
+                            PathImg=self.PathImg+ImgFolder_Scatter+'Histograms2d/',
+                            M=True,
+                            FlagHour=False,FlagBig=True) 
             # Total
             HyPl.HistogramNP(self.PrecCount[Vi1],Bins,Title=' Frecuencias',
                     Var=Variables[Vi1],
@@ -804,3 +850,100 @@ class Scatter_Gen(object):
                     PathImg=self.PathImg+ImgFolder_Scatter+'Histograms/',
                     M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst)
             
+    def HistGraphSel(self,Var1,EndImg='T',EndFold='',ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+        '''
+        DESCRIPTION:
+
+            Función para graficar el histograma de frecuencias de la 
+            información que uno adicione.
+        _________________________________________________________________________
+
+        INPUT:
+            + Var1: Variable 1
+            + ImgFolder_Scatter: Ruta donde se guardará el documento.
+            + Specific_Folder: Ruta donde se guardará el documento.
+        _________________________________________________________________________
+
+            OUTPUT:
+        Se generan diferentes variables o se cambian las actuales.
+        '''
+
+        # Información para hacer el gráfico
+        self.ImgFolder_Scatter = ImgFolder_Scatter
+
+        # Se incluyen los valores de la clase
+        dt = int(self.dtm)
+
+        # Datos para los gráficos
+        Variables = {'DurPrec': 'Duración del Evento [h]',
+                'IntPrec': 'Intensidad del Evento [mm/h]',
+                'MaxPrec': 'Máximo de Precipitación [mm]',
+                'TotalPrec': 'Total de Precipitación [mm]',
+                'IntPrecMax': 'Intensidad Máxima del Evento [mm/h]',
+                'Pindex': 'Relación de Intensidades',
+                'TasaPrec': 'Tasa de Cambio de Precipitación [mm/h]',
+                'VRateB': 'Tasa de Cambio de Presión Antes [hPa/h]',
+                'VRateA':'Tasa de Cambio de Presión Durante [hPa/h]',
+                'VChangeB':'Cambio de Presión Antes [hPa]',
+                'VChangeA':'Cambio de Presión Durante [hPa]',
+                'Hour': 'Hora del Evento [LT]'}
+
+        Variables = {'DurPrec': 'Duración del Evento',
+                'IntPrec': 'Intensidad del Evento',
+                'MaxPrec': 'Máximo de Precipitación',
+                'TotalPrec': 'Total de Precipitación',
+                'IntPrecMax': 'Intensidad Máxima del Evento',
+                'Pindex': 'Relación de Intensidades',
+                'TasaPrec': 'Tasa de Cambio de Precipitación',
+                'VRateB': 'Tasa de Cambio de Presión Antes',
+                'VRateA':'Tasa de Cambio de Presión Durante',
+                'VChangeB':'Cambio de Presión Antes',
+                'VChangeA':'Cambio de Presión Durante',
+                'Hour': 'Hora del Evento'}
+
+        Abre = {'DurPrec': 'DP',
+                'IntPrec': 'IP',
+                'MaxPrec': 'MP',
+                'TotalPrec': 'TP',
+                'IntPrecMax':'IPM',
+                'Pindex':'Pi',
+                'TasaPrec':'RPr',
+                'VRateB': 'RPB',
+                'VRateA':'RPA',
+                'VChangeB':'CPB',
+                'VChangeA':'CPA',
+                'Hour': 'HEv'}
+
+        V1 = ['Hour','DurPrec','IntPrec','MaxPrec','TotalPrec','IntPrecMax','Pindex',
+                'TasaPrec']
+        V2 = ['VRateB','VRateA','VChangeB','VChangeA']
+
+        Bins2d=12
+        for iV1,Vi1 in enumerate(V1):
+            if iV1 >1:
+                continue
+            if Vi1 == 'Hour':
+                FlagHour = True
+                flagEst = False
+                Bins=np.arange(0,24)
+            else:
+                FlagHour = False
+                flagEst = False
+                Bins=12
+            for iV2,Vi2 in enumerate(V1[iV1:]):
+                if Vi1 != Vi2:
+                    # Total
+                    HyPl.Histogram2d(Var1[Vi1],Var1[Vi2],
+                            [Bins,Bins2d],Title='Dimensiones',
+                            Var1=Variables[Vi1],Var2=Variables[Vi2],
+                            Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_'
+                            +Abre[Vi2]+'_Ev'+EndImg,
+                            PathImg=self.PathImg+ImgFolder_Scatter+'Histograms2d'+EndFold+'/',
+                            M=True,
+                            FlagHour=False) 
+            # Total
+            HyPl.HistogramNP(Var1[Vi1],Bins,Title=' Frecuencias',
+                    Var=Variables[Vi1],
+                    Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_Ev'+EndImg,
+                    PathImg=self.PathImg+ImgFolder_Scatter+'Histograms'+EndFold+'/',
+                    M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst)

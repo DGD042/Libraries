@@ -154,6 +154,9 @@ class CFitting:
                     perrT[key] = np.sqrt(np.diag(pcov))
                     CoefT[key] = Coef
                 except RuntimeError:
+                    print('WARNING: Cannot fit a',key)
+                    perrT[key] = np.nan
+                    CoefT[key] = np.nan
                     continue
 
             # Verify the maximum R^2

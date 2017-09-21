@@ -3721,7 +3721,7 @@ class BPumpL:
                     Results['DurVB'][iC] = (M-PosB)*dt/60
                     # Se obtiene la tasa de cambio
                     Results['VRateB'][iC] = Results['VChangeB'][iC]/Results['DurVB'][iC]
-                    if Results['VRateB'][iC] < 0:
+                    if Results['VRateB'][iC] < 0 or Results['VRateB'][iC] > 100:
                         Results['PosB'][iC] = np.nan
                         Results['VRateB'][iC] = np.nan
                         Results['VChangeB'][iC] = np.nan
@@ -3744,7 +3744,7 @@ class BPumpL:
                     Results['DurVA'][iC] = (PosA)*dt/60
                     # Se obtiene la tasa de cambio
                     Results['VRateA'][iC] = Results['VChangeA'][iC]/Results['DurVA'][iC]
-                    if Results['VRateA'][iC] < 0:
+                    if Results['VRateA'][iC] < 0 :
                         Results['PosA'][iC] = np.nan
                         Results['VRateA'][iC] = np.nan
                         Results['VChangeA'][iC] = np.nan

@@ -1641,7 +1641,116 @@ class Hydro_Plotter:
         if FlagA:
             return CC
 
-    def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True,FlagHour=False,flagEst=True):
+    def Histogram2d(self,Data1,Data2,Bins,Title='',Var1='',Var2='',Name='',PathImg='',M=True,FlagHour=False,FlagTitle=False,FlagBig=False):
+        '''
+        DESCRIPTION:
+        
+            Esta función permite hacer un histograma doble a partir de un set de
+            datos.
+
+        _________________________________________________________________________
+
+        INPUT:
+            :param Data1:    A ndarray, Vector de valores de una variable.
+            :param Data2:    A ndarray, Vector de valores de la otra variable.
+            :param Bins:     A List, List with 2 valuesfor the bins of the 
+                                     data.
+            :param Title:    A str, Título de la imágen.
+            :param Var1:     A str, Variable.
+            :param Var2:     A str, Variable.
+            :param Names:    A str, Nombre de la imágen.
+            :param PathImg:  A str, Ruta donde se quiere guardar el archivo.
+            :param M:        A str, Metodo para hacer el histograma.
+            :param FlagHour: A bool, flag para poner el eje x en horas.
+            :param FlagTitle:A bool, flag para incluir el título.
+            :param FlagBig:A bool, flag para hacer el texto más grande.
+        _________________________________________________________________________
+        
+        OUTPUT:
+            Esta función arroja una gráfica y la guarda en la ruta desada.
+        '''
+        warnings.filterwarnings('ignore')
+        # Se encuentra el histograma
+        q = ~(np.isnan(Data1) | np.isnan(Data2))
+        # Se encuentra el histograma
+        H, xedges, yedges = np.histogram2d(Data1[q],Data2[q]
+                ,bins=Bins,normed=M)
+
+        # Se organizan los valores del histograma
+        centerDx = (xedges[:-1] + xedges[1:]) / 2
+        centerDy = (yedges[:-1] + yedges[1:]) / 2
+
+        # Tamaño de la Figura
+        fH = self.fH # Largo de la Figura
+        fV = self.fV # Ancho de la Figura
+        # Se crea la carpeta para guardar la imágen
+        utl.CrFolder(PathImg)
+
+        # Parámetros de la gráfica
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
+        # Parámetros de la Figura
+        if FlagBig:
+            plt.rcParams.update({'font.size': 20,'font.family': 'sans-serif'\
+                ,'font.sans-serif': self.font\
+                ,'xtick.labelsize': 23,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 23,'ytick.major.size': 6,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        else:
+            plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+                ,'font.sans-serif': self.font\
+                ,'xtick.labelsize': 14,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+            labelbottom='on',direction='out')
+        plt.tick_params(axis='y',which='both',left='on',right='off',\
+            labelleft='on')
+        plt.tick_params(axis='y',which='major',direction='out') 
+        # Se realiza la figura 
+        plt.contourf(centerDx,centerDy,H.T)
+        # Se grafica el Colorbar
+        # cbar = plt.colorbar()
+        # if M:
+        #     cbar.ax.set_ylabel('Densidad')
+        # else:
+        #     cbar.ax.set_ylabel('Datos')
+
+        # Se cambia el valor de los ejes.
+        if FlagHour:
+            CCStr = []
+            for C in centerD:
+                hour = int(C)
+                minutes = int((C*60) % 60)
+                CCStr.append('%d:%02d' %(hour,minutes))
+            ax = plt.gca()
+            ax.set_xticklabels(CCStr)
+        # Se arreglan los ejes
+        ax = plt.gca()
+        # Se cambia el label de los eje
+        xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+        MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+        yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+        MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
+        minorLocatory = MultipleLocator(MyL)
+        plt.gca().yaxis.set_minor_locator(minorLocatory)
+
+        # Labels
+        # Título
+        if FlagTitle:
+            plt.title('Histograma de '+Title)
+        plt.xlabel(Var1)  # Colocamos la etiqueta en el eje x
+        plt.ylabel(Var2)  # Colocamos la etiqueta en el eje y
+        plt.tight_layout()
+        plt.savefig(PathImg + Name +'_Hist' + '.png',format='png',dpi=self.dpi )
+        plt.close('all')
+
+    def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True,FlagHour=False,flagEst=True,FlagTitle=False):
         '''
             DESCRIPTION:
         
@@ -1661,6 +1770,7 @@ class Hydro_Plotter:
         + Left: flag para poner los estadísticos a la izquierda.
         + FlagHour: flag para poner el eje x en horas.
         + flagEst: flag para poner los estadísticos.
+        + FlagTitle: flag incluir el título.
         _________________________________________________________________________
         
             OUTPUT:
@@ -1720,6 +1830,8 @@ class Hydro_Plotter:
                 CCStr.append('%d:%02d' %(hour,minutes))
             ax = plt.gca()
             ax.set_xticklabels(CCStr)
+            for tick in ax.get_xticklabels():
+                tick.set_rotation(45)
         # Se arreglan los ejes
         ax = plt.gca()
         # Se cambia el label de los eje
@@ -1752,10 +1864,11 @@ class Hydro_Plotter:
                 plt.text(xTL[-2]-2*MxL,yTL[-2]-6*MyL, r'$\kappa = %s$' %(round(D,3)), fontsize=14)
         # Labels
         # Título
-        if FEn:
-            plt.title('Histogram of '+Title,fontsize=15 )
-        else:
-            plt.title('Histograma de '+Title,fontsize=15 )
+        if FlagTitle:
+            if FEn:
+                plt.title('Histogram of '+Title,fontsize=15 )
+            else:
+                plt.title('Histograma de '+Title,fontsize=15 )
         plt.xlabel(Var,fontsize=16)  # Colocamos la etiqueta en el eje x
         if M == 'porcen':
             plt.ylabel('Porcentaje [%]',fontsize=16)  # Colocamos la etiqueta en el eje y
