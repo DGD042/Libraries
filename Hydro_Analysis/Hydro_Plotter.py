@@ -1044,7 +1044,7 @@ class Hydro_Plotter:
         plt.grid()
         # Se realiza la figura 
         plt.plot(Date,Err, 'k.', lw = 1)
-        plt.plot([Date[0],Date[1]],[ErrM,ErrM], 'k--', lw = 1)
+        plt.plot([Date[0],Date[-1]],[ErrM,ErrM], 'k--', lw = 1)
         # Se arreglan los ejes
         axes = plt.gca()
         plt.xlim([min(Date),max(Date)]) # Incluyen todas las fechas
@@ -1079,9 +1079,17 @@ class Hydro_Plotter:
         plt.savefig(PathImg + Var+'_Err' + '.png',format='png',dpi=self.dpi)
         plt.close('all')
 
+        # the histogram of the data
         q = ~np.isnan(Err)
-        E_MM = Err[q]
+        # Se encuentra el histograma
+        DH,DBin = np.histogram(Err[q],bins=30); [float(i) for i in DH]
+        DH = DH/float(DH.sum())*100;
 
+        # Se organizan los valores del histograma
+        widthD = 1 * (DBin[1] - DBin[0])
+        centerD = (DBin[:-1] + DBin[1:]) / 2
+
+        # Se encuentran los diferentes momentos estadísticos
         A = np.nanmean(Err)
         B = np.nanstd(Err)
 
@@ -1113,8 +1121,11 @@ class Hydro_Plotter:
         axs[1].tick_params(axis='y',which='major',direction='inout') 
         axs[1].grid()
 
-        # the histogram of the data
-        n, bins, patches = axs[0].hist(E_MM,bins=30, normed=1, facecolor='blue', alpha=0.5)
+        # n, bins, patches = axs[0].hist(E_MM,bins=30, normed=1, facecolor='blue', alpha=0.5)
+        p1 = axs[0].bar(DBin[:-1],DH,color='dodgerblue',width=widthD,edgecolor="none")#,edgecolor='none')
+        # Se cambia el valor de los ejes.
+        axs[0].set_xticks(centerD) # Se cambia el valor de los ejes
+
         # add a 'best fit' line
         axs[0].set_title('Histograma del Error de la medida',fontsize=16)
         axs[0].set_xlabel(Var_LUn,fontsize=16)
@@ -1752,29 +1763,30 @@ class Hydro_Plotter:
 
     def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True,FlagHour=False,flagEst=True,FlagTitle=False):
         '''
-            DESCRIPTION:
+        DESCRIPTION:
         
-        Esta función permite hacer un histograma a partir de unos datos y graficarlo.
+            Esta función permite hacer un histograma a partir de unos datos 
+            y graficarlo.
 
         _________________________________________________________________________
 
-            INPUT:
-        + Data: Vector de valores con los que se quiere realizar el histograma.
-        + Bins: Cantidad de intervalos de clase.
-        + Title: Título de la imágen.
-        + Var: Variable.
-        + Names: Nombre de la imágen.
-        + PathImg: Ruta donde se quiere guardar el archivo.
-        + M: Metodo para hacer el histograma.
-        + FEn: Flag para saber si quiere tener el histograma en inglés.
-        + Left: flag para poner los estadísticos a la izquierda.
-        + FlagHour: flag para poner el eje x en horas.
-        + flagEst: flag para poner los estadísticos.
-        + FlagTitle: flag incluir el título.
+        INPUT:
+            + Data: Vector de valores con los que se quiere realizar el histograma.
+            + Bins: Cantidad de intervalos de clase.
+            + Title: Título de la imágen.
+            + Var: Variable.
+            + Names: Nombre de la imágen.
+            + PathImg: Ruta donde se quiere guardar el archivo.
+            + M: Metodo para hacer el histograma.
+            + FEn: Flag para saber si quiere tener el histograma en inglés.
+            + Left: flag para poner los estadísticos a la izquierda.
+            + FlagHour: flag para poner el eje x en horas.
+            + flagEst: flag para poner los estadísticos.
+            + FlagTitle: flag incluir el título.
         _________________________________________________________________________
         
-            OUTPUT:
-        Esta función arroja una gráfica y la guarda en la ruta desada.
+        OUTPUT:
+            Esta función arroja una gráfica y la guarda en la ruta desada.
         '''
         warnings.filterwarnings('ignore')
         # Se encuentra el histograma
