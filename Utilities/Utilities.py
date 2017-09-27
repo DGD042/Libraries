@@ -104,18 +104,9 @@ def GetFolders(path):
         :param path: A str, Path where the data would be taken.
     _______________________________________________________________________
     OUTPUT:
-        :return: A List, List with the folders and files inside the path.
+        :return R: A List, List with the folders and files inside 
+                           the path.
     '''
-
-    act = os.getcwd()
-    os.chdir(path)
-    if platform.system() == 'Windows':
-        raise NotImplementedError
-    else:
-        proc = subprocess.Popen('ls',stdout=subprocess.PIPE)
-    R = proc.stdout.read().decode('utf-8').split('\n')
-    R.pop()
-    os.chdir(act)
-
+    R = next(os.walk(path))[1]
     return R
 

@@ -1124,7 +1124,7 @@ class Hydro_Plotter:
         # n, bins, patches = axs[0].hist(E_MM,bins=30, normed=1, facecolor='blue', alpha=0.5)
         p1 = axs[0].bar(DBin[:-1],DH,color='dodgerblue',width=widthD,edgecolor="none")#,edgecolor='none')
         # Se cambia el valor de los ejes.
-        axs[0].set_xticks(centerD) # Se cambia el valor de los ejes
+        #axs[0].set_xticks(centerD) # Se cambia el valor de los ejes
 
         # add a 'best fit' line
         axs[0].set_title('Histograma del Error de la medida',fontsize=16)
@@ -1140,13 +1140,16 @@ class Hydro_Plotter:
         axs[0].plot([A+B,A+B],[0,yTL[-1]],'k--')
         axs[0].plot([A-B,A-B],[0,yTL[-1]],'k--')
 
-        axs[1].plot([-100,200], [-100,200], 'k-')
+        # Diagrama de dispersión
+        
         axs[1].scatter(V1, V2, linewidth='0')
         axs[1].set_title('Diagrama de Dispersión',fontsize=16)
         axs[1].set_xlabel(Lab1 + ' ' + Var_LUn,fontsize=16)
         axs[1].set_ylabel(Lab2  + ' ' + Var_LUn,fontsize=16)
         axs[1].set_ylim([np.nanmin(V2)-2,np.nanmax(V2)+2])
         axs[1].set_xlim([np.nanmin(V1)-2,np.nanmax(V1)+2])
+        x = np.linspace(*axs[1].get_xlim())
+        axs[1].plot(x,x, 'k-')
         yTL = axs[1].yaxis.get_ticklocs() # List of Ticks in y
         MyL = (yTL[1]-yTL[0])/5 # Minor tick value
         minorLocatory = MultipleLocator(MyL)

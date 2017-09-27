@@ -32,11 +32,6 @@ import platform
 from Utilities import Utilities as utl
 from Utilities import DatesUtil as DUtil; DUtil=DUtil()
 
-try:
-    from EMSD.Extract_Data import Extract_Data as ExD
-except ImportError:
-    from Extract_Data import Extract_Data as ExD
-
 
 # ------------------------
 # Funciones
@@ -123,7 +118,8 @@ class EMSD(object):
     
     CLASS DESCRIPTION:
         
-        This class is for Extracting, Manipulating and Saving Data 
+        This class replaces the ExtractD class to make a better and 
+        efficient way of Extracting Manipulating and Saving Data 
         (EMSD). Functions in this class aims to manipulate times series 
         information with a preference for climate data, however you can 
         extract data from any file.
@@ -142,6 +138,7 @@ class EMSD(object):
         You can use any function of the class separatley but using the 
         function Open_Data first would allow you to have a better 
         control of the full class.
+
     ____________________________________________________________________________
 
     '''
@@ -155,24 +152,22 @@ class EMSD(object):
         self.Dates = None
         self.Values = None
         self.dtm = None
-        # self.Date_Formats = ['%Y/%m/%d','%Y-%m-%d','%Y%m%d',\
-        #                      '%d/%m/%Y','%d-%m-%Y','%d%m%Y',\
-        #                      '%m/%d/%Y','%m-%d-%Y','%m%d%Y',\
-        #                      '%Y/%d/%m','%Y-%d-%m''%Y%d%m',\
-        #                      '%y/%m/%d','%y-%m-%d','%y%m%d',\
-        #                      '%d/%m/%y','%d-%m-%y','%d%m%y',\
-        #                      '%m/%d/%y','%m-%d-%y','%m%d%y',\
-        #                      '%y/%d/%m','%y-%d-%m''%y%d%m']
-        # Hour = [' %H%M','-%H%M',' %H:%M','-%H:%M','_%H%M']
-        # self.DateTime_Formats = [i + j for i in self.Date_Formats for j in Hour]
+        self.Date_Formats = ['%Y/%m/%d','%Y-%m-%d','%Y%m%d',\
+                             '%d/%m/%Y','%d-%m-%Y','%d%m%Y',\
+                             '%m/%d/%Y','%m-%d-%Y','%m%d%Y',\
+                             '%Y/%d/%m','%Y-%d-%m''%Y%d%m',\
+                             '%y/%m/%d','%y-%m-%d','%y%m%d',\
+                             '%d/%m/%y','%d-%m-%y','%d%m%y',\
+                             '%m/%d/%y','%m-%d-%y','%m%d%y',\
+                             '%y/%d/%m','%y-%d-%m''%y%d%m']
+        Hour = [' %H%M','-%H%M',' %H:%M','-%H:%M','_%H%M']
+        self.DateTime_Formats = [i + j for i in self.Date_Formats for j in Hour]
         self.DateLab = ['DateH','DateD','DateM']
         self.DateNLab = ['DateHN','DateDN','DateMN']
         self.VLab = ['H','maxH','minH','D','maxD','minD','M','maxM','minM','NF','NNF']
         return
 
-    def Open_Data(self,File,flagCompelete=True,DataBase={'DataBaseType':'txt','deli':',','colStr':(0,),
-        'colData':(1,0), 'row_skip':1,'flagHeader':True,'rowH':1,'row_end':None,'str_NaN':None,
-        'num_NaN':None,'dtypeData':float}):
+    def Open_Data(self,File,deli=',',sheet=None,colDates=(0,),colData=(1,),row_skip=1,Header=True,row_end=None,num_NaN=9999.0,flagIDEAM=False,flagNCDCCOOP=False,flagCompelete=True):
         '''
         DESCRIPTION:
     
@@ -182,24 +177,25 @@ class EMSD(object):
         _______________________________________________________________________
 
         INPUT:
-            :param File:         A str, File that needs to be open.
-            :param flagComplete: A str, flag to know if the data is completed.
-            :param DataBase:     A dict, a dictionary with all the data to
-                                         apply the data extraction.
-            This parameter has to have all the information of the document that
-            wants to be extracted, if it does not have it i t assumes it's the
-            defaulted of the function. For more information consult the usage 
-            of the EMSD package.
+            + File: File that needs to be open.
+            + deli: Delimiter of the data, defaulted to ','.
+            + flagIDEAM: flag to know if you are opening an IDEAM type file.
+                         defaulted to False.
+            + flagNCDCCOOP: flag to know if you are opening an NCDC_COOP 
+                            type file.
+                         defaulted to False.
         _______________________________________________________________________
         
         OUTPUT:
-            :return Data: a dict, dictionary with all the data.
+            
+            This function ouptus a Matlab document.
         
         '''
         # ------------
         # Parameters
         # ------------
         self.File = File # Files
+        self.deli = deli # Delimiter
         # Complete information
         self.Flags = dict()
         self.Values = dict()
@@ -207,31 +203,8 @@ class EMSD(object):
         self.DatesN = dict()
         self.DatesO = dict()
 
-        if DataBase['DataBaseType'].lower == 'txt' or DataBase['DataBaseType'].lower == 'csv':
-            # Verify parameters
-            ParamsLab = ['deli','colStr','colData','row_skip','flagHeader','rowH','row_end','str_NaN',
-                'num_NaN','dtypeData']
-            Params = {'deli':',','colStr':(0,),
-                'colData':(1,0), 'row_skip':1,'flagHeader':True,'rowH':1,'row_end':None,'str_NaN':None,
-                'num_NaN':None,'dtypeData':float}
-            ParamsFunc = dict()
-            for iPar,Par in ParamsLab:
-                try:
-                    ParamsFunc[Par] = DataBase[Par]
-                except KeyError:
-                    ParamsFunc[Par] = Params[Par]
-            # Data Open
-            R = ExD.EDTXT(File,deli=ParamsFunc['deli'],colStr=ParamsFunc['colStr'],
-                    colData=ParamsFunc['colData'],row_skip=ParamsFunc['row_skip'],
-                    flagHeader=ParamsFunc['flagHeader'],rowH=ParamsFunc['rowH'],
-                    row_end=ParamsFunc['row_end'],str_NaN=ParamsFunc['str_NaN'],
-                    num_NaN=ParamsFunc['num_NaN'],dtypeData=ParamsFunc['dtypeData'])
-            self.Data = R
-            return R
-
-
         # Verify for irregular data extraction
-        elif DataBase['DataBaseType'].lower == 'ideam':
+        if flagIDEAM:
             DatesP, Values, Flags,self.FlagM, self.St_Info = self.EDIDEAM(File=self.File)
             keys = list(Values)
             keysDates = list(DatesP)
@@ -300,6 +273,52 @@ class EMSD(object):
         return
 
     # Information Extraction
+    def EDTXT(self,File=None,deli=None,colDates=(0,),colData=(1,),row_skip=1,flagHeader=True,rowH=0,row_end=None,num_NaN=None,dtypeData=float,Date_Format=None):
+        '''
+        DESCRIPTION:
+    
+            This function extract data series from a plain text file or a csv
+            type file.
+        _______________________________________________________________________
+
+        INPUT:
+            + File: File that needs to be open.
+            + deli: Delimiter of the data, defaulted to ','.
+            + colDates: tuple sequence with the columns where the dates or 
+                        string data is. Defaulted to (0)
+            + colData: tuple sequence with the columns where the data is.
+                       Defaulted to (1).
+            + row_skip: begining row. Defaulted to 0
+            + flagHeader: flag to get the header of the information.
+            + rowH: Header row.
+            + row_end: Ending row if nedded, defaulted to None.
+            + num_NaN: NaN number or string in the series.
+        _______________________________________________________________________
+        OUTPUT:
+            Dates and values are given in dictionaries.
+        '''
+        # ----------------
+        # Error Managment
+        # ----------------
+        # Verify values
+        if File == None:
+            Er = utl.ShowError('EDTXT','EDSM','No file was added')
+            raise Er
+        if num_NaN == None:
+            flagnumNaN = False
+        else:
+            flagnumNaN = True
+            if isinstance(num_NaN,str) == False:
+                num_NaN = float(num_NaN)
+
+        if flagHeader:
+            Headers = np.genfromtxt(File,dtype=str,usecols=colData,delimiter=deli,max_rows=1)
+        else:
+            Headers = np.genfromtxt(File,skip_header=rowH,dtype=str,usecols=colData,delimiter='\t',max_rows=1)
+
+        R = {'Headers':Headers}
+        return R
+
     def EDExcel(self,File=None,sheet=None,colDates=(0,),colData=(1,),row_skip=1,flagHeader=True,row_end=None,num_NaN=None):
         '''
         DESCRIPTION:
