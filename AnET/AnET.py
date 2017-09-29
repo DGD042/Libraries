@@ -29,6 +29,7 @@ from scipy.signal import butter, lfilter, freqz
 # ------------------
 # Importing Modules
 from Utilities import Utilities as utl
+from Utilities import Data_Man as DM
 from Hydro_Analysis import Hydro_Plotter as HyPl;HyPl=HyPl()
 
 
@@ -151,50 +152,77 @@ class AnET:
         '''
 
 
-        # Código para graficar las cosas por aparte
-        plt.figure(figsize=(20,10))
-        plt.plot(fr[:len(t)/2-1], amplitud[:len(t)/2-1], 'g-', linewidth = 2, label = u'Amplitud positiva')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
-        plt.plot(fr[len(t)/2:], amplitud[len(t)/2:], 'b-', linewidth = 2, label = u'Amplitud negativa')
-        plt.title('Amplitud de la fft' )  # Colocamos el título del gráfico
-        plt.xlabel(u'Frecuencia [Hz]')  # Colocamos la etiqueta en el eje x
-        plt.ylabel('Amplitud')  # Colocamos la etiqueta en el eje y
-        plt.legend(loc='best')
-        #Guardar la imagen
-        plt.savefig(Pathimg + 'fft(Amplitud)'+ str(ii) + '_' + str(i) + '.png')
-        
+        # # Código para graficar las cosas por aparte
+        # plt.figure(figsize=(20,10))
+        # plt.plot(fr[:len(t)/2-1], amplitud[:len(t)/2-1], 'g-', linewidth = 2, label = u'Amplitud positiva')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
+        # plt.plot(fr[len(t)/2:], amplitud[len(t)/2:], 'b-', linewidth = 2, label = u'Amplitud negativa')
+        # plt.title('Amplitud de la fft' )  # Colocamos el título del gráfico
+        # plt.xlabel(u'Frecuencia [Hz]')  # Colocamos la etiqueta en el eje x
+        # plt.ylabel('Amplitud')  # Colocamos la etiqueta en el eje y
+        # plt.legend(loc='best')
+        # #Guardar la imagen
+        # plt.savefig(Pathimg + 'fft(Amplitud)'+ str(ii) + '_' + str(i) + '.png')
+
+
+        fH = 20 # Largo de la Figura
+        fV = fH*(2.0/3.0) # Ancho de la Figura
+ 
 
         ####gráfica de la frecuencia vs potencia
-        plt.figure(figsize=(20,10))
-        plt.plot(fr[:len(t)/2-1], potencia[:len(t)/2-1], 'k-', linewidth = 2, label = u'Potencia positiva')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
+        # Parámetros de la Figura
+        plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+            ,'font.sans-serif': 'Arial'\
+            ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.major.width': 1,'xtick.minor.width': 1\
+            ,'ytick.labelsize': 14,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.major.width': 1,'ytick.minor.width': 1\
+            ,'axes.linewidth':1\
+            ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        plt.plot(fr[:int(len(t)/2-1)], potencia[:int(len(t)/2-1)], 'k-', linewidth = 2, label = u'Potencia positiva')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
         # plt.plot(fr[len(t)/2:], potencia[len(t)/2:], 'r-', linewidth = 2, label = u'Potencia negativa')
         plt.title('Potencia espectral vs Frecuencia' )  # Colocamos el título del gráfico
         plt.xlabel(u'Frecuencia [Hz]')  # Colocamos la etiqueta en el eje x
         plt.ylabel(u'Potencia espectral')  # Colocamos la etiqueta en el eje y
+        plt.tight_layout()
         #Guardar la imagen
         plt.savefig(Pathimg + 'Pot_fr'+ str(ii) + '_' + str(i) + '.png')
+        plt.close('all')
 
         ####gráfica de la periodo vs potencia
-        plt.figure(figsize=(20,10))
-        plt.plot(Period[:len(t)/2-1], potencia[:len(t)/2-1], 'r-', linewidth = 2, label = u'Potencia positiva')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
+        # Parámetros de la Figura
+        plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+            ,'font.sans-serif': 'Arial'\
+            ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.major.width': 1,'xtick.minor.width': 1\
+            ,'ytick.labelsize': 14,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.major.width': 1,'ytick.minor.width': 1\
+            ,'axes.linewidth':1\
+            ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        plt.plot(Period[:int(len(t)/2-1)], potencia[:int(len(t)/2-1)], 'r-', linewidth = 2, label = u'Potencia positiva')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
         # plt.plot(fr[len(t)/2:], potencia[len(t)/2:], 'r-', linewidth = 2, label = u'Potencia negativa')
         plt.title('Potencia espectral vs Periodo' )  # Colocamos el título del gráfico
-        plt.xlabel(u'Periodo')  # Colocamos la etiqueta en el eje x
+        plt.xlabel(u'Periodo [meses]')  # Colocamos la etiqueta en el eje x
         plt.ylabel(u'Potencia espectral')  # Colocamos la etiqueta en el eje y
+        plt.xlim([0,12*15])
+        plt.tight_layout()
         #Guardar la imagen
         plt.savefig(Pathimg + 'Pot_Per'+ str(ii) + '_' + str(i) + '.png')
+        plt.close('all')
         
 
-        ####gráfica de la frecuencia vs varianza
-        plt.figure(figsize=(20,10))
-        # plt.plot(fr[:len(t)/2-1], var[:len(t)/2-1], 'g-', linewidth = 2, label = u'varianza')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
-        # plt.plot(fr[len(t)/2:], var[len(t)/2:], 'g-', linewidth = 2, label = u'varianza')
-        plt.plot(fr[:len(t)/2-1], 2*var[:len(t)/2-1], '-', linewidth = 2, label = u'varianza')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
+        # ####gráfica de la frecuencia vs varianza
+        # plt.figure(figsize=(20,10))
+        # # plt.plot(fr[:len(t)/2-1], var[:len(t)/2-1], 'g-', linewidth = 2, label = u'varianza')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
+        # # plt.plot(fr[len(t)/2:], var[len(t)/2:], 'g-', linewidth = 2, label = u'varianza')
+        # plt.plot(fr[:len(t)/2-1], 2*var[:len(t)/2-1], '-', linewidth = 2, label = u'varianza')  # Dibujamos los valores de las parejas ordenadas con una línea contínua
 
-        plt.title('Porcentaje de varianza explicado' )  # Colocamos el título del gráfico
-        plt.xlabel(u'Frecuencia [Hz]')  # Colocamos la etiqueta en el eje x
-        plt.ylabel(u'Porcentaje de varianza')  # Colocamos la etiqueta en el eje y
-        #Guardar la imagen
-        plt.savefig(Pathimg + 'Var'+ str(ii) + '_' + str(i) + '.png')
+        # plt.title('Porcentaje de varianza explicado' )  # Colocamos el título del gráfico
+        # plt.xlabel(u'Frecuencia [Hz]')  # Colocamos la etiqueta en el eje x
+        # plt.ylabel(u'Porcentaje de varianza')  # Colocamos la etiqueta en el eje y
+        # #Guardar la imagen
+        # plt.savefig(Pathimg + 'Var'+ str(ii) + '_' + str(i) + '.png')
 
     def ButterworthFiler(self,cuts,order,fs,btype='lowpass',flagG=False,worN=2000,PathImg='',Name='Filt'):
         '''
