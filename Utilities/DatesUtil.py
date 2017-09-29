@@ -30,9 +30,9 @@ import warnings
 # Path to the Modules
 # Importing Modules
 try:
-    from Utilities import Utilities as ult
+    from Utilities import Utilities as utl
 except ImportError:
-    import Utilities as ult
+    import Utilities as utl
 
 
 # ------------------------
@@ -107,7 +107,7 @@ class DatesUtil(object):
         # ----------------
         if isinstance(Dates[0], str) == False:
             Er = utl.ShowError('Dates_str2datetime','DatesUtil','Bad Dates format given, not in string format')
-            return Er
+            raise TypeError
         # -------------------------
         # Temporal verification
         # -------------------------
@@ -177,7 +177,7 @@ class DatesUtil(object):
         # ----------------
         if isinstance(DatesP[0], datetime) == False and isinstance(DatesP[0], date) == False:
             Er = utl.ShowError('Dates_datetime2str','DatesUtil','Bad DatesP format given, not in date or datetime format')
-            return Er
+            raise TypeError
         # -------------------------
         # Date_Format Verification
         # -------------------------

@@ -34,84 +34,10 @@ from Utilities import DatesUtil as DUtil; DUtil=DUtil()
 
 try:
     from EMSD.Extract_Data import Extract_Data as ExD
+    from EMSD.Data_Man import Data_Man as DMan
 except ImportError:
     from Extract_Data import Extract_Data as ExD
-
-
-# ------------------------
-# Funciones
-# ------------------------
-def LoopDataDaily_IDEAM(DateP,Value,Flags,xRow_St,xCol_St,Years,Lines,Sum2=2):
-    '''
-    DESCRIPTION:
-    
-        With this function we extract the values in an IDEAM document type.
-    _________________________________________________________________________
-
-    INPUT:
-        + DateP: Empty list or with previous date values.
-        + Value: Empty list or with previous values.
-        + Flags: Empty list or with previous flags.
-        + xRow_St: Row where the data begins.
-        + xCol_St: Column where data begins.
-        + Year: Year that wants to be extracted.
-        + Lines: readlines variable.
-    _________________________________________________________________________
-    
-    OUTPUT:
-        - DateP: Extracted dates.
-        - Value: Extracted data.
-    '''
-    for j in range(1,13):
-        DateSt = date(int(Years),j,1)
-        if j == 12:
-            DateEnd = date(int(Years)+1,1,1)
-        else:
-            DateEnd = date(int(Years),j+1,1)
-        Days = (DateEnd-DateSt).days
-        
-        xR = xRow_St
-        for i in range(1,Days+1):
-            DateP.append(date(int(Years),j,i))
-            try:
-                Value.append(float(Lines[xR][xCol_St:xCol_St+5]))
-            except ValueError:
-                Value.append(np.nan)
-            except IndexError:
-                Value.append(np.nan)
-
-            try:
-                Flags.append(Lines[xR][xCol_St+5+1:xCol_St+5+2])
-            except IndexError:
-                Flags.append(' ')
-            if Flags[-1] == '' or Flags[-1] == ' ' or Flags[-1] == '\r':
-                Flags[-1] = np.nan
-
-            xR += Sum2
-        xCol_St += 9
-
-    return DateP,Value,Flags
-
-def perdelta(start, end, delta):
-    '''
-    DESCRIPTION:
-    
-        Function that iterates dates.
-    _________________________________________________________________________
-    
-    INPUT:
-        + start: Inicial date.
-        + end: Final date.
-        + delta: Timedelta.
-    _________________________________________________________________________
-    
-    OUTPUT:
-        curr: Current date.
-    '''
-    curr = start
-    while curr < end:
-        yield curr
-        curr += delta
+    from Data_Man import Data_Man as DMan
 
 # ------------------------
 # Class
@@ -171,7 +97,7 @@ class EMSD(object):
         return
 
     def Open_Data(self,File,flagCompelete=True,DataBase={'DataBaseType':'txt','deli':',','colStr':(0,),
-        'colData':(1,0), 'row_skip':1,'flagHeader':True,'rowH':1,'row_end':None,'str_NaN':None,
+        'colData':(1,0), 'row_skip':1,'flagHeader':True,'rowH':0,'row_end':None,'str_NaN':None,
         'num_NaN':None,'dtypeData':float}):
         '''
         DESCRIPTION:
@@ -207,15 +133,15 @@ class EMSD(object):
         self.DatesN = dict()
         self.DatesO = dict()
 
-        if DataBase['DataBaseType'].lower == 'txt' or DataBase['DataBaseType'].lower == 'csv':
+        if DataBase['DataBaseType'].lower() == 'txt' or DataBase['DataBaseType'].lower() == 'csv':
             # Verify parameters
             ParamsLab = ['deli','colStr','colData','row_skip','flagHeader','rowH','row_end','str_NaN',
                 'num_NaN','dtypeData']
             Params = {'deli':',','colStr':(0,),
-                'colData':(1,0), 'row_skip':1,'flagHeader':True,'rowH':1,'row_end':None,'str_NaN':None,
+                'colData':(1,0), 'row_skip':1,'flagHeader':True,'rowH':1,'row_end':0,'str_NaN':None,
                 'num_NaN':None,'dtypeData':float}
             ParamsFunc = dict()
-            for iPar,Par in ParamsLab:
+            for iPar,Par in enumerate(ParamsLab):
                 try:
                     ParamsFunc[Par] = DataBase[Par]
                 except KeyError:
@@ -240,11 +166,11 @@ class EMSD(object):
                     # print(key)
                     DatesStr = [i.strftime(self.Date_Formats[0]) for i in DatesP[key]]
                     try:
-                        R = self.CompD(DatesStr,Values[key])
+                        R = DMan.CompD(DatesStr,Values[key])
                         self.Dates[key]= R['DatesC']
                         self.DatesN[key] = R['DatesN']
                         self.Values[key] = R['VC']
-                        R = self.CompD(DatesStr,Flags[key])
+                        R = DMan.CompD(DatesStr,Flags[key])
                         self.Flags[key] = R['VC']
                     except:
                         self.Dates[key]= DatesStr
@@ -279,11 +205,11 @@ class EMSD(object):
             if flagCompelete:
                 for ikey,key in enumerate(keys):
                     if flagHor and flagMin:
-                        self.Dates,self.Values[key],self.DatesN,self.DatesO = self.CompD(DatesStr,Values[key],flagHor,HH,flagMin,MM)
+                        self.Dates,self.Values[key],self.DatesN,self.DatesO = DMan.CompD(DatesStr,Values[key],flagHor,HH,flagMin,MM)
                     elif flagHor:
-                        self.Dates,self.Values[key],self.DatesN,self.DatesO = self.CompD(DatesStr,Values[key],flagHor,HH)
+                        self.Dates,self.Values[key],self.DatesN,self.DatesO = DMan.CompD(DatesStr,Values[key],flagHor,HH)
                     else:
-                        self.Dates,self.Values[key],self.DatesN,self.DatesO = self.CompD(DatesStr,Values[key])
+                        self.Dates,self.Values[key],self.DatesN,self.DatesO = DMan.CompD(DatesStr,Values[key])
                 # dtm verification
                 Dif = self.DatesN[1]-self.DatesN[0]
                 if Dif.days == 0:
@@ -1344,99 +1270,6 @@ class EMSD(object):
         return Data
 
     # Data Managment
-    def CompD(self,Dates,V,dtm=None):
-        '''
-        DESCRIPTION:
-        
-            This function takes a data series and fill the missing dates with
-            nan values, It would fill the entire year.
-        _______________________________________________________________________
-
-        INPUT:
-            + Dates: Data date, it must be a string like this 'Year/month/day' 
-                    the separator '/' could be change with any character. 
-                    It must be a string vector or a date or datetime vector.
-            + V: Variable that wants to be filled. 
-            + dtm: Time delta for the full data, if None it would use the
-                   timedelta from the 2 values of the original data
-        _______________________________________________________________________
-        
-        OUTPUT:
-            - DateC: Comlete date string vector'
-            - V1C: Filled data values.
-            - DateN: Complete date Python datetime vector.
-        '''
-        V = np.array(V)
-        Dates = np.array(Dates)
-        # ---------------------
-        # Error managment
-        # ---------------------
-
-        if isinstance(Dates[0],str) == False and isinstance(Dates[0],date) == False and isinstance(Dates[0],datetime) == False:
-            Er = utl.ShowError('CompD','EDSM','Bad format in dates')
-            return Er
-
-        if len(Dates) != len(V):
-            Er = utl.ShowError('CompD','EDSM','Date and V are different length')
-            return Er
-        if dtm != None and isinstance(dtm,timedelta) == False:
-            Er = utl.ShowError('CompD','EDSM','Bad dtm format')
-            return Er
-
-        # Eliminate the errors in February
-        if isinstance(Dates[0],str):
-            lenDates = len(Dates)
-            Dates2 = np.array([i[:10] for i in Dates])
-            for iY,Y in enumerate(range(int(Dates2[0][:4]),int(Dates2[-1][:4]))):
-                Fi = date(Y,2,1)
-                Ff = date(Y,3,1)
-                Dif = (Ff-Fi).days
-                if Dif == 28:
-                    x = np.where(Dates2 == '%s/02/29' %(Y))
-                    Dates = np.delete(Dates,x)
-                    V = np.delete(V,x)
-                x = np.where(Dates2 == '%s/02/30' %(Y))
-                Dates = np.delete(Dates,x)
-                V = np.delete(V,x)
-
-        # ---------------------
-        # Dates Calculations
-        # ---------------------
-        # Original Dates
-        if isinstance(Dates[0],str):
-            DatesO = DUtil.Dates_str2datetime(Dates)
-        else:
-            DatesO = Dates
-        if dtm == None:
-            dtm = DatesO[1]-DatesO[0]
-        # Complete Dates
-        if isinstance(DatesO[0],datetime):
-            DateI = datetime(DatesO[0].year,1,1,0,0)
-            DateE = datetime(DatesO[-1].year,12,31,23,59)
-            DatesN = DUtil.Dates_Comp(DateI,DateE,dtm=dtm)
-        else:
-            DateI = date(DatesO[0].year,1,1)
-            DateE = date(DatesO[-1].year,12,31)
-            DatesN = DUtil.Dates_Comp(DateI,DateE,dtm=dtm)
-        # Filled data
-        VC = np.empty(len(DatesN))*np.nan
-        DatesN = np.array(DatesN)
-        DatesO = np.array(DatesO)
-        V = np.array(V)
-        # x = DatesN.searchsorted(DatesO)
-        x = np.searchsorted(DatesN,DatesO) 
-
-        try:
-            VC[x] = V
-        except ValueError:
-            VC = np.array(['' for i in range(len(DatesN))])
-            VC[x] = V
-        
-        DatesC = DUtil.Dates_datetime2str(DatesN)
-
-        Results = {'DatesC':DatesC,'DatesN':DatesN,'VC':VC}
-        return Results
-
     def CompDC(self,Dates,V,DateI,DateE,dtm=None):
         '''
         DESCRIPTION:

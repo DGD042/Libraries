@@ -94,7 +94,8 @@ def LoopDataDaily_IDEAM(DateP,Value,Flags,xRow_St,xCol_St,Years,Lines,Sum2=2):
 
 
 # Information Extraction
-def EDTXT(File,deli=',',colStr=(0,),colData=(1,),row_skip=1,flagHeader=True,rowH=0,row_end=None,str_NaN=None,num_NaN=None,dtypeData=float):
+def EDTXT(File,deli=',',colStr=(0,),colData=(1,),row_skip=1,flagHeader=True,
+        rowH=0,row_end=0,str_NaN=None,num_NaN=None,dtypeData=float):
     '''
     DESCRIPTION:
 
@@ -155,12 +156,36 @@ def EDTXT(File,deli=',',colStr=(0,),colData=(1,),row_skip=1,flagHeader=True,rowH
     # -------------------
     # Headers
     if flagHeader:
-        Headers = np.genfromtxt(File,dtype=str,usecols=colStr+colData,skip_header=rowH,
-                delimiter=deli,max_rows=1)
+        if colStr == None and colData == None:
+            Headers = np.genfromtxt(File,dtype=str,
+                    skip_header=rowH,delimiter=deli,max_rows=1)
+        elif colStr == None:
+            Headers = np.genfromtxt(File,dtype=str,usecols=colStr,
+                    skip_header=rowH,delimiter=deli,max_rows=1)
+        elif colData == None:
+            Headers = np.genfromtxt(File,dtype=str,usecols=colData,
+                    skip_header=rowH,delimiter=deli,max_rows=1)
+        else:
+            Headers = np.genfromtxt(File,dtype=str,usecols=colStr+colData,
+                    skip_header=rowH,delimiter=deli,max_rows=1)
     else:
-        Headers = list(colStr+colData)
+        rowH = 0
+        if colStr == None and colData == None:
+            Headers = np.genfromtxt(File,dtype=str,
+                    skip_header=rowH,delimiter=deli,max_rows=1)
+        elif colStr == None:
+            Headers = np.genfromtxt(File,dtype=str,usecols=colStr,
+                    skip_header=rowH,delimiter=deli,max_rows=1)
+        elif colData == None:
+            Headers = np.genfromtxt(File,dtype=str,usecols=colData,
+                    skip_header=rowH,delimiter=deli,max_rows=1)
+        else:
+            Headers = np.genfromtxt(File,dtype=str,usecols=colStr+colData,
+                    skip_header=rowH,delimiter=deli,max_rows=1)
+        Headers = np.arange(0,len(Headers))
 
-    R = {'Headers':Headers}
+    # R = {'Headers':Headers}
+    R = dict()
 
     # String Data
     if colStr != None:
@@ -168,21 +193,37 @@ def EDTXT(File,deli=',',colStr=(0,),colData=(1,),row_skip=1,flagHeader=True,rowH
                 skip_header=row_skip,skip_footer=row_end,unpack=True)
         if flagstrNaN:
             DataStr[DataStr == str_NaN] = 'nan'
-    for icol,col in enumerate(colStr):
-        R[Headers[colStr]] = DataStr[icol]
+        if len(colStr) == 1:
+            R[Headers[0]] = DataStr
+        elif len(colStr) > 1:
+            for icol,col in enumerate(colStr):
+                R[Headers[icol]] = DataStr[icol]
+
     if colData != None:
         Data = np.genfromtxt(File,dtype=dtypeData,usecols=colData,delimiter=deli,
                 skip_header=row_skip,skip_footer=row_end,unpack=True)
         if flagnumNaN:
             Data[Data== num_NaN] = np.nan
+
+        if len(colData) == 1:
+            if colStr == None:
+                R[Headers[icol]] = Data
+            else:
+                R[Headers[len(colStr)+1]] = Data
+        elif len(colData) > 1:
+            for icol,col in enumerate(colData):
+                if colStr == None:
+                    R[Headers[icol]] = Data[icol]
+                else:
+                    R[Headers[len(colStr)+icol]] = Data[icol]
+
     elif colData == None and colStr == None:
         Data = np.genfromtxt(File,dtype=dtypeData,delimiter=deli,
                 skip_header=row_skip,skip_footer=row_end,unpack=True)
         if flagnumNaN:
             Data[Data== num_NaN] = np.nan
-
-    for icol,col in enumerate(colData):
-        R[Headers[colData]] = Data[icol]
+        for icol,col in enumerate(Headers):
+            R[Headers[icol]] = Data[icol]
             
     return R
 

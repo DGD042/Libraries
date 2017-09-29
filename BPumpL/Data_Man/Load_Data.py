@@ -33,11 +33,7 @@ from Utilities import Utilities as utl
 from Utilities import DatesUtil as DUtil; DUtil=DUtil()
 
 # ------------------------
-# Funciones
-# ------------------------
-
-# ------------------------
-# Class
+# Functions
 # ------------------------
 
 '''
