@@ -1541,6 +1541,114 @@ class Hydro_Plotter:
         if FlagA:
             return 
 
+    def ScatterGen(self,V1,V2,Fit='',Title='',xLabel='',yLabel='',Name='',PathImg='',FlagA=True,FlagAn=False,FlagInv=False,FlagInvAxis=False):
+        '''
+        DESCRIPTION:
+        
+            This function allows the user to create a Scatter plot and adjust
+            the best line to the data.
+        _________________________________________________________________________
+
+        INPUT:
+            :param V1:       a ndarray, Vector with the X values. 
+            :param V2: a ndarray, Vector With the Y values.
+            :param Name:     a str, Title of the graph.
+            :param PathImg:  a str, Ruta donde se quiere guardar el archivo.
+            :param FlagA:    a bolean, Indicador si se quiere realizar el ajuste.
+            :param FlagAn:   a bolean, Indicador para anotar el número del punto.
+            :param FlagInv:  a bolean, Indicator to make inverse adjustment.
+            :param FlagInvAxis:  a bolean, Indicator to make inverse adjustment.
+        _________________________________________________________________________
+        
+            OUTPUT:
+        Esta función arroja una gráfica y la guarda en la ruta desada.
+        '''
+
+        # Se calcula el ajuste
+        if FlagA:
+            # Se importa el paquete de Fit
+            from AnET import CFitting
+            CF = CFitting()
+            if FlagInv:
+                # Se ajusta la curva
+                FitC = CF.FF(V2,V1,F=Fit)
+                # Se realiza el ajuste a ver que tal dió
+                x = np.linspace(np.nanmin(V2),np.nanmax(V2),100)
+                VC = FitC['Function'](x, *FitC['Coef'])
+            else:
+                # Se ajusta la curva
+                FitC = CF.FF(V1,V2,F=Fit)
+                # Se realiza el ajuste a ver que tal dió
+                x = np.linspace(np.nanmin(V1),np.nanmax(V1),100)
+                VC = FitC['Function'](x, *FitC['Coef'])
+
+        # Tamaño de la Figura
+        fH = self.fH # Largo de la Figura
+        fV = self.fV # Ancho de la Figura
+        # Se crea la carpeta para guardar la imágen
+        utl.CrFolder(PathImg)
+
+        # Se genera la gráfica
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
+        # Parámetros de la Figura
+        plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+            ,'font.sans-serif': self.font\
+            ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.major.width': 1,'xtick.minor.width': 1\
+            ,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.major.width': 1,'ytick.minor.width': 1\
+            ,'axes.linewidth':1\
+            ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+            labelbottom='on',direction='out')
+        plt.tick_params(axis='y',which='both',left='on',right='off',\
+            labelleft='on')
+        plt.tick_params(axis='y',which='major',direction='inout') 
+        plt.grid()
+        # Precipitación
+        plt.scatter(V1,V2,color='dodgerblue',alpha=0.7)
+        plt.title(Title,fontsize=16)
+        plt.xlabel(xLabel,fontsize=16)
+        plt.ylabel(yLabel,fontsize=16)
+
+        if FlagAn:
+            # Número de cada punto
+            n = np.arange(0,len(V1))
+            for i, txt in enumerate(n):
+                plt.annotate(txt, (V1[i],V2[i]),fontsize=8)
+
+        # Axes
+        ax = plt.gca()
+        xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+        MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+        plt.xlim([0,np.nanmax(V1)+2*MxL])
+
+        xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+        MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+        minorLocatorx = MultipleLocator(MxL)
+        yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+        MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
+        minorLocatory = MultipleLocator(MyL)
+        plt.gca().xaxis.set_minor_locator(minorLocatorx)
+        plt.gca().yaxis.set_minor_locator(minorLocatory)
+
+        # Se incluye el ajuste
+        if FlagA:
+            Label = FitC['FunctionEq']+'\n'+r'$R^2=%.3f$'
+            if FlagInv:
+                plt.plot(VC,x,'k--',label=Label %tuple(list(FitC['Coef'])+[FitC['R2']]))
+            else:
+                plt.plot(x,VC,'k--',label=Label %tuple(list(FitC['Coef'])+[FitC['R2']]))
+            plt.legend(loc=1,fontsize=12)
+
+        plt.tight_layout()
+        Nameout = PathImg+Name
+        plt.savefig(Nameout+'.png',format='png',dpi=self.dpi )
+        plt.close('all')
+
+        if FlagA:
+            return 
+
     def SPAvPD(self,PresRateB,PresRateA,Name='',PathImg='',Nameout='',FlagA=False,FEn=False):
         '''
             DESCRIPTION:
