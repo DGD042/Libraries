@@ -2089,10 +2089,10 @@ class EMSD(object):
         flagHour = False
         if lenDates > 10:
             flagHour = True
-            D_Formats = self.DateTime_Formats
+            D_Formats = DUtil.DateTime_Formats
             dt = int(60/dtm)
             # Hourly
-            DateH, DateHN, VH,VmaxH,VminH = self.Ca_E(Date,V1,dt,0,op=op,flagMa=True,flagDF=False)
+            DateH, DateHN, VH,VmaxH,VminH = DMan.Ca_E(Date,V1,dt,0,op=op,flagMa=True,flagDF=False)
             DatesC[DateLab[0]] = DateH
             DatesNC[DateNLab[0]] = DateHN
             VC[VLab[0]] = VH
@@ -2107,9 +2107,9 @@ class EMSD(object):
             op2 = op
         if flagHour:
             dt = 24
-            DateD, DateDN, VD,VmaxD,VminD = self.Ca_E(DateH,VH,dt,1,op=op2,flagMa=True,flagDF=False)
+            DateD, DateDN, VD,VmaxD,VminD = DMan.Ca_E(DateH,VH,dt,1,op=op2,flagMa=True,flagDF=False)
         else:
-            DateD, DateDN, VD,VmaxD,VminD = self.Ca_E(Date,V1,dt,1,op=op2,flagMa=True,flagDF=False)
+            DateD, DateDN, VD,VmaxD,VminD = DMan.Ca_E(Date,V1,dt,1,op=op2,flagMa=True,flagDF=False)
         DatesC[DateLab[1]] = DateD
         DatesNC[DateNLab[1]] = DateDN
         VC[VLab[3]] = VD
