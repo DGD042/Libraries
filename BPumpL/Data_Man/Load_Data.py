@@ -96,19 +96,22 @@ def LoadStationsInfo(endingmatR='_CBF_MR'):
     PathDataImp = 'Tesis_MscR/03_Data/'
     # Las listas se organizan como [Manizales,Medellin,Amazonas,USA]
     # Rutas originales de los datos
-    DataImpNames = ['Data_Imp','Data_Imp_Med','Data_Imp_Amazon']
+    DataImpNames = ['Data_Imp','Data_Imp_Med','Data_Imp_Amazon',
+            'Data_Imp_Wunder_USA']
     Original_DataBases = ['IDEA_CDIAC/02_mat/Manizales/',
             'Medellin_SIATA/02_mat/',
-            'Amazon_LBA/ATTO/02_mat/']
+            'Amazon_LBA/ATTO/02_mat/',
+            'Wunder/02_mat/']
     Filt_DataBases = ['02_Col_Data/01_Manizales/01_mat/01_CFilt/',
             '02_Col_Data/02_Medellin/01_mat/01_CFilt/',
-            '03_Amazonas/01_mat/01_CFilt/']
+            '03_Amazonas/01_mat/01_CFilt/',
+            '01_USA/01_mat/01_CFilt/']
 
     # ---------------------
     # Original
     # ---------------------
     # Parametros
-    DataBasesP = ['Manizales','Medellin','Amazonas']
+    DataBasesP = ['Manizales','Medellin','Amazonas','Wunder']
     TimeScale = ['Original','Horarios','Diarios','CFilt','Paths']
     StationInfo = ['ID','Name','Name_Arch','Altura','Latitud','Longitud']
     StationInfoType = {'ID':str,'Name':str,'Name_Arch':str,'Altura':float,
@@ -127,7 +130,8 @@ def LoadStationsInfo(endingmatR='_CBF_MR'):
     # Se buscan los archivos de importación
     ArchDataImp = [PathDataImp+DataImpNames[0]+'.xlsx',
             PathDataImp+DataImpNames[1]+'.xlsx',
-            PathDataImp+DataImpNames[2]+'.xlsx']
+            PathDataImp+DataImpNames[2]+'.xlsx',
+            PathDataImp+DataImpNames[3]+'.xlsx']
 
 
 
