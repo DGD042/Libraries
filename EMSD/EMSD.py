@@ -35,9 +35,11 @@ from Utilities import DatesUtil as DUtil; DUtil=DUtil()
 try:
     from EMSD.Extract_Data import Extract_Data as ExD
     from EMSD.Data_Man import Data_Man as DMan
+    from EMSD.Functions import Gen_Functions as GFun
 except ImportError:
     from Extract_Data import Extract_Data as ExD
     from Data_Man import Data_Man as DMan
+    from Functions import Gen_Functions as GFun
 
 # ------------------------
 # Class
@@ -157,14 +159,14 @@ class EMSD(object):
 
 
         # Verify for irregular data extraction
-        elif DataBase['DataBaseType'].lower == 'ideam':
+        elif DataBase['DataBaseType'].lower() == 'ideam':
             DatesP, Values, Flags,self.FlagM, self.St_Info = self.EDIDEAM(File=self.File)
             keys = list(Values)
             keysDates = list(DatesP)
             if flagCompelete:
                 for ikey,key in enumerate(keys):
                     # print(key)
-                    DatesStr = [i.strftime(self.Date_Formats[0]) for i in DatesP[key]]
+                    DatesStr = [i.strftime(DUtil.Date_Formats[0]) for i in DatesP[key]]
                     try:
                         R = DMan.CompD(DatesStr,Values[key])
                         self.Dates[key]= R['DatesC']
@@ -1079,9 +1081,9 @@ class EMSD(object):
                     DateP = []
                     Value = []
                     Flags = []
-                    DateP,Value,Flags = LoopDataDaily_IDEAM(DateP,Value,Flags,xRow_St,xCol_St,Years[-1],Lines,Sum2)
+                    DateP,Value,Flags = GFun.LoopDataDaily_IDEAM(DateP,Value,Flags,xRow_St,xCol_St,Years[-1],Lines,Sum2)
                 elif (Station_Code[-1] == Station_Code[-2]) and (Med_Temp_Match[-1] == Med_Temp_Match[-2]) and (Var_Temp_Match[-1] == Var_Temp_Match[-2]):
-                    DateP,Value,Flags = LoopDataDaily_IDEAM(DateP,Value,Flags,xRow_St,xCol_St,Years[-1],Lines,Sum2)
+                    DateP,Value,Flags = GFun.LoopDataDaily_IDEAM(DateP,Value,Flags,xRow_St,xCol_St,Years[-1],Lines,Sum2)
                 else:
                     keys.append(Station_Code[-2]+'_'+Var_Temp_Match[-2]+'_'+Med_Temp_Match[-2])
                     Stations_Name.append(Station_Name[-2])
@@ -1095,7 +1097,7 @@ class EMSD(object):
                     DateP = []
                     Value = []
                     Flags = []
-                    DateP,Value,Flags = LoopDataDaily_IDEAM(DateP,Value,Flags,xRow_St,xCol_St,Years[-1],Lines,Sum2)
+                    DateP,Value,Flags = GFun.LoopDataDaily_IDEAM(DateP,Value,Flags,xRow_St,xCol_St,Years[-1],Lines,Sum2)
 
             if irow == len(Lines)-1:
                 keys.append(Station_Code[-1]+'_'+Var_Temp_Match[-1]+'_'+Med_Temp_Match[-1])
@@ -1892,6 +1894,8 @@ class EMSD(object):
         OUTPUT:
             Save a mat file.
         '''
+        # Create Folder
+        utl.CrFolder(pathout)
         flagDatesDict = False
         flagDataDict = False
         if isinstance(Dates,dict):

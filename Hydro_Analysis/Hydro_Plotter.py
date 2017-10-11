@@ -122,6 +122,7 @@ class Hydro_Plotter:
             ,'ytick.major.width': 1,'ytick.minor.width': 1\
             ,'axes.linewidth':1\
             ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        plt.rcParams['agg.path.chunksize'] = 20000
         plt.tick_params(axis='x',which='both',bottom='on',top='off',\
             labelbottom='on',direction='out')
         plt.tick_params(axis='y',which='both',left='on',right='off',\

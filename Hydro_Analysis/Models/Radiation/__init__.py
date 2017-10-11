@@ -8,13 +8,8 @@
 
 '''
 
-This class have different routines for hydrological
-and thermodynamical analysis in relation with climatology.
-
-This package also graph all the different intervals requiered from the
-given data.
-
-
+This Functions makes several calculation of Radiation with different
+parameters
 ____________________________________________________________________________
 This class is of free use and can be modify, if you have some 
 problem please contact the programmer to the following e-mails:
@@ -27,16 +22,7 @@ ____________________________________________________________________________
 '''
 
 try:
-    from Hydro_Analysis.Hydro_Analysis import Hydro_Analysis 
-    from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter
-    from Hydro_Analysis.Evap_Models import Evap_Models
+    from Hydro_Analysis.Models.Radiation import RadModels 
 except ImportError:
-    from Hydro_Analysis import Hydro_Analysis 
-    from Hydro_Plotter import Hydro_Plotter
-    from Thermo_An import Thermo_An
-    from Evap_Models import Evap_Models
-    import Gen_Functions
-    import Meteo 
-    import Climate
-    import Models 
+    from Hydro_Analysis.Models.Radiation import RadModels
 

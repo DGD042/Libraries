@@ -323,8 +323,13 @@ def Ca_E(FechaC,V1C,dt=24,escala=1,op='mean',flagMa=False,flagDF=False,flagNaN=T
         dtm = timedelta(0,dt*60)
         FechaNN = DUtil.Dates_Comp(DateI,DateE,dtm=dtm)
         FechaEs = DUtil.Dates_datetime2str(FechaNN)
-
-    elif escala == 0 or escala == 1: # Para datos horarios o diarios
+    elif escala == 0:
+        DateI = datetime(DatesO[0].year,1,1,0,0)
+        DateE = datetime(DatesO[-1].year,12,31,23,59)
+        dtm = timedelta(0,dt*60*60)
+        FechaNN = DUtil.Dates_Comp(DateI,DateE,dtm=dtm)
+        FechaEs = DUtil.Dates_datetime2str(FechaNN)
+    elif escala == 1: # Para datos horarios o diarios
         for result in perdelta(date(int(yeari), 1, 1), date(int(yearf)+1, 1, 1), timedelta(days=1)):
             FR = result.strftime('%Y'+Sep+'%m'+Sep+'%d') # Fecha
             if escala == 0:
