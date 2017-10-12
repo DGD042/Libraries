@@ -51,7 +51,7 @@ from AnET import CorrSt as cr;cr=cr()
 from AnET import CFitting as CF; CF=CF()
 from Hydro_Analysis import Hydro_Plotter as HyPl;HyPl=HyPl()
 from Hydro_Analysis import Hydro_Analysis as HA; HA=HA()
-from Hydro_Analysis import Thermo_An as TA; TA=TA()
+from Hydro_Analysis.Models.Atmos_Thermo import Thermo_Fun as TA
 from AnET import AnET as anet;anet=anet()
 from EMSD import EMSD;EMSD=EMSD()
 from BPumpL.BPumpL import BPumpL as BP;BP=BP()
@@ -205,11 +205,11 @@ class Proc(object):
                     print('Revisar el delta de tiempo')
         except KeyError:
             self.flag['FechaC'] = False
-        try:
-            self.f['qC'] = TA.qeq(self.f['PresC'],self.f['HRC'],self.f['TC'])
-            self.flag['qC'] = True
-        except:
-            self.flag['qC'] = False
+
+        self.f['qC'] = TA.qeq(self.f['PresC'],self.f['HRC'],self.f['TC'])
+        self.flag['qC'] = True
+        # except KeyError:
+        #     self.flag['qC'] = False
         
         self.var = self.f.keys()
         self.VerifyData()           
@@ -528,7 +528,7 @@ class Proc(object):
 
             Gráfica de los eventos.
         '''
-        PathImg = 'Tesis_MscR/02_Docs/01_Tesis_Doc/Kap2/Img/'+self.DataBase
+        PathImg = 'Tesis_MscR/02_Docs/01_Tesis_Doc/Kap2/Img/'+self.DataBase+'/Series/'
         Name = self.NamesArch[self.irow]+'_Series'
         Var = ['Precipitación','Temperatura','Humedad Relativa','Presión']
 

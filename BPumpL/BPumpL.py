@@ -51,7 +51,7 @@ from AnET import CorrSt as cr; cr=cr()
 from AnET import CFitting as CF; CF=CF()
 from Hydro_Analysis import Hydro_Plotter as HyPl;HyPl=HyPl()
 from Hydro_Analysis import Hydro_Analysis as HA;HA=HA()
-from Hydro_Analysis import Thermo_An as TA;TA=TA()
+from Hydro_Analysis.Models.Atmos_Thermo import Thermo_Fun as TA
 from Hydro_Analysis.Meteo import MeteoFunctions as HyMF
 
 class BPumpL:
@@ -90,17 +90,17 @@ class BPumpL:
         fH=30 # Largo de la Figura
         fV = fH*(2/3) # Ancho de la Figura
         plt.close('all')
-        lfs = 15
+        lfs = 18
         #fig, axs = plt.subplots(2,2, figsize=DM.cm2inch(fH,fV), facecolor='w', edgecolor='k')
-        fig, axs = plt.subplots(2,2, figsize=DM.cm2inch(fH,fV))
         plt.rcParams.update({'font.size': lfs,'font.family': 'sans-serif'\
             ,'font.sans-serif': 'Arial'\
-            ,'xtick.labelsize': lfs-1,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.labelsize': 17,'xtick.major.size': 6,'xtick.minor.size': 4\
             ,'xtick.major.width': 1,'xtick.minor.width': 1\
-            ,'ytick.labelsize': lfs-1,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.labelsize': 17,'ytick.major.size': 12,'ytick.minor.size': 4\
             ,'ytick.major.width': 1,'ytick.minor.width': 1\
             ,'axes.linewidth':1\
             ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        fig, axs = plt.subplots(2,2, figsize=DM.cm2inch(fH,fV))
         axs = axs.ravel() # Para hacer un loop con los subplots
         #myFmt = mdates.DateFormatter('%d/%m/%y') # Para hacer el formato de fechas
         #xlabels = ['Ticklabel %i' % i for i in range(10)] # Para rotar los ejes
@@ -108,7 +108,8 @@ class BPumpL:
             if i == 0:
                 P1 = axs[i].plot(FechaN,PrecC,'b-', label = Var[i])
                 axs[i].set_ylabel(Var[i] + ' [mm]',fontsize=lfs)
-                
+                print('  minprec',np.nanmin(PrecC))
+                axs[i].set_ylim(bottom=0)
                 # Se arreglan los ejes
             elif i == 1:
                 P1 = axs[i].plot(FechaN,TempC,'r-', label = Var[i])
@@ -116,20 +117,15 @@ class BPumpL:
             elif i == 2:
                 P1 = axs[i].plot(FechaN,HRC,'g-', label = Var[i])
                 axs[i].set_ylabel(Var[i] + ' [%]',fontsize=lfs)
-                axs[i].set_xlabel(u'Fechas',fontsize=lfs)
+                # axs[i].set_xlabel(u'Fechas',fontsize=lfs)
             elif i == 3:
                 P1 = axs[i].plot(FechaN,PresBC,'k-', label = Var[i])
                 axs[i].set_ylabel(Var[i] + ' [hPa]',fontsize=lfs)
-                axs[i].set_xlabel(u'Fechas',fontsize=lfs)
+                # axs[i].set_xlabel(u'Fechas',fontsize=lfs)
             axs[i].set_title(Var[i],fontsize=lfs)
             # axs[i].legend(loc='best')
             # Se organizan las fechas
             axs[i].set_xlim([min(FechaN),max(FechaN)]) # Incluyen todas las fechas
-            # Se incluyen los valores de los minor ticks
-            yTL = axs[i].yaxis.get_ticklocs() # List of Ticks in y
-            MyL = (yTL[1]-yTL[0])/5 # Minor tick value
-            minorLocatory = MultipleLocator(MyL)
-            axs[i].yaxis.set_minor_locator(minorLocatory)
             # Se cambia el label de los ejes
             xTL = axs[i].xaxis.get_ticklocs() # List of position in x
             Labels2 = HyPl.monthlab(xTL)
@@ -138,12 +134,18 @@ class BPumpL:
             # Se rotan los ejes
             for tick in axs[i].get_xticklabels():
                 tick.set_rotation(45)
+            # Se incluyen los valores de los minor ticks
+            yTL = axs[i].yaxis.get_ticklocs() # List of Ticks in y
+            MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+            minorLocatory = MultipleLocator(MyL)
+            axs[i].yaxis.set_minor_locator(minorLocatory)
+            axs[i].grid()
         plt.tight_layout()
         if Tot == 0:
             # Se crea la ruta en donde se guardarán los archivos
             utl.CrFolder(PathImg)
-            plt.savefig(PathImg + Name + '_Series_'+ \
-                '.png',format='png',dpi=300 )
+            plt.savefig(PathImg + Name + '_Series'+ \
+                '.png',format='png',dpi=120)
         else:
             # Se crea la ruta en donde se guardarán los archivos
             utl.CrFolder(PathImg+ 'Manizales/Series/')

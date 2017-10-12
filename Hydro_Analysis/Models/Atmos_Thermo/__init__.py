@@ -8,8 +8,8 @@
 
 '''
 
-This package has the different Models and equations relation with
-atmospheric and ground physics.
+This Functions have different physics equations for atmospheric 
+thermodynamics 
 ____________________________________________________________________________
 This class is of free use and can be modify, if you have some 
 problem please contact the programmer to the following e-mails:
@@ -22,12 +22,7 @@ ____________________________________________________________________________
 '''
 
 try:
-    import Hydro_Analysis.Models.Radiation
-    import Hydro_Analysis.Models.Atmos_Thermo
+    from Hydro_Analysis.Models.Atmos_Thermo import Thermo_Fun
 except ImportError:
-    import Models.Radiation
-    import Models.Atmos_Thermo
-except ImportError:
-    import Radiation
-    import Atmos_Thermo
+    from Hydro_Analysis.Models.Atmos_Thermo import Thermo_Fun
 
