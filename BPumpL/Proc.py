@@ -78,6 +78,7 @@ class Proc(object):
         # Información para gráficos
         LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica']
         LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]']
+        self.DataBase = DataBase
         
         self.mmHg2hPa = 1.3332239
 
@@ -519,4 +520,19 @@ class Proc(object):
                 savingkeys.append(v[:-1]+'C_Temp')
                 Data[v[:-1]+'C_Temp'] = self.f[VarComp[v+'_Temp']]
         EMSD.Writemat(Dates,Data,savingkeys,datekeys=self.DatesDoc,datakeys=savingkeys[4:],pathout=pathout,Names=self.NamesArch[self.irow]+endingmat)
+        return
+    
+    def GraphEvents(self):
+        '''
+        DESCRIPTION:
+
+            Gráfica de los eventos.
+        '''
+        PathImg = 'Tesis_MscR/02_Docs/01_Tesis_Doc/Kap2/Img/'+self.DataBase
+        Name = self.NamesArch[self.irow]+'_Series'
+        Var = ['Precipitación','Temperatura','Humedad Relativa','Presión']
+
+        BP.GraphIDEA(self.f['FechaCP'],self.f['PrecC'],
+                self.f['TC'],self.f['HRC'],self.f['PresC'],Var,PathImg,0,V=0,Name=Name)
+        return
 
