@@ -50,7 +50,7 @@ from Utilities import Data_Man as DM
 from AnET import CorrSt as cr; cr=cr()
 from AnET import CFitting as CF; CF=CF()
 from Hydro_Analysis import Hydro_Plotter as HyPl;HyPl=HyPl()
-from Hydro_Analysis import Hydro_Analysis as HA;HA=HA()
+from Hydro_Analysis import Hydro_Analysis as HA
 from Hydro_Analysis.Models.Atmos_Thermo import Thermo_Fun as TA
 from Hydro_Analysis.Meteo import MeteoFunctions as HyMF
 
@@ -151,6 +151,167 @@ class BPumpL:
             utl.CrFolder(PathImg+ 'Manizales/Series/')
             plt.savefig(PathImg + 'Manizales/Series/' + Tot[71:-4] + '_Series_'+ \
                 str(V) +'.png',format='png',dpi=self.dpi )
+        plt.close('all')
+
+    def Graph_CiclD(self,PrecC,TempC,HRC,PresBC,Var,PathImg,Name=''):
+        '''
+            DESCRIPTION:
+        
+        Con esta función se pretende graficar los datos de las estaciones
+        de IDEA para poder visualizar las series completas.
+        _________________________________________________________________________
+
+            INPUT:
+        + FechaN: Vector de fechas con los valores en formato datetime.
+        + PrecC: Precipitación completa.
+        + TempC: Temperatura completa.
+        + HRC: Humedad relativa completa.
+        + PresBC: Presión Barométrica completa.
+        + Var: Nombre de variables a gráficar.
+        + PathImg: Ruta para guardar las imágenes.
+        + V: número de la figura.
+        _________________________________________________________________________
+        
+            OUTPUT:
+        Esta función libera un subplot con todas las figuras de las diferentes 
+        variables.
+        '''
+
+        # Tamaño de la Figura
+        fH=30 # Largo de la Figura
+        fV = fH*(2/3) # Ancho de la Figura
+        plt.close('all')
+        lfs = 18
+        #fig, axs = plt.subplots(2,2, figsize=DM.cm2inch(fH,fV), facecolor='w', edgecolor='k')
+        plt.rcParams.update({'font.size': lfs,'font.family': 'sans-serif'\
+            ,'font.sans-serif': 'Arial'\
+            ,'xtick.labelsize': 17,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.major.width': 1,'xtick.minor.width': 1\
+            ,'ytick.labelsize': 17,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.major.width': 1,'ytick.minor.width': 1\
+            ,'axes.linewidth':1\
+            ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        fig, axs = plt.subplots(2,2, figsize=DM.cm2inch(fH,fV))
+        axs = axs.ravel() # Para hacer un loop con los subplots
+        #myFmt = mdates.DateFormatter('%d/%m/%y') # Para hacer el formato de fechas
+        #xlabels = ['Ticklabel %i' % i for i in range(10)] # Para rotar los ejes
+        HH = np.arange(0,24)
+        for i in range(4):
+            if i == 0:
+                P1 = axs[i].errorbar(HH,PrecC['CiDT'],yerr=PrecC['ErrT'],fmt='-',color='b')
+                axs[i].set_ylabel(Var[i] + ' [mm]',fontsize=lfs)
+            elif i == 1:
+                P1 = axs[i].errorbar(HH,TempC['CiDT'],yerr=TempC['ErrT'],fmt='-',color='r')
+                axs[i].set_ylabel(Var[i] + ' [°C]',fontsize=lfs)
+            elif i == 2:
+                P1 = axs[i].errorbar(HH,HRC['CiDT'],yerr=HRC['ErrT'],fmt='-',color='g')
+                axs[i].set_ylabel(Var[i] + ' [%]',fontsize=lfs)
+                # axs[i].set_xlabel(u'Fechas',fontsize=lfs)
+            elif i == 3:
+                P1 = axs[i].errorbar(HH,PresBC['CiDT'],yerr=PresBC['ErrT'],fmt='-',color='k')
+                axs[i].set_ylabel(Var[i] + ' [hPa]',fontsize=lfs)
+                # axs[i].set_xlabel(u'Fechas',fontsize=lfs)
+            axs[i].set_title(Var[i],fontsize=lfs)
+            # axs[i].legend(loc='best')
+            # Se organizan las Horas
+            axs[i].set_xlim([0,23])
+            # Se cambia el label de los ejes
+            xTL = axs[i].xaxis.get_ticklocs() # List of position in x
+            MxL = (xTL[1]-xTL[0])/5 # Minor tick value
+            minorLocatorx = MultipleLocator(MxL)
+            axs[i].xaxis.set_minor_locator(minorLocatorx)
+            # Se incluyen los valores de los minor ticks
+            yTL = axs[i].yaxis.get_ticklocs() # List of Ticks in y
+            MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+            minorLocatory = MultipleLocator(MyL)
+            axs[i].yaxis.set_minor_locator(minorLocatory)
+            axs[i].grid()
+        plt.tight_layout()
+        # Se crea la ruta en donde se guardarán los archivos
+        utl.CrFolder(PathImg)
+        plt.savefig(PathImg + 'CTErr_' + Name +\
+            '.png',format='png',dpi=120)
+        plt.close('all')
+
+    def Graph_CiclA(self,PrecC,TempC,HRC,PresBC,Var,PathImg,Name=''):
+        '''
+            DESCRIPTION:
+        
+        Con esta función se pretende graficar los datos de las estaciones
+        de IDEA para poder visualizar las series completas.
+        _________________________________________________________________________
+
+            INPUT:
+        + FechaN: Vector de fechas con los valores en formato datetime.
+        + PrecC: Precipitación completa.
+        + TempC: Temperatura completa.
+        + HRC: Humedad relativa completa.
+        + PresBC: Presión Barométrica completa.
+        + Var: Nombre de variables a gráficar.
+        + PathImg: Ruta para guardar las imágenes.
+        + V: número de la figura.
+        _________________________________________________________________________
+        
+            OUTPUT:
+        Esta función libera un subplot con todas las figuras de las diferentes 
+        variables.
+        '''
+
+        # Tamaño de la Figura
+        fH=30 # Largo de la Figura
+        fV = fH*(2/3) # Ancho de la Figura
+        plt.close('all')
+        lfs = 18
+        #fig, axs = plt.subplots(2,2, figsize=DM.cm2inch(fH,fV), facecolor='w', edgecolor='k')
+        plt.rcParams.update({'font.size': lfs,'font.family': 'sans-serif'\
+            ,'font.sans-serif': 'Arial'\
+            ,'xtick.labelsize': 17,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.major.width': 1,'xtick.minor.width': 1\
+            ,'ytick.labelsize': 17,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.major.width': 1,'ytick.minor.width': 1\
+            ,'axes.linewidth':1\
+            ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        fig, axs = plt.subplots(2,2, figsize=DM.cm2inch(fH,fV))
+        axs = axs.ravel() # Para hacer un loop con los subplots
+        #myFmt = mdates.DateFormatter('%d/%m/%y') # Para hacer el formato de fechas
+        #xlabels = ['Ticklabel %i' % i for i in range(10)] # Para rotar los ejes
+        Months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dec']
+        Months2 = ['Ene','Mar','May','Jul','Sep','Nov']
+        HH = np.arange(1,13)
+        for i in range(4):
+            if i == 0:
+                P1 = axs[i].errorbar(HH,PrecC['MesM'],yerr=PrecC['MesE'],fmt='-',color='b')
+                axs[i].set_ylabel(Var[i] + ' [mm]',fontsize=lfs)
+            elif i == 1:
+                P1 = axs[i].errorbar(HH,TempC['MesM'],yerr=TempC['MesE'],fmt='-',color='r')
+                axs[i].set_ylabel(Var[i] + ' [°C]',fontsize=lfs)
+            elif i == 2:
+                P1 = axs[i].errorbar(HH,HRC['MesM'],yerr=HRC['MesE'],fmt='-',color='g')
+                axs[i].set_ylabel(Var[i] + ' [%]',fontsize=lfs)
+                # axs[i].set_xlabel(u'Fechas',fontsize=lfs)
+            elif i == 3:
+                P1 = axs[i].errorbar(HH,PresBC['MesM'],yerr=PresBC['MesE'],fmt='-',color='k')
+                axs[i].set_ylabel(Var[i] + ' [hPa]',fontsize=lfs)
+                # axs[i].set_xlabel(u'Fechas',fontsize=lfs)
+            axs[i].set_title(Var[i],fontsize=lfs)
+            # axs[i].legend(loc='best')
+            # Se organizan las Horas
+            axs[i].set_xlim([0.5,12.5])
+            # Se cambia el label de los ejes
+            xTL = axs[i].xaxis.get_ticklocs() # List of position in x
+            # Se incluyen los valores de los minor ticks
+            yTL = axs[i].yaxis.get_ticklocs() # List of Ticks in y
+            MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+            minorLocatory = MultipleLocator(MyL)
+            axs[i].yaxis.set_minor_locator(minorLocatory)
+            axs[i].grid()
+            axs[i].set_xticks(np.arange(1,13,2),minor=False)
+            axs[i].set_xticklabels(Months2)
+        plt.tight_layout()
+        # Se crea la ruta en donde se guardarán los archivos
+        utl.CrFolder(PathImg)
+        plt.savefig(PathImg + 'CAErr_' + Name +\
+            '.png',format='png',dpi=120)
         plt.close('all')
 
     def NaNEl(self,V):

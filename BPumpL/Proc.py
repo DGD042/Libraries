@@ -50,7 +50,7 @@ from Utilities import Data_Man as DM
 from AnET import CorrSt as cr;cr=cr()
 from AnET import CFitting as CF; CF=CF()
 from Hydro_Analysis import Hydro_Plotter as HyPl;HyPl=HyPl()
-from Hydro_Analysis import Hydro_Analysis as HA; HA=HA()
+from Hydro_Analysis import Hydro_Analysis as HA; 
 from Hydro_Analysis.Models.Atmos_Thermo import Thermo_Fun as TA
 from AnET import AnET as anet;anet=anet()
 from EMSD import EMSD;EMSD=EMSD()
@@ -125,6 +125,8 @@ class Proc(object):
         self.StInfo = StInfo
 
         self.Arch = Arch[DataBase]['Original']
+        self.ArchT = Arch
+        self.ArchD = Arch[DataBase]['Diarios']
         self.Paths = Arch[DataBase]['Paths']
         self.Names = np.array(StInfo[DataBase]['Name'])
         self.NamesArch = StInfo[DataBase]['Name_Arch'] 
@@ -334,7 +336,7 @@ class Proc(object):
                     self.f[Var2[v]] = anet.AnomGen(self.f[Var2[v]],h24)
         return
 
-    def EventSeparation(self,Ci=60,Cf=60,m=0.8,M=100,mP=-1,MP=-0.5,mT=0.5,MT=1):
+    def EventSeparation(self,Ci=60,Cf=60,m=0.2,M=100,mP=-1,MP=-0.5,mT=0.5,MT=1):
         '''
         DESCRIPTION:
 
@@ -356,6 +358,7 @@ class Proc(object):
         for iv,v in enumerate(Var[1:]):
             if self.flag[v]:
                 PrecC, Variable[v], FechaEv = BP.ExEv(self.f[Var2['PrecC']],self.f[Var2[v]],self.f['FechaC'],Ci=Ci,Cf=Cf,m=m,M=M,dt=int(self.dtm))
+        print(PrecC.shape)
 
         for iv,v in enumerate(Var):
             if v != 'PresC':
@@ -536,3 +539,63 @@ class Proc(object):
                 self.f['TC'],self.f['HRC'],self.f['PresC'],Var,PathImg,0,V=0,Name=Name)
         return
 
+    def Cycle_An(self):
+        '''
+        DESCRIPTION:
+
+            Gráfica los diferentes ciclos climatológicos y meteorológicos.
+        '''
+        PathImg = 'Tesis_MscR/02_Docs/01_Tesis_Doc/Kap2/Img/'+self.DataBase+'/Hidro_A/'
+        Name = self.NamesArch[self.irow]
+        Var = ['Precipitación','Temperatura','Humedad Relativa','Presión']
+        Variables = ['Prec','T','HR','Pres']
+
+        # Se carga la información Horaria
+        DataH = LD.LoadData(self.ArchT,self.DataBase,irow=self.irow,TimeScale='Horarios')
+        self.DataH = DataH
+        if self.DataBase == 'Manizales':
+            FechaC = DataH['FechaEs']
+        elif self.DataBase == 'Medellin':
+            FechaC = DataH['FechasC']
+        elif self.DataBase == 'Amazonas' or self.DataBase == 'Wunder':
+            if self.irow == 1 and self.DataBase == 'Amazonas':
+                FechaC = DataH['FechasC']
+            else:
+                FechaC = DataH['FechaC']
+        # Se carga la información Diaria
+        DataD = LD.LoadData(self.ArchT,self.DataBase,irow=self.irow,TimeScale='Diarios')
+        self.DataD = DataD
+        if self.DataBase == 'Manizales':
+            FechaCD = DataD['FechaEs']
+            FechaCD = np.array([i[:4]+'/'+i[5:] for i in FechaCD])
+        elif self.DataBase == 'Medellin' or self.DataBase == 'Amazonas':
+            FechaCD = DataD['FechaEs']
+        elif self.DataBase == 'Wunder':
+            FechaCD = DataD['FechaM']
+        self.FechaCD = FechaCD
+
+        # Se carga la información
+        CH = dict()
+        CM = dict()
+        for Lab in Variables:
+            # Horario
+            try:
+                HASR = HA(DateH=FechaC,VarH=DataH[Lab+'H'])
+            except KeyError:
+                HASR = HA(DateH=FechaC,VarH=DataH[Lab+'CH'])
+            CH[Lab] = HASR.CiclD(FlagG=False)
+
+            # Diario
+            try:
+                HASR = HA(DateM=FechaCD,VarM=DataD[Lab+'M'])
+            except KeyError:
+                HASR = HA(DateM=FechaCD,VarM=DataD[Lab+'CM'])
+            CM[Lab] = HASR.CiclA(FlagG=False)
+
+        self.CH = CH
+        self.CM = CM
+
+        # Se grafica el ciclo diurno
+        BP.Graph_CiclD(CH['Prec'],CH['T'],CH['HR'],CH['Pres'],Var,PathImg,Name=Name)
+        BP.Graph_CiclA(CM['Prec'],CM['T'],CM['HR'],CM['Pres'],Var,PathImg,Name=Name)
+        return

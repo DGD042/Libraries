@@ -264,7 +264,7 @@ class Wunder(object):
             VC = DMan.CompD(Dates,Data[Lab],dtm=timedelta(0,60))
             # Precipitation corrected
             if Lab == 'HourlyPrecipMM':
-                VC['VC'] = VC['VC']/60
+                VC['VC'] = VC['VC']# /60
             if iLab == 0:
                 DatesC = VC['DatesC']
             DataC[self.LabDataSave[Lab]] = VC['VC']
