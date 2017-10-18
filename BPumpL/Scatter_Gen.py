@@ -224,8 +224,10 @@ class Scatter_Gen(object):
         self.MEvNo = []
         for iC in range(len(self.f['PresC'])):
             xEv = np.where(DatesEvP[iC] == self.PrecCount['DatesEvst'][iC])[0][0]
-            Bef = xEv-int(60/dt*1)
+            Bef = xEv-int(60/dt*1.5)
             Aft = xEv+int(60/dt*(15/60)) 
+            if Bef <= 10:
+                continue
             Min = np.nanmin(self.f['PresC'][iC][Bef:Aft])
             xMin1 = np.where(self.f['PresC'][iC][:Aft]==Min)[0][-1]
             if Min < -0.3:
@@ -920,30 +922,33 @@ class Scatter_Gen(object):
 
         Bins2d=12
         for iV1,Vi1 in enumerate(V1):
-            if iV1 >1:
+            if iV1 !=0:
                 continue
             if Vi1 == 'Hour':
                 FlagHour = True
                 flagEst = False
                 Bins=np.arange(0,24)
+                vmax = None
             else:
                 FlagHour = False
                 flagEst = False
                 Bins=12
-            for iV2,Vi2 in enumerate(V1[iV1:]):
-                if Vi1 != Vi2:
-                    # Total
-                    HyPl.Histogram2d(Var1[Vi1],Var1[Vi2],
-                            [Bins,Bins2d],Title='Dimensiones',
-                            Var1=Variables[Vi1],Var2=Variables[Vi2],
-                            Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_'
-                            +Abre[Vi2]+'_Ev'+EndImg,
-                            PathImg=self.PathImg+ImgFolder_Scatter+'Histograms2d'+EndFold+'/',
-                            M=True,
-                            FlagHour=False) 
+                vmax = None
+            # for iV2,Vi2 in enumerate(V1[iV1:]):
+            #     if Vi1 != Vi2:
+            #         # Total
+            #         HyPl.Histogram2d(Var1[Vi1],Var1[Vi2],
+            #                 [Bins,Bins2d],Title='Dimensiones',
+            #                 Var1=Variables[Vi1],Var2=Variables[Vi2],
+            #                 Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_'
+            #                 +Abre[Vi2]+'_Ev'+EndImg,
+            #                 PathImg=self.PathImg+ImgFolder_Scatter+'Histograms2d'+EndFold+'/',
+            #                 M=True,
+            #                 FlagHour=False) 
             # Total
             HyPl.HistogramNP(Var1[Vi1],Bins,Title=' Frecuencias',
                     Var=Variables[Vi1],
                     Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_Ev'+EndImg,
                     PathImg=self.PathImg+ImgFolder_Scatter+'Histograms'+EndFold+'/',
-                    M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst)
+                    M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst,
+                    FlagBig=True,vmax=vmax)

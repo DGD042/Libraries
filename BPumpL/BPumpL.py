@@ -1108,29 +1108,29 @@ class BPumpL:
                 
                 FS = 13
 
-                ax11.text(Lx,L+SLP, r'$r_{Pearson}(%s,%s)=$' %(V22,V33), fontsize=FS)
-                ax11.text(Lx,L+SLS, r'$r_{Pearson}(%s,%s)=$' %(V11,V22), fontsize=FS)
-                if CCP >= 0: # Cuando la correlación es positiva
-                    if CCP >= QQMP:
-                        ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='blue')
-                    else:
-                        ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='red')
-                elif CCP <0: # Cuando la correlación es negativa
-                    if CCP <= QQMP:
-                        ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='blue')
-                    else:
-                        ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='red')
+                # ax11.text(Lx,L+SLP, r'$r_{Pearson}(%s,%s)=$' %(V22,V33), fontsize=FS)
+                # ax11.text(Lx,L+SLS, r'$r_{Pearson}(%s,%s)=$' %(V11,V22), fontsize=FS)
+                # if CCP >= 0: # Cuando la correlación es positiva
+                #     if CCP >= QQMP:
+                #         ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='blue')
+                #     else:
+                #         ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='red')
+                # elif CCP <0: # Cuando la correlación es negativa
+                #     if CCP <= QQMP:
+                #         ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='blue')
+                #     else:
+                #         ax11.text(Lx+Sx,L+SLP, r'$%s$' %(round(CCP,3)), fontsize=FS,color='red')
 
-                if CCP2 >= 0: # Cuando la correlación es positiva
-                    if CCP2 >= QQMP2:
-                        ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='blue')
-                    else:
-                        ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='red')
-                elif CCP2 <0: # Cuando la correlación es negativa
-                    if CCP2 <= QQMP2:
-                        ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='blue')
-                    else:
-                        ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='red')
+                # if CCP2 >= 0: # Cuando la correlación es positiva
+                #     if CCP2 >= QQMP2:
+                #         ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='blue')
+                #     else:
+                #         ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='red')
+                # elif CCP2 <0: # Cuando la correlación es negativa
+                #     if CCP2 <= QQMP2:
+                #         ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='blue')
+                #     else:
+                #         ax11.text(Lx+Sx,L+SLS, r'$%s$' %(round(CCP2,3)), fontsize=FS,color='red')
 
                 if Lim == 'all':
                     ax11.set_ylim(Lim1)

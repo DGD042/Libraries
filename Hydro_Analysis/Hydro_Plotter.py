@@ -20,6 +20,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import matplotlib.patches as patches
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import sys
@@ -538,9 +539,9 @@ class Hydro_Plotter:
         plt.grid()
 
         if FlagMan:
-            plt.contourf(x3,np.arange(1,14),ProcP3,v,vmax=vmax,vmin=vmin)
+            plt.contourf(x3,np.arange(1,14),ProcP3,v,vmax=vmax,vmin=vmin,cmap=cm.jet)
         else:
-            plt.contourf(x3,np.arange(1,14),ProcP3)
+            plt.contourf(x3,np.arange(1,14),ProcP3,cmap=cm.jet)
         plt.title(NameSt,fontsize=LabTi)  # Colocamos el título del gráfico
         # plt.ylabel('Meses',fontsize=15)  # Colocamos la etiqueta en el eje x
         # plt.xlabel('Horas',fontsize=15)  # Colocamos la etiqueta en el eje y
@@ -1873,7 +1874,7 @@ class Hydro_Plotter:
         plt.savefig(PathImg + Name +'_Hist' + '.png',format='png',dpi=self.dpi )
         plt.close('all')
 
-    def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True,FlagHour=False,flagEst=True,FlagTitle=False):
+    def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True,FlagHour=False,flagEst=True,FlagTitle=False,FlagBig=False,vmax=None):
         '''
         DESCRIPTION:
         
@@ -1895,6 +1896,8 @@ class Hydro_Plotter:
             + FlagHour: flag para poner el eje x en horas.
             + flagEst: flag para poner los estadísticos.
             + FlagTitle: flag incluir el título.
+            + FlagBig: flag para poner la letra grande.
+            + vmax: valor máximo del gráfico.
         _________________________________________________________________________
         
         OUTPUT:
@@ -1929,33 +1932,44 @@ class Hydro_Plotter:
         # Parámetros de la gráfica
         F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
-        plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-            ,'font.sans-serif': self.font\
-            ,'xtick.labelsize': 14,'xtick.major.size': 6,'xtick.minor.size': 4\
-            ,'xtick.major.width': 1,'xtick.minor.width': 1\
-            ,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
-            ,'ytick.major.width': 1,'ytick.minor.width': 1\
-            ,'axes.linewidth':1\
-            ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        if FlagBig:
+            plt.rcParams.update({'font.size': 18,'font.family': 'sans-serif'\
+                ,'font.sans-serif': self.font\
+                ,'xtick.labelsize': 18,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 18,'ytick.major.size': 6,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        else:
+            plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+                ,'font.sans-serif': self.font\
+                ,'xtick.labelsize': 14,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 16,'ytick.major.size': 6,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
         plt.tick_params(axis='x',which='both',bottom='on',top='off',\
             labelbottom='on',direction='out')
         plt.tick_params(axis='y',which='both',left='on',right='off',\
             labelleft='on')
         plt.tick_params(axis='y',which='major',direction='out') 
         # Se realiza la figura 
-        p1 = plt.bar(DBin[:-1],DH,color='dodgerblue',width=widthD)#,edgecolor='none')
+        # p1 = plt.bar(DBin[:-1],DH,color='dodgerblue',width=widthD,edgecolor='k')
+        p1 = plt.bar(centerD,DH,color='dodgerblue',width=widthD,edgecolor='k')
         # Se cambia el valor de los ejes.
         plt.xticks(centerD) # Se cambia el valor de los ejes
+        ax = plt.gca()
         if FlagHour:
             CCStr = []
             for C in centerD:
                 hour = int(C)
                 minutes = int((C*60) % 60)
                 CCStr.append('%d:%02d' %(hour,minutes))
-            ax = plt.gca()
             ax.set_xticklabels(CCStr)
-            for tick in ax.get_xticklabels():
-                tick.set_rotation(45)
+        for tick in ax.get_xticklabels():
+            tick.set_rotation(45)
         # Se arreglan los ejes
         ax = plt.gca()
         # Se cambia el label de los eje
@@ -1967,6 +1981,8 @@ class Hydro_Plotter:
         plt.gca().yaxis.set_minor_locator(minorLocatory)
 
         plt.xlim([DBin[0],DBin[-1]])
+        if vmax != None:
+            plt.ylim([0,vmax])
         if flagEst:
             plt.plot([A,A],[0,yTL[-1]],'k-')
             plt.plot([A+B,A+B],[0,yTL[-1]],'k--')
@@ -1990,12 +2006,12 @@ class Hydro_Plotter:
         # Título
         if FlagTitle:
             if FEn:
-                plt.title('Histogram of '+Title,fontsize=15 )
+                plt.title('Histogram of '+Title)
             else:
-                plt.title('Histograma de '+Title,fontsize=15 )
-        plt.xlabel(Var,fontsize=16)  # Colocamos la etiqueta en el eje x
+                plt.title('Histograma de '+Title)
+        plt.xlabel(Var)  # Colocamos la etiqueta en el eje x
         if M == 'porcen':
-            plt.ylabel('Porcentaje [%]',fontsize=16)  # Colocamos la etiqueta en el eje y
+            plt.ylabel('Porcentaje [%]')  # Colocamos la etiqueta en el eje y
         plt.tight_layout()
         plt.savefig(PathImg + Name +'_Hist' + '.png',format='png',dpi=self.dpi )
         plt.close('all')

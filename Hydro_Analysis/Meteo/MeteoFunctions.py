@@ -613,7 +613,7 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
                 # -----------------------------
                 # Max Intensity precipitation
                 # -----------------------------
-                IntPrecMax.append(MaxPrec[-1]/(5/60))
+                IntPrecMax.append(MaxPrec[-1]/(dt/60))
                 # ------------------------
                 # P Index
                 # ------------------------

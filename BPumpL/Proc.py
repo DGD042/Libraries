@@ -54,6 +54,7 @@ from Hydro_Analysis import Hydro_Analysis as HA;
 from Hydro_Analysis.Models.Atmos_Thermo import Thermo_Fun as TA
 from AnET import AnET as anet;anet=anet()
 from EMSD import EMSD;EMSD=EMSD()
+from EMSD.Data_Man import Data_Man as DMan
 from BPumpL.BPumpL import BPumpL as BP;BP=BP()
 from BPumpL.Data_Man import Load_Data as LD
 
@@ -198,6 +199,9 @@ class Proc(object):
             self.f['FechaCP'] = DUtil.Dates_str2datetime(self.f['FechaC'],Date_Format='%Y/%m/%d-%H%M',flagQuick=True)
             if isinstance(self.f['FechaCP'],int):
                 self.f['FechaCP'] = DUtil.Dates_str2datetime(self.f['FechaC'],Date_Format='%Y-%m-%d-%H%M',flagQuick=True)
+            if self.DataBase == 'Amazonas':
+                self.f['FechaCP'] = self.f['FechaCP']-timedelta(0,4*60*60)
+                self.f['FechaC'] = DUtil.Dates_datetime2str(self.f['FechaCP'])
             # print('Loop took {} seconds'.format(time.time()-last_time))
             # Delta de tiempo
             self.dtm = str(int(self.f['FechaC'][1][-2:]))
@@ -208,8 +212,9 @@ class Proc(object):
         except KeyError:
             self.flag['FechaC'] = False
 
-        self.f['qC'] = TA.qeq(self.f['PresC'],self.f['HRC'],self.f['TC'])
+        self.f['qC'] = TA.qeq(self.f['PresC'],self.f['HRC'],self.f['TC'])*1000
         self.flag['qC'] = True
+
         # except KeyError:
         #     self.flag['qC'] = False
         
@@ -562,6 +567,15 @@ class Proc(object):
                 FechaC = DataH['FechasC']
             else:
                 FechaC = DataH['FechaC']
+
+        if self.DataBase == 'Amazonas':
+            FechaCP = DUtil.Dates_str2datetime(FechaC,Date_Format='%Y/%m/%d-%H%M',flagQuick=True)
+            FechaCP = FechaCP - timedelta(0,4*60*60)
+            for Lab in Variables:
+                VC = DMan.CompD(FechaCP,DataH[Lab+'H'],dtm=timedelta(0,60*60))
+                DataH[Lab+'H'] = VC['VC']
+                if Lab == 'PrecC':
+                    FechaC = VC['DatesC']
         # Se carga la información Diaria
         DataD = LD.LoadData(self.ArchT,self.DataBase,irow=self.irow,TimeScale='Diarios')
         self.DataD = DataD
