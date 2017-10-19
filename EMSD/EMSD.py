@@ -301,10 +301,10 @@ class EMSD(object):
         if max(colDates) > ncol-1 or max(colData) > ncol-1:
             Er = utl.ShowError('EDExcel','EDSM','column exceed dimension of the sheet')
         if row_end != None:
-            if row_end > nrow-1:
-                row_end = nrow-1
+            if row_end > nrow:
+                row_end = nrow
         else:
-            row_end = nrow-1
+            row_end = nrow
 
         # Header Exctraction
         if flagHeader:
