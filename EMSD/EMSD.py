@@ -99,7 +99,7 @@ class EMSD(object):
         return
 
     def Open_Data(self,File,flagCompelete=True,DataBase={'DataBaseType':'txt','deli':',','colStr':(0,),
-        'colData':(1,0), 'row_skip':1,'flagHeader':True,'rowH':0,'row_end':None,'str_NaN':None,
+        'colData':(1,), 'row_skip':1,'flagHeader':True,'rowH':0,'row_end':0,'str_NaN':None,
         'num_NaN':None,'dtypeData':float}):
         '''
         DESCRIPTION:
@@ -140,7 +140,7 @@ class EMSD(object):
             ParamsLab = ['deli','colStr','colData','row_skip','flagHeader','rowH','row_end','str_NaN',
                 'num_NaN','dtypeData']
             Params = {'deli':',','colStr':(0,),
-                'colData':(1,0), 'row_skip':1,'flagHeader':True,'rowH':1,'row_end':0,'str_NaN':None,
+                'colData':(1,), 'row_skip':1,'flagHeader':True,'rowH':1,'row_end':0,'str_NaN':None,
                 'num_NaN':None,'dtypeData':float}
             ParamsFunc = dict()
             for iPar,Par in enumerate(ParamsLab):
@@ -301,10 +301,10 @@ class EMSD(object):
         if max(colDates) > ncol-1 or max(colData) > ncol-1:
             Er = utl.ShowError('EDExcel','EDSM','column exceed dimension of the sheet')
         if row_end != None:
-            if row_end > nrow:
-                row_end = nrow
+            if row_end > nrow-1:
+                row_end = nrow-1
         else:
-            row_end = nrow
+            row_end = nrow-1
 
         # Header Exctraction
         if flagHeader:
