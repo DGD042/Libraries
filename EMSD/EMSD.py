@@ -2044,7 +2044,7 @@ class EMSD(object):
         else:
             return self.Dates,self.DatesN, self.Values
             
-    def Ca_EC(self,Date=None,V1=None,op='mean',key=None,dtm=None,op2=None,op3=None):
+    def Ca_EC(self,Date=None,V1=None,op='mean',key=None,dtm=None,op2=None,op3=None,flagHour=True):
         '''
         DESCRIPTION:
 
@@ -2091,11 +2091,10 @@ class EMSD(object):
         # Temporal verification
         lenDates = len(Date[0])
         flagHour = False
-        if lenDates > 10:
-            flagHour = True
+        if flagHour:
             D_Formats = DUtil.DateTime_Formats
             dt = int(60/dtm)
-            if dt != 60
+            if dt != 60:
                 # Hourly
                 DateH, DateHN, VH,VmaxH,VminH = DMan.Ca_E(Date,V1,dt,0,op=op,flagMa=True,flagDF=False)
                 DatesC[DateLab[0]] = DateH
@@ -2104,17 +2103,16 @@ class EMSD(object):
                 VC[VLab[1]] = VmaxH
                 VC[VLab[2]] = VminH
         else:
-            D_Formats = self.Date_Formats
+            D_Formats = DUtil.Date_Formats
             VH = V1
         # Daily data
-        dt = int(24*60/dtm)
         if op2 == None:
             op2 = op
         if flagHour:
             dt = 24
             DateD, DateDN, VD,VmaxD,VminD = DMan.Ca_E(DateH,VH,dt,1,op=op2,flagMa=True,flagDF=False)
         else:
-            DateD, DateDN, VD,VmaxD,VminD = DMan.Ca_E(Date,V1,dt,1,op=op2,flagMa=True,flagDF=False)
+            DateD, DateDN, VD,VmaxD,VminD = DMan.Ca_E(Date,V1,dtm,1,op=op2,flagMa=True,flagDF=False)
         DatesC[DateLab[1]] = DateD
         DatesNC[DateNLab[1]] = DateDN
         VC[VLab[3]] = VD
@@ -2124,7 +2122,7 @@ class EMSD(object):
         if op3 == None:
             op3 = op
 
-        DateM, DateMN, VM,VmaxM,VminM,VNF,VNNF = self.Ca_E(DateD,VD,dt,2,op=op3,flagMa=True,flagDF=True)
+        DateM, DateMN, VM,VmaxM,VminM,VNF,VNNF = self.Ca_E(DateD,VD,1,2,op=op3,flagMa=True,flagDF=True)
         DatesC[DateLab[2]] = DateM
         DatesNC[DateNLab[2]] = DateMN
         VC[VLab[6]] = VM
