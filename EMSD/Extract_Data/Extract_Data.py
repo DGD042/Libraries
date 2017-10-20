@@ -126,17 +126,17 @@ def EDTXT(File,deli=',',colStr=(0,),colData=(1,),row_skip=1,flagHeader=True,
     # ----------------
     # Error Managment
     # ----------------
-    if not(isinstance(colStr,tuple)) and not(isinstance(colStr,list)) and colStr == None:
+    if not(isinstance(colStr,tuple)) and not(isinstance(colStr,list)) and colStr != None:
         Er = utl.ShowError('EDTXT','EMSD.Extract_Data',
                 'colStr not in tuple or list')
         raise TypeError
-    elif not(isinstance(colStr,tuple)):
+    elif not(isinstance(colStr,tuple)) and colStr != None:
         colStr = tuple(colStr)
-    if not(isinstance(colData,tuple)) and not(isinstance(colData,list)) and colData == None:
+    if not(isinstance(colData,tuple)) and not(isinstance(colData,list)) and colData != None:
         Er = utl.ShowError('EDTXT','EMSD.Extract_Data',
                 'colData not in tuple or list')
         raise TypeError
-    elif not(isinstance(colData,tuple)):
+    elif not(isinstance(colData,tuple)) and colStr != None:
         colData = tuple(colData)
 
     # Verify values
@@ -159,10 +159,10 @@ def EDTXT(File,deli=',',colStr=(0,),colData=(1,),row_skip=1,flagHeader=True,
         if colStr == None and colData == None:
             Headers = np.genfromtxt(File,dtype=str,
                     skip_header=rowH,delimiter=deli,max_rows=1)
-        elif colStr == None:
+        elif colStr != None:
             Headers = np.genfromtxt(File,dtype=str,usecols=colStr,
                     skip_header=rowH,delimiter=deli,max_rows=1)
-        elif colData == None:
+        elif colData != None:
             Headers = np.genfromtxt(File,dtype=str,usecols=colData,
                     skip_header=rowH,delimiter=deli,max_rows=1)
         else:
