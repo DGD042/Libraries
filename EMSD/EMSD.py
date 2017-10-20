@@ -2095,13 +2095,14 @@ class EMSD(object):
             flagHour = True
             D_Formats = DUtil.DateTime_Formats
             dt = int(60/dtm)
-            # Hourly
-            DateH, DateHN, VH,VmaxH,VminH = DMan.Ca_E(Date,V1,dt,0,op=op,flagMa=True,flagDF=False)
-            DatesC[DateLab[0]] = DateH
-            DatesNC[DateNLab[0]] = DateHN
-            VC[VLab[0]] = VH
-            VC[VLab[1]] = VmaxH
-            VC[VLab[2]] = VminH
+            if dt != 60
+                # Hourly
+                DateH, DateHN, VH,VmaxH,VminH = DMan.Ca_E(Date,V1,dt,0,op=op,flagMa=True,flagDF=False)
+                DatesC[DateLab[0]] = DateH
+                DatesNC[DateNLab[0]] = DateHN
+                VC[VLab[0]] = VH
+                VC[VLab[1]] = VmaxH
+                VC[VLab[2]] = VminH
         else:
             D_Formats = self.Date_Formats
             VH = V1
