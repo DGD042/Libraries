@@ -542,10 +542,10 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
                 xMM = xM[a]
                 k = 2
         if EvN == 1:
-            DatesEvst_Aft.append(DatesEv[xmm+1])
+            DatesEvst_Aft.append(DatesEv[xmm])
             DatesEvend_Aft.append(DatesEv[xMM])
         else:
-            DatesEvst_Aft.append(DatesEv[i][xmm+1])
+            DatesEvst_Aft.append(DatesEv[i][xmm])
             DatesEvend_Aft.append(DatesEv[i][xMM])
     
     DatesEvst = DUtil.Dates_str2datetime(DatesEvst_Aft,Date_Format=None)

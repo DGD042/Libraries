@@ -394,6 +394,8 @@ class BPumpL:
                     Prec2[xDateSt:xDateEnd] = np.nan
                     maxPrec = np.nanmax(Prec2)
                     continue
+                if q[0]-Ci < 0 or q[0]+Cf >= len(Prec2):
+                    continue
                 if xx == 0:
                     PrecC = Prec[q[0]-Ci:q[0]+Cf]
                     VC = V[q[0]-Ci:q[0]+Cf]
@@ -4197,6 +4199,168 @@ class BPumpL:
             plt.savefig(Nameout + '.png',format='png',dpi=300 )
             plt.close('all')
 
+    def EventsSeriesGen(self,DatesEv,Data,DataV,DataKeyV,DataKey=None,
+            PathImg='',Name='',NameArch='',
+            GraphInfo={'ylabel':['Precipitación [mm]'],'color':['b'],'label':['Precipitación']},
+            GraphInfoV={'color':['-.b'],'label':['Inicio del Evento']},
+            flagBig=False,vm={'vmax':[],'vmin':[]},Ev=0):
+        '''
+        DESCRIPTION:
+
+            Esta función realiza los gráficos de los diferentes eventos
+            solamente de los eventos de precipitación.
+        _______________________________________________________________________
+        INPUT:
+            :param DatesEv:     A ndarray, Dates of the events.
+            :param Data:        A dict, Diccionario con las variables
+                                            que se graficarán.
+            :param DataV:       A dict, Diccionario con las líneas verticales
+                                        estos deben ser fechas en formato
+                                        datetime.
+            :param DataKeyV:    A list, Lista con keys de los valores verticales.
+
+        '''
+        # Se organizan las fechas
+        if not(isinstance(DatesEv[0],datetime)):
+            FechaEvv = DUtil.Dates_str2datetime(DatesEv)
+        else:
+            FechaEvv = DatesEv
+
+        if DataKey is None:
+            flagSeveral = False
+        elif len(DataKey) >= 1:
+            flagSeveral = True
+
+        if len(vm['vmax']) == 0 and len(vm['vmin']) == 0:
+            flagVm = False
+        else:
+            flagVm = True
+
+        if flagVm:
+            if len(vm['vmax']) >= 1 and len(vm['vmin']) >= 1:
+                flagVmax = True
+                flagVmin = True
+            elif len(vm['vmax']) >= 1:
+                flagVmax = True
+                flagVmin = False
+            elif len(vm['vmin']) >= 1:
+                flagVmax = False
+                flagVmin = True
+
+        # -------------------------
+        # Se grafican los eventos
+        # -------------------------
+
+        # Se grafican las dos series
+        fH=30 # Largo de la Figura
+        fV = fH*(2/3) # Ancho de la Figura
+
+        # Se crea la carpeta para guardar la imágen
+        utl.CrFolder(PathImg + NameArch + '/')
+
+        if flagBig:
+            plt.rcParams.update({'font.size': 18,'font.family': 'sans-serif'\
+                ,'font.sans-serif': 'Arial Narrow'\
+                ,'xtick.labelsize': 18,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 18,'ytick.major.size': 12,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        else:
+            plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+                ,'font.sans-serif': 'Arial Narrow'\
+                ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
+
+        f = plt.figure(figsize=DM.cm2inch(fH,fV))
+        ax = host_subplot(111, axes_class=AA.Axes)
+        ax.tick_params(axis='x',which='both',bottom='on',top='off',\
+            labelbottom='on',direction='out')
+        ax.tick_params(axis='y',which='both',left='on',right='off',\
+            labelleft='on')
+        ax.tick_params(axis='y',which='major',direction='inout') 
+        if flagSeveral:
+            if len(DataKey) >= 1:
+                DataP = Data[DataKey[0]]
+        else:
+            DataP = Data
+
+        # Se grafica el gráfico principal
+        ax.plot(FechaEvv,DataP,color=GraphInfo['color'][0],label=GraphInfo['label'][0])
+        ax.axis["left"].label.set_color(color=GraphInfo['color'][0])
+        ax.set_ylabel(GraphInfo['ylabel'][0])
+        ax.set_title(Name+r" Evento "+DUtil.Dates_datetime2str([DataV['DatesEvst'][Ev]])[0])
+
+        # Se escala el eje 
+        if flagVm:
+            if (flagVmax and flagVmin) and (not(vm['vmin'][0] is None) and not(vm['vmax'][0] is None)):
+                ax.set_ylim([vm['vmin'][0],vm['vmax'][0]])
+            elif flagVmax and not(vm['vmax'][0] is None):
+                ax.set_ylim(ymax=vm['vmax'][0])
+            elif flagVmin and not(vm['vmin'][0] is None):
+                ax.set_ylim(ymin=vm['vmin'][0])
+
+        yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+
+        # Se grafican las líneas verticales
+        for ilab,lab in enumerate(DataKeyV):
+            ax.plot([DataV[lab][Ev],DataV[lab][Ev]],[yTL[0],yTL[-1]],
+                    GraphInfoV['color'][ilab],label=GraphInfoV['label'][ilab])
+
+        # Se organizan los ejes 
+        MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+        minorLocatory = MultipleLocator(MyL)
+        ax.yaxis.set_minor_locator(minorLocatory)
+
+        # Se realizan los demás gráficos
+        if flagSeveral:
+            axi = [ax.twinx() for i in range(len(DataKey)-1)]
+            for ilab,lab in enumerate(DataKey):
+                if ilab >= 1:
+                    axi[ilab-1].plot(FechaEvv,Data[lab],color=GraphInfo['color'][ilab],
+                            label=GraphInfo['label'][ilab])
+                    axi[ilab-1].set_ylabel(GraphInfo['ylabel'][ilab])
+                    if ilab == 2:
+                        offset = 60
+                        new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
+                        axi[ilab-1].axis["right"] = new_fixed_axis(loc="right",
+                                                        axes=axi[ilab-1],
+                                                        offset=(offset, 0))
+                        axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
+                    elif ilab == 3:
+                        # axi[ilab-1].spines['right'].set_position(('axes',-0.25))
+                        offset = -60
+                        new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
+                        axi[ilab-1].axis["right"] = new_fixed_axis(loc="left",
+                                                        axes=axi[ilab-1],
+                                                        offset=(offset, 0))
+                        axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
+                        # axi[ilab-1].set_frame_on(True)
+                        # axi[ilab-1].patch.set_visible(False)
+                    else:
+                        axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
+
+                    # Se organizan los ejes 
+                    yTL = axi[ilab-1].yaxis.get_ticklocs() # List of Ticks in y
+                    MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+                    minorLocatory = MultipleLocator(MyL)
+                    axi[ilab-1].yaxis.set_minor_locator(minorLocatory)
+
+        plt.legend(loc=3,framealpha=0.6)
+        # plt.grid()
+        plt.tight_layout()
+        Nameout = PathImg + NameArch + '/' + NameArch + '_Ev_'+str(Ev)
+        plt.savefig(Nameout+'.png',format='png',dpi=200)
+        plt.close('all')
+
+
+
+
     def MapEvents(self,elevation,ElCor,Est,Points,V1,V2,vmax1,vmin1,vmax2,vmin2,Fecha,xlim=[-75.55,-75.46],ylim=[5.02,5.09],flagsmall=True,VarL1='',VarL2='',PathImg='',Name=''):
         '''
         DESCRIPTION:
@@ -4346,4 +4510,4 @@ class BPumpL:
 
         plt.savefig(PathImg+Name+'.png',format = 'png',dpi=self.dpi)
         plt.close('all')
-
+ 

@@ -150,6 +150,30 @@ def Eeq(q,p):
 
     return e
 
+def Weq(p,RH,T):
+    '''
+    DESCRIPTION:
+    
+        This function calculates the mixed rate of water vapor in the
+        atmosphere.
+    _________________________________________________________________________
+
+    INPUT:
+        :param RH: A ndarray or float, Relative Humidity.
+        :param p:  A ndarray or float, Pressure.
+        :param T:  A ndarray or float, Temperature.
+    _________________________________________________________________________
+    
+    OUTPUT:
+        :return W: A ndarray or float, Mixed rate water vapor.
+    '''
+    es,e = ESeq(T,HR=RH)
+
+    epsilon = 0.622
+    W = (epsilon*e)/p
+
+    return W
+
 def HReq(T,q,p):
     '''
         DESCRIPTION:

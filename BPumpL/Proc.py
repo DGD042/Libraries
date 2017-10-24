@@ -77,8 +77,8 @@ class Proc(object):
         # Constantes
         # ----------------------------
         # Información para gráficos
-        LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica']
-        LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]']
+        LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica','Tasa de Mezcla de Vapor de Agua']
+        LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]','Tasa de Mezcla [kg/g]']
         self.DataBase = DataBase
         
         self.mmHg2hPa = 1.3332239
@@ -88,7 +88,7 @@ class Proc(object):
         self.epsgMAGNA = 3116
 
         # Diccionarios con las diferentes variables
-        self.Variables = ['PrecC','TC','HRC','PresC','qC']
+        self.Variables = ['PrecC','TC','HRC','PresC','qC','WC']
         self.Variables_N = dict()
         self.Variables2 = dict()
         self.Variables3 = dict()
@@ -212,8 +212,13 @@ class Proc(object):
         except KeyError:
             self.flag['FechaC'] = False
 
+        # Humedad específica
         self.f['qC'] = TA.qeq(self.f['PresC'],self.f['HRC'],self.f['TC'])*1000
         self.flag['qC'] = True
+
+        # Tasa de mezcla del vapor de agua
+        self.f['WC'] = TA.Weq(self.f['PresC'],self.f['HRC'],self.f['TC'])*1000
+        self.flag['WC'] = True
 
         # except KeyError:
         #     self.flag['qC'] = False

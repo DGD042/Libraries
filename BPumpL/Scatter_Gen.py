@@ -227,7 +227,10 @@ class Scatter_Gen(object):
             Bef = xEv-int(60/dt*1.5)
             Aft = xEv+int(60/dt*(15/60)) 
             if Bef <= 10:
+                self.EvNo.append(iC)
+                self.MEvNo.append(self.Months[iC])
                 continue
+                
             Min = np.nanmin(self.f['PresC'][iC][Bef:Aft])
             xMin1 = np.where(self.f['PresC'][iC][:Aft]==Min)[0][-1]
             if Min < -0.3:
@@ -354,6 +357,79 @@ class Scatter_Gen(object):
                 self.Statistics.update({'Perc_Temp_Yes':len(self.EvDYes['PrecC_Temp'])/len(self.f['PrecC_Temp']),
                         'Perc_Temp_No':len(self.EvDNo['PrecC_Temp'])/len(self.f['PrecC_Temp'])})
         return
+
+    def EventsSeriesGenGraph(self,ImgFolder='',Evmax=1,EvType='Tot',
+            flags={'TC':False,'PresC':False,'HRC':False,'qC':False}):
+        '''
+        DESCRIPTION:
+            Con esta función se pretenden graficar los diferentes eventos de 
+            precipitación por separado.
+
+            Es necesario haber corrido la función EventsPrecPresDetection antes.
+        _________________________________________________________________________
+
+        INPUT:
+            + ImgFolder: Carpeta donde se guardarán los datos.
+        _________________________________________________________________________
+
+        OUTPUT:
+            Se generan los gráficos
+
+        '''
+        self.ImgFolder = ImgFolder
+
+
+        Labels = ['PresC','TC','HRC','qC']
+        UnitsDict = {'TC':'Temperatura [°C]','PresC':'Presión [hPa]','HRC':'Humedad Relativa [%]',
+                'qC':'Humedad Específica [kg/g]'}
+        ColorDict = {'TC':'r','PresC':'k','HRC':'g',
+                'qC':'g'}
+        LabelDict = {'TC':'Temperatura','PresC':'Presión','HRC':'Humedad Relativa',
+                'qC':'Humedad Específica'}
+
+
+        DataKeys = ['PrecC']
+        Units = ['Precipitación [mm]']
+        Color = ['b']
+        Label = ['Precipitación']
+        Vars = 'Prec'
+        for iLab,Lab in enumerate(Labels):
+            if flags[Lab]:
+                DataKeys.append(Lab)
+                Units.append(UnitsDict[Lab])
+                Color.append(ColorDict[Lab])
+                Label.append(LabelDict[Lab])
+                Vars += '_'+Lab[:-1]
+        Vars += '_Events'
+
+
+        EvTot = dict()
+        if EvType == 'Tot':
+            EvTot = self.f
+        elif EvType == 'Yes':
+            for iLab,Lab in enumerate(Labels+['PrecC']):
+                EvTot[Lab] = self.f[Lab][self.EvYes]
+        elif EvType == 'No':
+            for iLab,Lab in enumerate(Labels+['PrecC']):
+                EvTot[Lab] = self.f[Lab][self.EvNo]
+
+        # Se grafican los eventos
+        for iEv in range(len(EvTot)):
+            if iEv <= Evmax:
+                Data = dict()
+                Data['PrecC'] = EvTot['PrecC'][iEv]
+                for iLab,Lab in enumerate(Labels):
+                    if flags[Lab]:
+                        Data[Lab] = EvTot[Lab][iEv]
+                BP.EventsSeriesGen(self.f['FechaEv'][iEv],Data,self.PrecCount,
+                        DataKeyV=['DatesEvst','DatesEvend'],DataKey=DataKeys,
+                        PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
+                        Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
+                        GraphInfo={'ylabel':Units,'color':Color,
+                            'label':Label},
+                        GraphInfoV={'color':['-.b','-.g'],
+                            'label':['Inicio del Evento','Fin del Evento']},
+                        flagBig=False,vm={'vmax':[None],'vmin':[0]},Ev=iEv)
 
     def EventsGraphSeries(self,ImgFolder='Manizales/Events/'):
         '''
