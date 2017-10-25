@@ -4283,6 +4283,7 @@ class BPumpL:
                 ,'axes.linewidth':1\
                 ,'grid.alpha':0.1,'grid.linestyle':'-'})
 
+        plt.xticks(rotation=45)
         f = plt.figure(figsize=DM.cm2inch(fH,fV))
         ax = host_subplot(111, axes_class=AA.Axes)
         ax.tick_params(axis='x',which='both',bottom='on',top='off',\
@@ -4298,6 +4299,11 @@ class BPumpL:
 
         # Se grafica el gráfico principal
         ax.plot(FechaEvv,DataP,color=GraphInfo['color'][0],label=GraphInfo['label'][0])
+        if not(flagAverage):
+            ax.axis["bottom"].major_ticklabels.set_rotation(30)
+            ax.axis["bottom"].major_ticklabels.set_ha("right")
+            ax.axis["bottom"].label.set_pad(30)
+            ax.axis["bottom"].format_xdata = mdates.DateFormatter('%H%M')
         ax.axis["left"].label.set_color(color=GraphInfo['color'][0])
         ax.set_ylabel(GraphInfo['ylabel'][0])
 
@@ -4340,7 +4346,7 @@ class BPumpL:
                             axi[ilab-1].set_ylim(ymin=vm['vmin'][ilab])
 
                     if ilab == 2:
-                        offset = 65
+                        offset = 80
                         new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
                         axi[ilab-1].axis["right"] = new_fixed_axis(loc="right",
                                                         axes=axi[ilab-1],
@@ -4364,20 +4370,19 @@ class BPumpL:
                     MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
                     minorLocatory = MultipleLocator(MyL)
                     axi[ilab-1].yaxis.set_minor_locator(minorLocatory)
+                    axi[ilab-1].format_xdata = mdates.DateFormatter('%H%M')
+                    # axi[ilab-1].axes.get_xaxis().set_visible(False)
 
         if flagAverage:
             ax.set_xlabel('Tiempo [h]')
             ax.set_title(r"Diagrama de Compuestos en "+Name)
         else:
-            for tick in ax.get_xticklabels():
-                tick.set_rotation(45)
             if Date == '':
                 ax.set_title(Name)
             else:
                 ax.set_title(Name+r" Evento "+Date)
         plt.legend(loc=4,framealpha=0.6,fontsize=lensize)
         # plt.grid()
-        plt.tight_layout()
         if flagAverage:
             # Se crea la carpeta para guardar la imágen
             utl.CrFolder(PathImg + 'Average/')
@@ -4386,6 +4391,7 @@ class BPumpL:
             # Se crea la carpeta para guardar la imágen
             utl.CrFolder(PathImg + NameArch + '/')
             Nameout = PathImg + NameArch + '/' + NameArch + '_Ev_'+str(Ev)
+        plt.tight_layout()
 
         plt.savefig(Nameout+'.png',format='png',dpi=200)
         plt.close('all')

@@ -516,7 +516,7 @@ class Scatter_Gen(object):
                     'label':Label},
                 GraphInfoV={'color':['-.b','-.g'],
                     'label':['Inicio del Evento','Fin del Evento']},
-                flagBig=flagBig,vm=vm,Ev=0,flagV=False)
+                flagBig=flagBig,vm=vm,Ev=0,flagV=False,Date=Dates[0].strftime('%Y/%m/%d'))
 
     def EventsGraphSeries(self,ImgFolder='Manizales/Events/'):
         '''
