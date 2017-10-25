@@ -141,7 +141,7 @@ class DatesUtil(object):
             except:
                 if iF == len(Date_Formats)-1:
                     Er = utl.ShowError('Dates_str2datetime','DatesUtil','Bad date format, change format')
-                    return Er
+                    raise TypeError
                 else:
                     continue
         # -------------------------

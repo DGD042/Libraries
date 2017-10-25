@@ -32,7 +32,6 @@ import platform
 from Utilities import Utilities as utl
 from Utilities import DatesUtil as DUtil; DUtil=DUtil()
 
-
 # ------------------------
 # Funciones
 # ------------------------
@@ -159,10 +158,10 @@ def EDTXT(File,deli=',',colStr=(0,),colData=(1,),row_skip=1,flagHeader=True,
         if colStr == None and colData == None:
             Headers = np.genfromtxt(File,dtype=str,
                     skip_header=rowH,delimiter=deli,max_rows=1)
-        elif colStr != None:
+        elif colStr != None and colData == None:
             Headers = np.genfromtxt(File,dtype=str,usecols=colStr,
                     skip_header=rowH,delimiter=deli,max_rows=1)
-        elif colData != None:
+        elif colData != None and colStr == None:
             Headers = np.genfromtxt(File,dtype=str,usecols=colData,
                     skip_header=rowH,delimiter=deli,max_rows=1)
         else:
