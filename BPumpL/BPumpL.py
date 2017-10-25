@@ -4204,7 +4204,7 @@ class BPumpL:
             GraphInfo={'ylabel':['Precipitación [mm]'],'color':['b'],'label':['Precipitación']},
             GraphInfoV={'color':['-.b'],'label':['Inicio del Evento']},
             flagBig=False,vm={'vmax':[],'vmin':[]},Ev=0,flagV=True,
-            flagAverage=False,dt=1,Date=''):
+            flagAverage=False,dt=1,Date='',flagEvent=False):
         '''
         DESCRIPTION:
 
@@ -4360,8 +4360,6 @@ class BPumpL:
                                                         axes=axi[ilab-1],
                                                         offset=(offset, 0))
                         axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
-                        # axi[ilab-1].set_frame_on(True)
-                        # axi[ilab-1].patch.set_visible(False)
                     else:
                         axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
 
@@ -4371,7 +4369,6 @@ class BPumpL:
                     minorLocatory = MultipleLocator(MyL)
                     axi[ilab-1].yaxis.set_minor_locator(minorLocatory)
                     axi[ilab-1].format_xdata = mdates.DateFormatter('%H%M')
-                    # axi[ilab-1].axes.get_xaxis().set_visible(False)
 
         if flagAverage:
             ax.set_xlabel('Tiempo [h]')
@@ -4387,6 +4384,12 @@ class BPumpL:
             # Se crea la carpeta para guardar la imágen
             utl.CrFolder(PathImg + 'Average/')
             Nameout = PathImg + 'Average/' + NameArch 
+        elif flagEvent:
+            # Se crea la carpeta para guardar la imágen
+            DateL = Date.split('/')
+            utl.CrFolder(PathImg + DateL[0]+DateL[1]+DateL[2] + '/')
+            Nameout = PathImg + '/' + DateL[0]+DateL[1]+DateL[2] + '/'\
+                    + NameArch + '_Ev_' + str(Ev)
         else:
             # Se crea la carpeta para guardar la imágen
             utl.CrFolder(PathImg + NameArch + '/')

@@ -476,7 +476,7 @@ class Scatter_Gen(object):
 
         Labels = ['Pres_F','T_F','HR_F','q_F','W_F']
         UnitsDict = {'T_F':'Temperatura [°C]','Pres_F':'Presión [hPa]','HR_F':'Humedad Relativa [%]',
-                'q_F':'Humedad Específica [kg/g]','W_F':'Tasa de Mezcla [kg/g]'}
+                'q_F':'Humedad Específica [g/kg]','W_F':'Tasa de Mezcla [g/kg]'}
         ColorDict = {'T_F':'r','Pres_F':'k','HR_F':'g',
                 'q_F':'g','W_F':'m'}
         LabelDict = {'T_F':'Temperatura','Pres_F':'Presión','HR_F':'Humedad Relativa',
@@ -516,7 +516,8 @@ class Scatter_Gen(object):
                     'label':Label},
                 GraphInfoV={'color':['-.b','-.g'],
                     'label':['Inicio del Evento','Fin del Evento']},
-                flagBig=flagBig,vm=vm,Ev=0,flagV=False,Date=Dates[0].strftime('%Y/%m/%d'))
+                flagBig=flagBig,vm=vm,Ev=0,flagV=False,Date=Dates[0].strftime('%Y/%m/%d'),
+                flagEvent=True)
 
     def EventsGraphSeries(self,ImgFolder='Manizales/Events/'):
         '''
