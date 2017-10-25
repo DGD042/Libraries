@@ -77,8 +77,10 @@ class Proc(object):
         # Constantes
         # ----------------------------
         # Información para gráficos
-        LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica','Tasa de Mezcla de Vapor de Agua']
-        LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]','Tasa de Mezcla [kg/g]']
+        LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión',
+                'Humedad Especifica','Tasa de Mezcla de Vapor de Agua']
+        LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]',
+                'Presión [hPa]','Hum. Espec. [kg/kg]','Tasa de Mezcla [kg/g]']
         self.DataBase = DataBase
         
         self.mmHg2hPa = 1.3332239
@@ -109,8 +111,6 @@ class Proc(object):
             self.LabelV[v] = LabelV[iv]
             self.LabelVU[v] = LabelVU[iv]
         # Información para gráficos
-        LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica']
-        LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]']
         self.DatesDoc = ['FechaEv','FechaEv_Pres','FechaEv_Temp','FechaC']
         # Flags
         self.flag = dict()
@@ -367,6 +367,7 @@ class Proc(object):
         VariableTemp = dict()
         for iv,v in enumerate(Var[1:]):
             if self.flag[v]:
+                print(v)
                 PrecC, Variable[v], FechaEv = BP.ExEv(self.f[Var2['PrecC']],self.f[Var2[v]],self.f['FechaC'],Ci=Ci,Cf=Cf,m=m,M=M,dt=int(self.dtm))
         print(PrecC.shape)
 
@@ -397,6 +398,7 @@ class Proc(object):
                     TC2 = Variable['TC'][i]
                     HRC2 = Variable['HRC'][i]
                     qC2 = Variable['qC'][i]
+                    WC2 = Variable['WC'][i]
                     xx += 1
                 else:
                     PrecC2 = np.vstack((PrecC2,PrecC[i]))
@@ -404,6 +406,7 @@ class Proc(object):
                     TC2 = np.vstack((TC2,Variable['TC'][i]))
                     HRC2 = np.vstack((HRC2,Variable['HRC'][i]))
                     qC2 = np.vstack((qC2,Variable['qC'][i]))
+                    WC2 = np.vstack((WC2,Variable['WC'][i]))
                 FechaEv2.append(FechaEv[i])
                 xx += 1
         self.f[self.VariablesComp['PrecC']] = PrecC2
@@ -411,6 +414,7 @@ class Proc(object):
         self.f[self.VariablesComp['TC']] = TC2
         self.f[self.VariablesComp['HRC']] = HRC2
         self.f[self.VariablesComp['qC']] = qC2
+        self.f[self.VariablesComp['WC']] = WC2
         self.f['FechaEv'] = FechaEv2
 
         xx = 0
@@ -431,6 +435,7 @@ class Proc(object):
                     TC2 = VariablePres['TC'][i]
                     HRC2 = VariablePres['HRC'][i]
                     qC2 = VariablePres['qC'][i]
+                    WC2 = VariablePres['WC'][i]
                     xx += 1
                 else:
                     PresC2 = np.vstack((PresC2,PresC[i]))
@@ -438,6 +443,7 @@ class Proc(object):
                     TC2 = np.vstack((TC2,VariablePres['TC'][i]))
                     HRC2 = np.vstack((HRC2,VariablePres['HRC'][i]))
                     qC2 = np.vstack((qC2,VariablePres['qC'][i]))
+                    WC2 = np.vstack((WC2,VariablePres['WC'][i]))
                 FechaEv2.append(FechaEvPres[i])
                 xx += 1
         self.f[self.VariablesComp['PrecC_Pres']] = PrecC2
@@ -445,6 +451,7 @@ class Proc(object):
         self.f[self.VariablesComp['TC_Pres']] = TC2
         self.f[self.VariablesComp['HRC_Pres']] = HRC2
         self.f[self.VariablesComp['qC_Pres']] = qC2
+        self.f[self.VariablesComp['WC_Pres']] = WC2
         self.f['FechaEv_Pres'] = FechaEv2
 
 
@@ -466,6 +473,7 @@ class Proc(object):
                     PresC2 = VariableTemp['PresC'][i]
                     HRC2 = VariableTemp['HRC'][i]
                     qC2 = VariableTemp['qC'][i]
+                    WC2 = VariableTemp['WC'][i]
                     xx += 1
                 else:
                     TC2 = np.vstack((TC2 ,TC[i]))
@@ -473,6 +481,7 @@ class Proc(object):
                     PresC2 = np.vstack((PresC2,VariableTemp['PresC'][i]))
                     HRC2 = np.vstack((HRC2,VariableTemp['HRC'][i]))
                     qC2 = np.vstack((qC2,VariableTemp['qC'][i]))
+                    WC2 = np.vstack((WC2,VariableTemp['WC'][i]))
                 FechaEv2.append(FechaEvTemp[i])
                 xx += 1
         self.f[self.VariablesComp['PrecC_Temp']] = PrecC2
@@ -480,6 +489,7 @@ class Proc(object):
         self.f[self.VariablesComp['TC_Temp']] = TC2
         self.f[self.VariablesComp['HRC_Temp']] = HRC2
         self.f[self.VariablesComp['qC_Temp']] = qC2
+        self.f[self.VariablesComp['WC_Temp']] = WC2
         self.f['FechaEv_Temp'] = FechaEv2
         self.flag['VariablesComp'] = True
 

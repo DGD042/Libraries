@@ -81,9 +81,6 @@ class Scatter_Gen(object):
         # Constantes
         # ----------------------------
         # Información para gráficos
-        LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica']
-        LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]']
-        
         self.mmHg2hPa = 1.3332239
 
         # Projections
@@ -91,9 +88,10 @@ class Scatter_Gen(object):
         self.epsgMAGNA = 3116
 
         # Diccionarios con las diferentes variables
-        self.Variables = ['PrecC','TC','HRC','PresC','qC',
-                'PrecC_Pres','TC_Pres','HRC_Pres','PresC_Pres','qC_Pres',
-                'PrecC_Temp','TC_Temp','HRC_Temp','PresC_Temp','qC_Temp']
+        self.Variables = ['Prec','T_F','HR_F','Pres_F','q_F','W_F',
+                'PrecC','TC','HRC','PresC','qC','WC',
+                'PrecC_Pres','TC_Pres','HRC_Pres','PresC_Pres','qC_Pres','WC_Pres'
+                'PrecC_Temp','TC_Temp','HRC_Temp','PresC_Temp','qC_Temp','WC_Temp']
         # Información para gráficos
         LabelV = ['Precipitación','Temperatura','Humedad Relativa','Presión','Humedad Especifica']
         LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]','Presión [hPa]','Hum. Espec. [kg/kg]']
@@ -359,7 +357,8 @@ class Scatter_Gen(object):
         return
 
     def EventsSeriesGenGraph(self,ImgFolder='',Evmax=1,EvType='Tot',
-            flags={'TC':False,'PresC':False,'HRC':False,'qC':False}):
+            flags={'TC':False,'PresC':False,'HRC':False,'qC':False,'WC':False},
+            flagAver=False,flagBig=False):
         '''
         DESCRIPTION:
             Con esta función se pretenden graficar los diferentes eventos de 
@@ -379,13 +378,13 @@ class Scatter_Gen(object):
         self.ImgFolder = ImgFolder
 
 
-        Labels = ['PresC','TC','HRC','qC']
+        Labels = ['PresC','TC','HRC','qC','WC']
         UnitsDict = {'TC':'Temperatura [°C]','PresC':'Presión [hPa]','HRC':'Humedad Relativa [%]',
-                'qC':'Humedad Específica [kg/g]'}
+                'qC':'Humedad Específica [kg/g]','WC':'Tasa de Mezcla [kg/g]'}
         ColorDict = {'TC':'r','PresC':'k','HRC':'g',
-                'qC':'g'}
+                'qC':'g','WC':'m'}
         LabelDict = {'TC':'Temperatura','PresC':'Presión','HRC':'Humedad Relativa',
-                'qC':'Humedad Específica'}
+                'qC':'Humedad Específica','WC':'Tasa de Mezcla de V.A.'}
 
 
         DataKeys = ['PrecC']
@@ -413,23 +412,111 @@ class Scatter_Gen(object):
             for iLab,Lab in enumerate(Labels+['PrecC']):
                 EvTot[Lab] = self.f[Lab][self.EvNo]
 
-        # Se grafican los eventos
-        for iEv in range(len(EvTot)):
-            if iEv <= Evmax:
-                Data = dict()
-                Data['PrecC'] = EvTot['PrecC'][iEv]
-                for iLab,Lab in enumerate(Labels):
-                    if flags[Lab]:
-                        Data[Lab] = EvTot[Lab][iEv]
-                BP.EventsSeriesGen(self.f['FechaEv'][iEv],Data,self.PrecCount,
-                        DataKeyV=['DatesEvst','DatesEvend'],DataKey=DataKeys,
-                        PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
-                        Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
-                        GraphInfo={'ylabel':Units,'color':Color,
-                            'label':Label},
-                        GraphInfoV={'color':['-.b','-.g'],
-                            'label':['Inicio del Evento','Fin del Evento']},
-                        flagBig=False,vm={'vmax':[None],'vmin':[0]},Ev=iEv)
+        if flagAver:
+            # Se grafican los eventos en promedio
+            dt = int(self.dtm)
+            Data = dict()
+            Data['PrecC'] = np.nanmean(EvTot['PrecC'],axis=0)
+            for iLab,Lab in enumerate(Labels):
+                if flags[Lab]:
+                    Data[Lab] = np.nanmean(EvTot[Lab],axis=0)
+            BP.EventsSeriesGen(self.f['FechaEv'][0],Data,self.PrecCount,
+                    DataKeyV=['DatesEvst','DatesEvend'],DataKey=DataKeys,
+                    PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
+                    Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
+                    GraphInfo={'ylabel':Units,'color':Color,
+                        'label':Label},
+                    GraphInfoV={'color':['-.b','-.g'],
+                        'label':['Inicio del Evento','Fin del Evento']},
+                    flagBig=flagBig,vm={'vmax':[None],'vmin':[0]},Ev=0,
+                    flagV=False,flagAverage=True,dt=dt)
+        else:
+            # Se grafican los eventos
+            for iEv in range(len(EvTot)):
+                if iEv <= Evmax:
+                    Data = dict()
+                    Data['PrecC'] = EvTot['PrecC'][iEv]
+                    for iLab,Lab in enumerate(Labels):
+                        if flags[Lab]:
+                            Data[Lab] = EvTot[Lab][iEv]
+                    BP.EventsSeriesGen(self.f['FechaEv'][iEv],Data,self.PrecCount,
+                            DataKeyV=['DatesEvst','DatesEvend'],DataKey=DataKeys,
+                            PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
+                            Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
+                            GraphInfo={'ylabel':Units,'color':Color,
+                                'label':Label},
+                            GraphInfoV={'color':['-.b','-.g'],
+                                'label':['Inicio del Evento','Fin del Evento']},
+                            flagBig=flagBig,vm={'vmax':[None],'vmin':[0]},Ev=iEv,
+                            Date=DUtil.Dates_datetime2str([self.PrecCount['DatesEvst'][iEv]])[0])
+
+    def EventsSeriesGraphAEv(self,Dates,ImgFolder='',
+            flags={'T_F':False,'Pres_F':False,'HR_F':False,'q_F':False,'W_F':False},
+            flagBig=False,vm={'vmax':[1.45,1.15,3.7,21.2],'vmin':[0,-1.1,-4.9,-17.1]}):
+        '''
+        DESCRIPTION:
+            Con esta función se pretenden graficar los diferentes eventos de 
+            precipitación por separado.
+
+            Es necesario haber corrido la función EventsPrecPresDetection antes.
+        _________________________________________________________________________
+
+        INPUT:
+            + Dates: Fecha inicial y final del evento.
+            + ImgFolder: Carpeta donde se guardarán los datos.
+        _________________________________________________________________________
+
+        OUTPUT:
+            Se generan los gráficos
+
+        '''
+        self.ImgFolder = ImgFolder
+        if not(isinstance(Dates[0],datetime)):
+            Dates = DUtil.Dates_str2datetime(Dates)
+
+        Labels = ['Pres_F','T_F','HR_F','q_F','W_F']
+        UnitsDict = {'T_F':'Temperatura [°C]','Pres_F':'Presión [hPa]','HR_F':'Humedad Relativa [%]',
+                'q_F':'Humedad Específica [kg/g]','W_F':'Tasa de Mezcla [kg/g]'}
+        ColorDict = {'T_F':'r','Pres_F':'k','HR_F':'g',
+                'q_F':'g','W_F':'m'}
+        LabelDict = {'T_F':'Temperatura','Pres_F':'Presión','HR_F':'Humedad Relativa',
+                'q_F':'Humedad Específica','W_F':'Tasa de Mezcla de V.A.'}
+
+
+        DataKeys = ['Prec']
+        Units = ['Precipitación [mm]']
+        Color = ['b']
+        Label = ['Precipitación']
+        Vars = 'Prec'
+        for iLab,Lab in enumerate(Labels):
+            if flags[Lab]:
+                DataKeys.append(Lab)
+                Units.append(UnitsDict[Lab])
+                Color.append(ColorDict[Lab])
+                Label.append(LabelDict[Lab])
+                Vars += '_'+Lab
+        Vars += '_Events'
+
+        # Se encuentra el evento
+        FechaCP = self.f['FechaCP']
+        xDatei = np.where(FechaCP==Dates[0])[0][0]
+        xDatef = np.where(FechaCP==Dates[1])[0][0]
+        EvTot = dict()
+        for iE,E in enumerate(DataKeys):
+            FechaCPC = FechaCP[xDatei:xDatef+1]
+            EvTot[E] = self.f[E][xDatei:xDatef+1]
+            print(E,'vmax',np.nanmax(EvTot[E]))
+            print(E,'vmin',np.nanmin(EvTot[E]))
+
+        BP.EventsSeriesGen(FechaCPC,EvTot,0,
+                DataKeyV=['DatesEvst','DatesEvend'],DataKey=DataKeys,
+                PathImg=self.PathImg+ImgFolder+'EventComp/'+'/'+Vars+'/',
+                Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
+                GraphInfo={'ylabel':Units,'color':Color,
+                    'label':Label},
+                GraphInfoV={'color':['-.b','-.g'],
+                    'label':['Inicio del Evento','Fin del Evento']},
+                flagBig=flagBig,vm=vm,Ev=0,flagV=False)
 
     def EventsGraphSeries(self,ImgFolder='Manizales/Events/'):
         '''
@@ -450,19 +537,19 @@ class Scatter_Gen(object):
         # Diagramas de compuestos promedios
         if self.flag['PrecC']:
             if self.flag['PresC'] and self.flag['TC']:
-                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['TC'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['TC'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder+'Original/' ,DTT=self.dtm)
                 PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['PresC_Pres'],self.f['TC_Pres'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
                 PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['TC_Temp'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.flag['PresC'] and self.flag['HRC']:
-                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['HRC'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['HRC'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder+'Original/',DTT=self.dtm)
                 PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['PresC_Pres'],self.f['HRC_Pres'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
                 PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['HRC_Temp'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.flag['PresC'] and self.flag['qC']:
-                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['qC'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['qC'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder+'Original/',DTT=self.dtm)
                 PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['PresC_Pres'],self.f['qC_Pres'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
                 PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['qC_Temp'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.flag['TC'] and self.flag['qC']:
-                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['TC'],self.f['qC'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder,DTT=self.dtm)
+                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['TC'],self.f['qC'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder+'Original/',DTT=self.dtm)
                 PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['TC_Pres'],self.f['qC_Pres'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
                 PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['TC_Temp'],self.f['qC_Temp'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
         else:

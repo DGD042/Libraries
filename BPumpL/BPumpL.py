@@ -4203,7 +4203,8 @@ class BPumpL:
             PathImg='',Name='',NameArch='',
             GraphInfo={'ylabel':['Precipitación [mm]'],'color':['b'],'label':['Precipitación']},
             GraphInfoV={'color':['-.b'],'label':['Inicio del Evento']},
-            flagBig=False,vm={'vmax':[],'vmin':[]},Ev=0):
+            flagBig=False,vm={'vmax':[],'vmin':[]},Ev=0,flagV=True,
+            flagAverage=False,dt=1,Date=''):
         '''
         DESCRIPTION:
 
@@ -4221,10 +4222,15 @@ class BPumpL:
 
         '''
         # Se organizan las fechas
-        if not(isinstance(DatesEv[0],datetime)):
-            FechaEvv = DUtil.Dates_str2datetime(DatesEv)
+        if flagAverage:
+            H = int(len(DatesEv)/2)
+            FechaEvv = np.arange(-H,H,1)
+            FechaEvv = FechaEvv*dt/60
         else:
-            FechaEvv = DatesEv
+            if not(isinstance(DatesEv[0],datetime)):
+                FechaEvv = DUtil.Dates_str2datetime(DatesEv)
+            else:
+                FechaEvv = DatesEv
 
         if DataKey is None:
             flagSeveral = False
@@ -4255,24 +4261,24 @@ class BPumpL:
         fH=30 # Largo de la Figura
         fV = fH*(2/3) # Ancho de la Figura
 
-        # Se crea la carpeta para guardar la imágen
-        utl.CrFolder(PathImg + NameArch + '/')
 
         if flagBig:
+            lensize=17
+            plt.rcParams.update({'font.size': 20,'font.family': 'sans-serif'\
+                ,'font.sans-serif': 'Arial Narrow'\
+                ,'xtick.labelsize': 20,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 20,'ytick.major.size': 12,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        else:
+            lensize=15
             plt.rcParams.update({'font.size': 18,'font.family': 'sans-serif'\
                 ,'font.sans-serif': 'Arial Narrow'\
                 ,'xtick.labelsize': 18,'xtick.major.size': 6,'xtick.minor.size': 4\
                 ,'xtick.major.width': 1,'xtick.minor.width': 1\
                 ,'ytick.labelsize': 18,'ytick.major.size': 12,'ytick.minor.size': 4\
-                ,'ytick.major.width': 1,'ytick.minor.width': 1\
-                ,'axes.linewidth':1\
-                ,'grid.alpha':0.1,'grid.linestyle':'-'})
-        else:
-            plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
-                ,'font.sans-serif': 'Arial Narrow'\
-                ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
-                ,'xtick.major.width': 1,'xtick.minor.width': 1\
-                ,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
                 ,'ytick.major.width': 1,'ytick.minor.width': 1\
                 ,'axes.linewidth':1\
                 ,'grid.alpha':0.1,'grid.linestyle':'-'})
@@ -4294,7 +4300,6 @@ class BPumpL:
         ax.plot(FechaEvv,DataP,color=GraphInfo['color'][0],label=GraphInfo['label'][0])
         ax.axis["left"].label.set_color(color=GraphInfo['color'][0])
         ax.set_ylabel(GraphInfo['ylabel'][0])
-        ax.set_title(Name+r" Evento "+DUtil.Dates_datetime2str([DataV['DatesEvst'][Ev]])[0])
 
         # Se escala el eje 
         if flagVm:
@@ -4308,9 +4313,10 @@ class BPumpL:
         yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
 
         # Se grafican las líneas verticales
-        for ilab,lab in enumerate(DataKeyV):
-            ax.plot([DataV[lab][Ev],DataV[lab][Ev]],[yTL[0],yTL[-1]],
-                    GraphInfoV['color'][ilab],label=GraphInfoV['label'][ilab])
+        if flagV:
+            for ilab,lab in enumerate(DataKeyV):
+                ax.plot([DataV[lab][Ev],DataV[lab][Ev]],[yTL[0],yTL[-1]],
+                        GraphInfoV['color'][ilab],label=GraphInfoV['label'][ilab])
 
         # Se organizan los ejes 
         MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
@@ -4325,8 +4331,16 @@ class BPumpL:
                     axi[ilab-1].plot(FechaEvv,Data[lab],color=GraphInfo['color'][ilab],
                             label=GraphInfo['label'][ilab])
                     axi[ilab-1].set_ylabel(GraphInfo['ylabel'][ilab])
+                    if flagVm and len(vm['vmax']) > 1:
+                        if (not(vm['vmin'][ilab] is None) and not(vm['vmax'][ilab] is None)):
+                            axi[ilab-1].set_ylim([vm['vmin'][ilab],vm['vmax'][ilab]])
+                        elif not(vm['vmax'][ilab] is None):
+                            axi[ilab-1].set_ylim(ymax=vm['vmax'][ilab])
+                        elif not(vm['vmin'][ilab] is None):
+                            axi[ilab-1].set_ylim(ymin=vm['vmin'][ilab])
+
                     if ilab == 2:
-                        offset = 60
+                        offset = 65
                         new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
                         axi[ilab-1].axis["right"] = new_fixed_axis(loc="right",
                                                         axes=axi[ilab-1],
@@ -4334,7 +4348,7 @@ class BPumpL:
                         axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
                     elif ilab == 3:
                         # axi[ilab-1].spines['right'].set_position(('axes',-0.25))
-                        offset = -60
+                        offset = -65
                         new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
                         axi[ilab-1].axis["right"] = new_fixed_axis(loc="left",
                                                         axes=axi[ilab-1],
@@ -4351,15 +4365,30 @@ class BPumpL:
                     minorLocatory = MultipleLocator(MyL)
                     axi[ilab-1].yaxis.set_minor_locator(minorLocatory)
 
-        plt.legend(loc=3,framealpha=0.6)
+        if flagAverage:
+            ax.set_xlabel('Tiempo [h]')
+            ax.set_title(r"Diagrama de Compuestos en "+Name)
+        else:
+            for tick in ax.get_xticklabels():
+                tick.set_rotation(45)
+            if Date == '':
+                ax.set_title(Name)
+            else:
+                ax.set_title(Name+r" Evento "+Date)
+        plt.legend(loc=4,framealpha=0.6,fontsize=lensize)
         # plt.grid()
         plt.tight_layout()
-        Nameout = PathImg + NameArch + '/' + NameArch + '_Ev_'+str(Ev)
+        if flagAverage:
+            # Se crea la carpeta para guardar la imágen
+            utl.CrFolder(PathImg + 'Average/')
+            Nameout = PathImg + 'Average/' + NameArch 
+        else:
+            # Se crea la carpeta para guardar la imágen
+            utl.CrFolder(PathImg + NameArch + '/')
+            Nameout = PathImg + NameArch + '/' + NameArch + '_Ev_'+str(Ev)
+
         plt.savefig(Nameout+'.png',format='png',dpi=200)
         plt.close('all')
-
-
-
 
     def MapEvents(self,elevation,ElCor,Est,Points,V1,V2,vmax1,vmin1,vmax2,vmin2,Fecha,xlim=[-75.55,-75.46],ylim=[5.02,5.09],flagsmall=True,VarL1='',VarL2='',PathImg='',Name=''):
         '''
