@@ -56,12 +56,6 @@ def perdelta(start, end, delta):
         yield curr
         curr += delta
 
-
-
-# ------------------------
-# Class
-# ------------------------
-
 # Data Managment
 def CompD(Dates,V,dtm=None):
     '''
@@ -167,21 +161,23 @@ def CompDC(Dates,V,DateI,DateE,dtm=None):
     _____________________________________________________________________
 
     INPUT:
-        + Dates: Data date, it must be a string like this 'Year/month/day' 
-                the separator '/' could be change with any character. 
-                It must be a string vector or a date or datetime vector.
-        + VC: Variable. 
-        + DateI: Initial Date in date or datetime format.
-        + DateE: Final Date in date or datetime format.
-        + dtm: Time delta for the full data, if None it would use the
-               timedelta from the 2 values of the original data
+        :param Dates: Data date, it must be a string like this 
+                      'Year/month/day' the separator '/' 
+                      could be change with any character.  
+                      It must be a string vector or a date or datetime vector.
+        :param VC:    Variable. 
+        :param DateI: Initial Date in date or datetime format.
+        :param DateE: Final Date in date or datetime format.
+        :param dtm:   Time delta for the full data, if None it 
+                      would use the timedelta from the 2 values 
+                      of the original data
     _____________________________________________________________________
     
     OUTPUT:
-        - DatesC: Comlete date string vector.
-        - V1C: Filled data values.
-        - DatesN: Complete date Python datetime vector.
-    
+        :return Results: A dict, Dictionary with the following results.
+            DatesC: Complete date string vector.
+            V1C:    Filled data values.
+            DatesN: Complete date Python datetime vector.
     '''
     
     V = np.array(V)

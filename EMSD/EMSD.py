@@ -2071,26 +2071,25 @@ class EMSD(object):
         VC = dict()
 
         # Value verification
-        if Date == None and self.Dates == None:
+        if Date is None and self.Dates is None:
             Er = utl.ShowError('Ca_EC','EDSM','No dates was added')
             return None
-        elif Date == None:
+        elif Date is None:
             Date = self.Dates
-        if V1 == None and self.Values == None:
+        if V1 is None and self.Values is None:
             Er = utl.ShowError('Ca_EC','EDSM','No data was added')
             return None
-        elif V1 == None:
-            if key == None:
+        elif V1 is None:
+            if key is None:
                 Er = utl.ShowError('Ca_EC','EDSM','key value is needed')
                 return None
             else:
                 V1 = self.Values[key]
-        if dtm == None:
+        if dtm is None:
             dtm = self.dtm
 
         # Temporal verification
         lenDates = len(Date[0])
-        flagHour = False
         if flagHour:
             D_Formats = DUtil.DateTime_Formats
             dt = int(60/dtm)

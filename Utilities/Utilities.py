@@ -48,8 +48,7 @@ def ShowError(fn,cl,msg):
        :return: An int, Error managment -1. 
     '''
 
-    print('ERROR: Function <'+fn+'> Class <'+cl+'>: '+msg)
-    return -1
+    raise Exception('ERROR: Function <'+fn+'> Class <'+cl+'>: '+msg)
 
 def ExitError(fn,cl,msg):
     '''

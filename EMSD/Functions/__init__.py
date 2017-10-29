@@ -35,13 +35,9 @@ ____________________________________________________________________________
 '''
 
 try:
-    from EMSD.EMSD import EMSD
+    from EMSD.Functions import Gen_Functions
+    from EMSD.Functions import TemporalFunctions
 except ImportError:
-    from EMSD import EMSD
-
-from EMSD import Data_Man
-from EMSD import Extract_Data
-from EMSD import Functions
-from EMSD import Specific
-from EMSD import Write_Data
+    import Gen_Functions
+    import TemporalFunctions
 
