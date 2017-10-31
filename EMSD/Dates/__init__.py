@@ -35,14 +35,9 @@ ____________________________________________________________________________
 '''
 
 try:
-    from EMSD.EMSD import EMSD
+    from EMSD.Dates import DatesC
+    from EMSD.Dates import DatesFunctions
 except ImportError:
-    from EMSD import EMSD
-
-from EMSD import Data_Man
-from EMSD import Extract_Data
-from EMSD import Functions
-from EMSD import Specific
-from EMSD import Write_Data
-from EMSD import Dates
+    import DatesC
+    import DatesFunctions
 

@@ -94,7 +94,7 @@ class Hydro_Analysis(object):
     def __init__(self,DateH=None,VarH=None,DateM=None,VarM=None,DTH=24,PathImg='',Info=['Image','Nombre','Precipitación','Precipitación [mm]','b']):
         # Parameters
         self.operations = DM.operations
-        if DateH != None:
+        if not(DateH is None):
             if isinstance(DateH[0],str):
                 self.DateH = DUtil.Dates_str2datetime(DateH)
             elif isinstance(DateH[0],datetime):
@@ -103,7 +103,7 @@ class Hydro_Analysis(object):
                 self.DateH = None
         else:
             self.DateH = None
-        if DateM != None:
+        if not(DateM is None):
             if isinstance(DateM[0],str):
                 if len(DateM[0]) <= 7:
                     DateM2 = [i+'/01' for i in DateM]
@@ -116,11 +116,11 @@ class Hydro_Analysis(object):
                 self.DateM = None
         else:
             self.DateM = None
-        if VarH != None:
+        if not(VarH is None):
             self.VarH = np.array(VarH)
         else:
             self.VarH = None
-        if VarM != None:
+        if not(VarM is None):
             self.VarM = np.array(VarM)
         else:
             self.VarM = None
