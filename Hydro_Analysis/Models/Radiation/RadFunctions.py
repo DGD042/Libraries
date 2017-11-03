@@ -269,3 +269,27 @@ def EqAlmorox(Method,Tmax,Tmin,Lat,J,Z=0,Tmin2=0,dTM=0,FlagRea=False):
 
     return Hc
 
+def AngstromPrescottEq(H0,N,n,flagRad=False,a=None,b=None):
+    '''
+    DESCRIPTION:
+    
+        This function contains the Angstrom-Prescott model to calculate the
+        regresion from the relation of radiation and the relation of the 
+        day length.
+    _________________________________________________________________________
+
+    INPUT:
+        :param H0: a ndArray, Extraterrestial Radiation in MJ/m^2/day.
+        :param H:  a ndArray, Surface Radiation in MJ/m^2/day.
+        :param N:  a ndArray, Day length in hours.
+        :param n:  a ndArray, sunshine duration in hours.
+    _________________________________________________________________________
+    
+    OUTPUT:
+        :return Eq: Equation or result of data.
+    '''
+    if flagRad:
+        return (a+(b*(n/N)))*H0
+    else:
+        return c+d*(n/N)
+

@@ -142,15 +142,15 @@ def Dates_datetime2str(DatesP,Date_Format=None):
     # -------------------------
     if Date_Format == None:
         if isinstance(DatesP[0],datetime):
-            Date_Formats = DateTime_Formats
+            Date_Format = DateTime_Formats
         else:
-            Date_Formats = Date_Formats
+            Date_Format = Date_Formats
     else:
-        Date_Formats = [Date_Format]
+        Date_Format = [Date_Format]
     # -------------------------
     # Changing Dates
     # -------------------------
-    Dates = np.array([i.strftime(Date_Formats[0]) for i in DatesP])
+    Dates = np.array([i.strftime(Date_Format[0]) for i in DatesP])
     return Dates
 
 def Dates_ampm224h(Dates,Hours=None,Date_Format=None):
