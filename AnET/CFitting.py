@@ -21,6 +21,7 @@ from scipy.optimize import curve_fit # To do curve fitting
 import sys
 import os
 import warnings
+import re
 
 # ------------------
 # Personal Modules
@@ -46,13 +47,16 @@ def Log(x,a,b,c):
 class CFitting:
 
     def __init__(self):
-
+        '''
+        '''
         self.Adj = {'lineal':LR,'potential':PL,
                     'parabolic':Par,'exponential':Exp,
                     'logaritmic':Log}
 
-        self.AdjF = {'lineal':r'$y=%.4fx+%.4f$','potential':r'$y=%.4fx^{%.4f}$',
-                    'parabolic':r'$y=%.4fx^2+%.4fx+%.4f$','exponential':r'$y = %.4fe^{%.4fx}$',
+        self.AdjF = {'lineal':r'$y = %.4fx + %.4f$',
+                    'potential':r'$y = %.4fx^{%.4f}$',
+                    'parabolic':r'$y = %.4fx^2 + %.4fx + %.4f$',
+                    'exponential':r'$y = %.4fe^{%.4fx}$',
                     'logaritmic':r'$y = %.4f \log(%.4fx) + %.4f$'}
         return
 
@@ -109,8 +113,7 @@ class CFitting:
         # --------------------------------
 
         if isinstance(F,str) == False and F != 0:
-            Er = utl.ShowError('FF','CFitting','Given parameter F is not on the listed functions.')
-            return Er
+            utl.ShowError('FF','CFitting','Given parameter F is not on the listed functions.')
 
         keys = list(self.Adj)
         if F == '' or F == 0:
@@ -121,8 +124,8 @@ class CFitting:
             try:
                 fun = self.Adj[key]
             except KeyError:
-                Er = utl.ShowError('FF','CFitting','Given parameter F is not on the listed functions.')
-                return Er
+                utl.ShowError('FF','CFitting','Given parameter F is not on the listed functions.')
+                
 
         # -----------------
         # Calculations
@@ -183,9 +186,38 @@ class CFitting:
             Results['R2'] = R2
             Results['Functionkey'] = key
             Results['Function'] = fun
-            Results['FunctionEq'] = self.AdjF[key]
+            Results['FunctionEq'] = self.FunctionsEqstr(self.AdjF[key],Coef)
 
         return Results
+
+    def FunctionsEqstr(self,funEq,Coef):
+        '''
+        DESCRIPTION:
+            
+            Method to correct the functions strings if a parameter is
+            negative.
+        _______________________________________________________________________
+        '''
+
+        Par = re.compile('\%.4f')
+        S = re.finditer(Par,funEq)
+        SList = [i for i in S]
+        Sse = [(i.start(),i.end()) for i in SList]
+
+        for iC,C in enumerate(Coef):
+            if C < 0:
+                if funEq[Sse[iC][0]-2] == '+':
+                    L = funEq[Sse[iC][0]-2].replace('+','')
+                    funEq = funEq[:Sse[iC][0]-2]+L+funEq[Sse[iC][0]-1:]
+
+        return funEq
+
+
+
+
+
+
+
 
 
 

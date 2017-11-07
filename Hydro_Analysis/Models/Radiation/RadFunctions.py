@@ -291,5 +291,40 @@ def AngstromPrescottEq(H0,N,n,flagRad=False,a=None,b=None):
     if flagRad:
         return (a+(b*(n/N)))*H0
     else:
-        return c+d*(n/N)
+        return a+b*(n/N)
 
+def AngstromPrescottEq2(RelN,a,b):
+    '''
+    DESCRIPTION:
+    
+        This function contains the Angstrom-Prescott model to calculate the
+        regresion from the relation of radiation and the relation of the 
+        day length.
+    _________________________________________________________________________
+
+    INPUT:
+        :param n:  a ndArray, sunshine duration in hours.
+    _________________________________________________________________________
+    
+    OUTPUT:
+        :return Eq: Equation or result of data.
+    '''
+    return a+b*RelN
+
+def AngstromPrescottEq3(RelN,m1,m2,m3,b):
+    '''
+    DESCRIPTION:
+    
+        This function contains the Angstrom-Prescott model to calculate the
+        regresion from the relation of radiation and the relation of the 
+        day length.
+    _________________________________________________________________________
+
+    INPUT:
+        :param n:  a ndArray, sunshine duration in hours.
+    _________________________________________________________________________
+    
+    OUTPUT:
+        :return Eq: Equation or result of data.
+    '''
+    return m1*RelN + m2*RelN**2 + m3*RelN**3 + b
