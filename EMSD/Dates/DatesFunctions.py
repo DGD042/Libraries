@@ -78,15 +78,15 @@ def Dates_str2datetime(Dates,Date_Format=None,flagQuick=False):
     # -------------------------
     if Date_Format == None:
         if flagHour:
-            Date_Formats = DateTime_Formats
+            Date_Format = DateTime_Formats
         else:
-            Date_Formats = Date_Formats
+            Date_Format = Date_Formats
     else:
-        Date_Formats = [Date_Format]
+        Date_Format = [Date_Format]
     # -------------------------
     # Transformation
     # -------------------------
-    for iF,F in enumerate(Date_Formats):
+    for iF,F in enumerate(Date_Format):
         try:
             if flagQuick:
                 if flagHour:
@@ -98,8 +98,7 @@ def Dates_str2datetime(Dates,Date_Format=None,flagQuick=False):
             break
         except:
             if iF == len(Date_Formats)-1:
-                Er = utl.ShowError('Dates_str2datetime','DatesUtil','Bad date format, change format')
-                raise TypeError
+                utl.ShowError('Dates_str2datetime','DatesUtil','Bad date format, change format')
             else:
                 continue
     # -------------------------
