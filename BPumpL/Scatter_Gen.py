@@ -222,7 +222,7 @@ class Scatter_Gen(object):
         self.MEvNo = []
         for iC in range(len(self.f['PresC'])):
             xEv = np.where(DatesEvP[iC] == self.PrecCount['DatesEvst'][iC])[0][0]
-            Bef = xEv-int(60/dt*1.5)
+            Bef = xEv-int(60/dt*3)
             Aft = xEv+int(60/dt*(15/60)) 
             if Bef <= 10:
                 self.EvNo.append(iC)
@@ -318,42 +318,42 @@ class Scatter_Gen(object):
                         'Perc_Pres_No':len(self.EvDNo['PrecC_Pres'])/(len(self.f['PrecC_Pres'])-NoAn)}
 
                 # Temperatura
-                for i in range(len(self.f['PrecC_Temp'])):
-                    if np.nanmax(self.f['PrecC_Temp'][i][self.Middle:self.Middle+(60/int(self.dtm)*1)+1]) >= MaxPrec and np.nanmax(self.f['PrecC_Temp'][i][self.Middle-(60/int(self.dtm)*1)+1:self.Middle]) <= MaxPrec:
-                        if xT1 == 0:
-                            self.EvDYes['PrecC_Temp'] = self.f['PrecC_Temp'][i]
-                            self.EvDYes['TC_Temp'] = self.f['TC_Temp'][i]
-                            self.EvDYes['PresC_Temp'] = self.f['PresC_Temp'][i]
-                            self.EvDYes['HRC_Temp'] = self.f['HRC_Temp'][i]
-                            self.EvDYes['qC_Temp'] = self.f['qC_Temp'][i]
-                            self.EvDYes['FechaEv_Temp'] = self.f['FechaEv_Temp'][i]
-                            xT1 += 1
-                        else:
-                            self.EvDYes['PrecC_Temp']   = np.vstack((self.EvDYes['PrecC_Temp'],self.f['PrecC_Temp'][i]))
-                            self.EvDYes['TC_Temp']      = np.vstack((self.EvDYes['TC_Temp'],self.f['TC_Temp'][i]))
-                            self.EvDYes['PresC_Temp']   = np.vstack((self.EvDYes['PresC_Temp'],self.f['PresC_Temp'][i]))
-                            self.EvDYes['HRC_Temp']     = np.vstack((self.EvDYes['HRC_Temp'],self.f['HRC_Temp'][i]))
-                            self.EvDYes['qC_Temp']      = np.vstack((self.EvDYes['qC_Temp'],self.f['qC_Temp'][i]))
-                            self.EvDYes['FechaEv_Temp']      = np.vstack((self.EvDYes['FechaEv_Temp'],self.f['FechaEv_Temp'][i]))
-                    else:
-                        if xT2 == 0:
-                            self.EvDNo['PrecC_Temp'] = self.f['PrecC_Temp'][i]
-                            self.EvDNo['TC_Temp'] = self.f['TC_Temp'][i]
-                            self.EvDNo['PresC_Temp'] = self.f['PresC_Temp'][i]
-                            self.EvDNo['HRC_Temp'] = self.f['HRC_Temp'][i]
-                            self.EvDNo['qC_Temp'] = self.f['qC_Temp'][i]
-                            self.EvDNo['FechaEv_Temp'] = self.f['FechaEv_Temp'][i]
-                            xT2 += 1
-                        else:
-                            self.EvDNo['PrecC_Temp']   = np.vstack((self.EvDNo['PrecC_Temp'],self.f['PrecC_Temp'][i]))
-                            self.EvDNo['TC_Temp']      = np.vstack((self.EvDNo['TC_Temp'],self.f['TC_Temp'][i]))
-                            self.EvDNo['PresC_Temp']   = np.vstack((self.EvDNo['PresC_Temp'],self.f['PresC_Temp'][i]))
-                            self.EvDNo['HRC_Temp']     = np.vstack((self.EvDNo['HRC_Temp'],self.f['HRC_Temp'][i]))
-                            self.EvDNo['qC_Temp']      = np.vstack((self.EvDNo['qC_Temp'],self.f['qC_Temp'][i]))
-                            self.EvDNo['FechaEv_Temp']      = np.vstack((self.EvDNo['FechaEv_Temp'],self.f['FechaEv_Temp'][i]))
+                # for i in range(len(self.f['PrecC_Temp'])):
+                #     if np.nanmax(self.f['PrecC_Temp'][i][self.Middle:self.Middle+(60/int(self.dtm)*1)+1]) >= MaxPrec and np.nanmax(self.f['PrecC_Temp'][i][self.Middle-(60/int(self.dtm)*1)+1:self.Middle]) <= MaxPrec:
+                #         if xT1 == 0:
+                #             self.EvDYes['PrecC_Temp'] = self.f['PrecC_Temp'][i]
+                #             self.EvDYes['TC_Temp'] = self.f['TC_Temp'][i]
+                #             self.EvDYes['PresC_Temp'] = self.f['PresC_Temp'][i]
+                #             self.EvDYes['HRC_Temp'] = self.f['HRC_Temp'][i]
+                #             self.EvDYes['qC_Temp'] = self.f['qC_Temp'][i]
+                #             self.EvDYes['FechaEv_Temp'] = self.f['FechaEv_Temp'][i]
+                #             xT1 += 1
+                #         else:
+                #             self.EvDYes['PrecC_Temp']   = np.vstack((self.EvDYes['PrecC_Temp'],self.f['PrecC_Temp'][i]))
+                #             self.EvDYes['TC_Temp']      = np.vstack((self.EvDYes['TC_Temp'],self.f['TC_Temp'][i]))
+                #             self.EvDYes['PresC_Temp']   = np.vstack((self.EvDYes['PresC_Temp'],self.f['PresC_Temp'][i]))
+                #             self.EvDYes['HRC_Temp']     = np.vstack((self.EvDYes['HRC_Temp'],self.f['HRC_Temp'][i]))
+                #             self.EvDYes['qC_Temp']      = np.vstack((self.EvDYes['qC_Temp'],self.f['qC_Temp'][i]))
+                #             self.EvDYes['FechaEv_Temp']      = np.vstack((self.EvDYes['FechaEv_Temp'],self.f['FechaEv_Temp'][i]))
+                #     else:
+                #         if xT2 == 0:
+                #             self.EvDNo['PrecC_Temp'] = self.f['PrecC_Temp'][i]
+                #             self.EvDNo['TC_Temp'] = self.f['TC_Temp'][i]
+                #             self.EvDNo['PresC_Temp'] = self.f['PresC_Temp'][i]
+                #             self.EvDNo['HRC_Temp'] = self.f['HRC_Temp'][i]
+                #             self.EvDNo['qC_Temp'] = self.f['qC_Temp'][i]
+                #             self.EvDNo['FechaEv_Temp'] = self.f['FechaEv_Temp'][i]
+                #             xT2 += 1
+                #         else:
+                #             self.EvDNo['PrecC_Temp']   = np.vstack((self.EvDNo['PrecC_Temp'],self.f['PrecC_Temp'][i]))
+                #             self.EvDNo['TC_Temp']      = np.vstack((self.EvDNo['TC_Temp'],self.f['TC_Temp'][i]))
+                #             self.EvDNo['PresC_Temp']   = np.vstack((self.EvDNo['PresC_Temp'],self.f['PresC_Temp'][i]))
+                #             self.EvDNo['HRC_Temp']     = np.vstack((self.EvDNo['HRC_Temp'],self.f['HRC_Temp'][i]))
+                #             self.EvDNo['qC_Temp']      = np.vstack((self.EvDNo['qC_Temp'],self.f['qC_Temp'][i]))
+                #             self.EvDNo['FechaEv_Temp']      = np.vstack((self.EvDNo['FechaEv_Temp'],self.f['FechaEv_Temp'][i]))
 
-                self.Statistics.update({'Perc_Temp_Yes':len(self.EvDYes['PrecC_Temp'])/len(self.f['PrecC_Temp']),
-                        'Perc_Temp_No':len(self.EvDNo['PrecC_Temp'])/len(self.f['PrecC_Temp'])})
+                # self.Statistics.update({'Perc_Temp_Yes':len(self.EvDYes['PrecC_Temp'])/len(self.f['PrecC_Temp']),
+                #         'Perc_Temp_No':len(self.EvDNo['PrecC_Temp'])/len(self.f['PrecC_Temp'])})
         return
 
     def EventsSeriesGenGraph(self,ImgFolder='',Evmax=1,EvType='Tot',
@@ -540,19 +540,19 @@ class Scatter_Gen(object):
             if self.flag['PresC'] and self.flag['TC']:
                 PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['TC'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder+'Original/' ,DTT=self.dtm)
                 PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['PresC_Pres'],self.f['TC_Pres'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
-                PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['TC_Temp'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                # PrecH,PrecBin,PresH,PresBin,TH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['TC_Temp'],'Precipitación','Presión Barométrica','Temperatura','Prec','Pres','Temp','Precipitación [mm]','Presión [hPa]','Temperatura [°C]','b-','k-','r-','b','k','r',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.flag['PresC'] and self.flag['HRC']:
                 PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['HRC'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder+'Original/',DTT=self.dtm)
                 PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['PresC_Pres'],self.f['HRC_Pres'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
-                PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['HRC_Temp'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                # PrecH,PrecBin,PresH,PresBin,HRH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['HRC_Temp'],'Precipitación','Presión Barométrica','Humedad Relativa','Prec','Pres','HR','Precipitación [mm]','Presión [hPa]','Humedad Relativa [%]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.flag['PresC'] and self.flag['qC']:
                 PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC'],self.f['PresC'],self.f['qC'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder+'Original/',DTT=self.dtm)
                 PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['PresC_Pres'],self.f['qC_Pres'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
-                PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['qC_Temp'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                # PrecH,PrecBin,PresH,PresBin,qH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['PresC_Temp'],self.f['qC_Temp'],'Precipitación','Presión Barométrica','Humedad Específica','Prec','Pres','q','Precipitación [mm]','Presión [hPa]','Humedad Específica [kg/kg]','b-','k-','g-','b','k','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
             if self.flag['TC'] and self.flag['qC']:
                 PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC'],self.f['TC'],self.f['qC'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow],self.PathImg+self.ImgFolder+'Original/',DTT=self.dtm)
                 PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC_Pres'],self.f['TC_Pres'],self.f['qC_Pres'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Pres',self.PathImg+self.ImgFolder,DTT=self.dtm)
-                PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['TC_Temp'],self.f['qC_Temp'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
+                # PrecH,PrecBin,TH,TBin,HRH,TBin = BP.graphEv(self.f['PrecC_Temp'],self.f['TC_Temp'],self.f['qC_Temp'],'Precipitación','Temperatura','Humedad Específica','Prec','Temp','q','Precipitación [mm]','Temperatura [°C]','Humedad Específica [kg/kg]','b-','r-','g-','b','r','g',self.irow,self.NamesArch[self.irow]+'_Temp',self.PathImg+self.ImgFolder,DTT=self.dtm)
         else:
             print('No se tiene información de precipitación para realizar los diagramas')
         return

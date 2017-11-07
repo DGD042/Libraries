@@ -1874,7 +1874,7 @@ class Hydro_Plotter:
         plt.savefig(PathImg + Name +'_Hist' + '.png',format='png',dpi=self.dpi )
         plt.close('all')
 
-    def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True,FlagHour=False,flagEst=True,FlagTitle=False,FlagBig=False,vmax=None):
+    def HistogramNP(self,Data,Bins,Title='',Var='',Name='',PathImg='',M='porcen',FEn=False,Left=True,FlagHour=False,flagEst=True,FlagTitle=False,FlagBig=False,vmax=None,FlagMonths=False):
         '''
         DESCRIPTION:
         
@@ -1898,6 +1898,7 @@ class Hydro_Plotter:
             + FlagTitle: flag incluir el título.
             + FlagBig: flag para poner la letra grande.
             + vmax: valor máximo del gráfico.
+            + FlagMonths: flag para incluir meses.
         _________________________________________________________________________
         
         OUTPUT:
@@ -1909,7 +1910,7 @@ class Hydro_Plotter:
         # Se encuentra el histograma
         DH,DBin = np.histogram(Data[q],bins=Bins); [float(i) for i in DH]
 
-        if M == 'porcen':
+        if M.lower() == 'porcen':
             # Se encuentra la frecuencia relativa del histograma
             DH = DH/float(DH.sum())*100;
 
@@ -1968,6 +1969,10 @@ class Hydro_Plotter:
                 minutes = int((C*60) % 60)
                 CCStr.append('%d:%02d' %(hour,minutes))
             ax.set_xticklabels(CCStr)
+        if FlagMonths:
+            Meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul',
+                    'Ago','Sep','Oct','Nov','Dec']
+            ax.set_xticklabels(Meses)
         for tick in ax.get_xticklabels():
             tick.set_rotation(45)
         # Se arreglan los ejes
@@ -2006,9 +2011,9 @@ class Hydro_Plotter:
         # Título
         if FlagTitle:
             if FEn:
-                plt.title('Histogram of '+Title)
+                plt.title(Title)
             else:
-                plt.title('Histograma de '+Title)
+                plt.title(Title)
         plt.xlabel(Var)  # Colocamos la etiqueta en el eje x
         if M == 'porcen':
             plt.ylabel('Porcentaje [%]')  # Colocamos la etiqueta en el eje y

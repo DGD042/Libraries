@@ -1013,7 +1013,7 @@ class Hydro_Analysis(object):
             - An: Dates where the operation was made.
         '''
         # Determine operation
-        Comp = utl.Oper_Det(Comparation)
+        Comp = DM.Oper_Det(Comparation)
         # ----------------
         # Error managment
         # ----------------
@@ -1122,7 +1122,7 @@ class Hydro_Analysis(object):
         keys = ['TotalNumDays','TotalPrecCount','TotalDateB','MaxNumDays',\
             'MaxPrecCount','DateMaxDays','MaxPrecCount_MaxDay','MaxNumDays_MaxPrec']
         # Determine operation
-        Comp = utl.Oper_Det(Comparation)
+        Comp = DM.Oper_Det(Comparation)
         # ----------------
         # Error managment
         # ----------------

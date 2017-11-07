@@ -30,7 +30,8 @@ import platform
 # ------------------
 # Importing Modules
 from Utilities import Utilities as utl
-from Utilities import DatesUtil as DUtil; DUtil=DUtil()
+# from Utilities import DatesUtil as DUtil; DUtil=DUtil()
+from EMSD.Dates import DatesFunctions as DUtil
 
 # ------------------------
 # Funciones
@@ -89,15 +90,11 @@ def CompD(Dates,V,dtm=None):
     # ---------------------
 
     if isinstance(Dates[0],str) == False and isinstance(Dates[0],date) == False and isinstance(Dates[0],datetime) == False:
-        Er = utl.ShowError('CompD','EDSM','not expected format in dates')
-        return TypeError
-
+        utl.ShowError('CompD','EDSM','not expected format in dates')
     if len(Dates) != len(V):
-        Er = utl.ShowError('CompD','EDSM','Date and V are different length')
-        return Er
+        utl.ShowError('CompD','EDSM','Date and V are different length')
     if dtm != None and isinstance(dtm,timedelta) == False:
-        Er = utl.ShowError('CompD','EDSM','Bad dtm format')
-        return Er
+        utl.ShowError('CompD','EDSM','Bad dtm format')
 
     # Eliminate the errors in February
     if isinstance(Dates[0],str):
