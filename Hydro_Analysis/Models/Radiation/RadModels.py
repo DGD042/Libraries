@@ -202,15 +202,21 @@ class Model_AngstromPrescott(object):
         if model == 1:
             MN = np.nanmean(self.RelN)
             STDN = np.nanstd(self.RelN)
+            NN = len(self.RelN)
+            print(STDN)
+            STDN = STDN/np.sqrt(NN)
+            print(NN)
+            print(STDN)
+            print(MN)
             MRad = np.nanmean(self.RelRad)
             STDRad = np.nanstd(self.RelRad)
-            M = 2.5
+            NRad = len(self.RelRad)
+            STDRad = STDRad/np.sqrt(NRad)
+            M = 10
             self.RelN[(self.RelN > MN+M*STDN) | (self.RelN < MN-M*STDN)] = np.nan
             self.RelRad[(self.RelRad > MRad+M*STDRad) | (self.RelRad < MRad-M*STDRad)] = np.nan
             return
         
-
-
     def AdjustModel(self,model=1):
         '''
         DESCRIPTION:
