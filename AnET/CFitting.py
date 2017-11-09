@@ -160,6 +160,7 @@ class CFitting:
                     print('WARNING: Cannot fit a',key)
                     perrT[key] = np.nan
                     CoefT[key] = np.nan
+                    R2T.append(np.nan)
                     continue
 
             # Verify the maximum R^2

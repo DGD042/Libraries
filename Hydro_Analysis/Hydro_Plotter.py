@@ -1535,7 +1535,11 @@ class Hydro_Plotter:
             plt.plot(x,VC,'k--',label=Label %tuple(list(FitC['Coef'])+[FitC['R2']]))
             plt.legend(loc=1,fontsize=12)
 
-        plt.tight_layout()
+        try:
+            plt.tight_layout()
+        except RuntimeError:
+            plt.close('all')
+            return
         Nameout = PathImg+Name
         plt.savefig(Nameout+'.png',format='png',dpi=self.dpi )
         plt.close('all')
@@ -1975,15 +1979,6 @@ class Hydro_Plotter:
             ax.set_xticklabels(Meses)
         for tick in ax.get_xticklabels():
             tick.set_rotation(45)
-        # Se arreglan los ejes
-        ax = plt.gca()
-        # Se cambia el label de los eje
-        xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
-        MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-        yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
-        MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
-        minorLocatory = MultipleLocator(MyL)
-        plt.gca().yaxis.set_minor_locator(minorLocatory)
 
         plt.xlim([DBin[0],DBin[-1]])
         if vmax != None:
@@ -2017,6 +2012,15 @@ class Hydro_Plotter:
         plt.xlabel(Var)  # Colocamos la etiqueta en el eje x
         if M == 'porcen':
             plt.ylabel('Porcentaje [%]')  # Colocamos la etiqueta en el eje y
+        # Se arreglan los ejes
+        ax = plt.gca()
+        # Se cambia el label de los eje
+        xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+        MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+        yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+        MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
+        minorLocatory = MultipleLocator(MyL)
+        plt.gca().yaxis.set_minor_locator(minorLocatory)
         plt.tight_layout()
         plt.savefig(PathImg + Name +'_Hist' + '.png',format='png',dpi=self.dpi )
         plt.close('all')

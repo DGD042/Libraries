@@ -3872,6 +3872,8 @@ class BPumpL:
                             # print(MaxVarB)
                             # print(VC[iC][:M])
                             # print(P)
+                            if P < 0:
+                                break
                             PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
                             break
 
@@ -3879,6 +3881,14 @@ class BPumpL:
                     try:
                         Results['PosB'][iC] = PosB
                     except: 
+                        Results['PosB'][iC] = np.nan
+                        Results['VRateB'][iC] = np.nan
+                        Results['VChangeB'][iC] = np.nan
+                        Results['DurVB'][iC] = np.nan
+                        Results['PosA'][iC] = np.nan
+                        Results['VRateA'][iC] = np.nan
+                        Results['VChangeA'][iC] = np.nan
+                        Results['DurVA'][iC] = np.nan
                         continue
                     # Se obtiene el cambio de la variable
                     Results['VChangeB'][iC] = MaxVarB-VC[iC][M]
@@ -3891,6 +3901,12 @@ class BPumpL:
                         Results['VRateB'][iC] = np.nan
                         Results['VChangeB'][iC] = np.nan
                         Results['DurVB'][iC] = np.nan
+                    if Results['PosB'][iC] == -9999.0:
+                        Results['PosB'][iC] = np.nan
+                        Results['VRateB'][iC] = np.nan
+                        Results['VChangeB'][iC] = np.nan
+                        Results['DurVB'][iC] = np.nan
+
 
                     # ----
                     # Se encuentra el valor máximo después
@@ -3910,6 +3926,11 @@ class BPumpL:
                     # Se obtiene la tasa de cambio
                     Results['VRateA'][iC] = Results['VChangeA'][iC]/Results['DurVA'][iC]
                     if Results['VRateA'][iC] < 0 :
+                        Results['PosA'][iC] = np.nan
+                        Results['VRateA'][iC] = np.nan
+                        Results['VChangeA'][iC] = np.nan
+                        Results['DurVA'][iC] = np.nan
+                    if Results['PosA'][iC] == -9999.0:
                         Results['PosA'][iC] = np.nan
                         Results['VRateA'][iC] = np.nan
                         Results['VChangeA'][iC] = np.nan

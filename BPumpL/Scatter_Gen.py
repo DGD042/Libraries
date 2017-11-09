@@ -380,11 +380,11 @@ class Scatter_Gen(object):
 
         Labels = ['PresC','TC','HRC','qC','WC']
         UnitsDict = {'TC':'Temperatura [°C]','PresC':'Presión [hPa]','HRC':'Humedad Relativa [%]',
-                'qC':'Humedad Específica [kg/g]','WC':'Tasa de Mezcla [kg/g]'}
+                'qC':'Humedad Específica [kg/g]','WC':'Relación de Mezcla [kg/g]'}
         ColorDict = {'TC':'r','PresC':'k','HRC':'g',
                 'qC':'g','WC':'m'}
         LabelDict = {'TC':'Temperatura','PresC':'Presión','HRC':'Humedad Relativa',
-                'qC':'Humedad Específica','WC':'Tasa de Mezcla de V.A.'}
+                'qC':'Humedad Específica','WC':'Relación de Mezcla de V.A.'}
 
 
         DataKeys = ['PrecC']
@@ -816,8 +816,8 @@ class Scatter_Gen(object):
             MPres = list()
             for iC in range(len(Pres)):
                 xEv = np.where(DatesEvP[iC] == self.Res_Prec['DatesEvst'][iC])[0][0]
-                Bef = xEv-int(60/int(self.dtm)*1)
-                Aft = xEv+int(60/int(self.dtm)*(15/60)) 
+                Bef = xEv-int(60/dt*3)
+                Aft = xEv+int(60/dt*(15/60)) 
                 Min = np.nanmin(Pres[iC][Bef:Aft])
                 xMin1 = np.where(Pres[iC][:Aft]==Min)[0][-1]
                 MPres.append(xMin1)
