@@ -17,6 +17,7 @@ import numpy as np
 import scipy.io as sio # To use .mat files
 from scipy import stats as st # To make linear regressions
 from scipy.optimize import curve_fit # To do curve fitting
+from scipy.stats.distributions import t # t distribution
 # System
 import sys
 import os
@@ -78,7 +79,7 @@ class CFitting:
         self.AdjF[key] = funeq
         return
 
-    def FF(self,xdata,ydata,F='lineal',flagParabolic=False):
+    def FF(self,xdata,ydata,F='lineal',alpha=0.05,flagParabolic=False):
         '''
         DESCRIPTION:
         
@@ -87,9 +88,13 @@ class CFitting:
         _______________________________________________________________________
 
         INPUT:
-            + xdata: Data in the x axis.
-            + ydata: Data in the y axis.
-            + F: Function that wants to be fitted, by default is 'lineal'.
+            :param xdata:         A ndArray, Data in the x axis.
+            :param ydata:         A ndArray, Data in the y axis.
+            :param F:             A str, Function that wants to be fitted, 
+                                  by default is 'lineal'.
+            :param alpha:         A float, significance level.
+            :param flagParabolic: A boolean, flag to adjust Parabolic in 
+                                  automatic.
 
                  The functions that are defaulted to fit are the following:
 
@@ -189,6 +194,25 @@ class CFitting:
             Results['Function'] = fun
             Results['FunctionEq'] = self.FunctionsEqstr(self.AdjF[key],Coef)
 
+        # Confidence intervals of the parameters
+        n = len(Y)  # Number of data
+        p = len(Results['Coef']) # Number of parameters
+        dof = max(0,n-p) # Number of degrees of freedom
+        # Student-t value for the dof and confidence level
+        tval = t.ppf(1.0-alpha/2.0, dof)
+
+        Results['ConInt'] = []
+        for i, p, var in zip(range(n),Results['Coef'],np.diag(pcov)):
+            sigma = var**0.5
+            Results['ConInt'].append([p-sigma*tval,p+sigma*tval])
+
+        # Error de la estimación
+        SS = []
+        VC = Results['Function'](X, *Results['Coef'])
+        for iy,y in enumerate(VC):
+            SS.append((Y[iy]-y)**2)
+        EErr = np.sqrt((1/(n-2))*np.sum(np.array(SS)))
+        Results['EErr'] = EErr
         return Results
 
     def FunctionsEqstr(self,funEq,Coef):

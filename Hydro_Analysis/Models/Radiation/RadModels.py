@@ -215,7 +215,14 @@ class Model_AngstromPrescott(object):
             M = 10
             self.RelN[(self.RelN > MN+M*STDN) | (self.RelN < MN-M*STDN)] = np.nan
             self.RelRad[(self.RelRad > MRad+M*STDRad) | (self.RelRad < MRad-M*STDRad)] = np.nan
-            return
+        elif model == 2:
+            self.AdjustModel(model=2)
+            FitC = self.R
+            VC = FitC['Function'](self.RelN, *FitC['Coef'])
+            DatOver = VC+FitC['EErr']
+            DatLower = VC-FitC['EErr']
+            self.RelRad[(self.RelRad > DatOver) | (self.RelRad < DatLower)] = np.nan
+        return
         
     def AdjustModel(self,model=1):
         '''
@@ -241,7 +248,7 @@ class Model_AngstromPrescott(object):
         self.Parameters = self.R['Coef']
         return
 
-    def GraphAdj(self,Name='Image',PathImg=''):
+    def GraphAdj(self,Name='Image',PathImg='',flagConInt=False):
         '''
         DESCRIPTION:
 
@@ -305,7 +312,15 @@ class Model_AngstromPrescott(object):
         # Se incluye el ajuste
         Label = FitC['FunctionEq']+'\n'+r'$R^2=%.3f$'
         plt.plot(x,VC,'k--',label=Label %tuple(list(FitC['Coef'])+[FitC['R2']]))
-        plt.legend(loc=1,fontsize=10)
+        plt.legend(loc=1,fontsize=10,framealpha=0.6)
+        if flagConInt:
+            for i in range(2):
+                Coef = []
+                for j in range(len(FitC['Coef'])):
+                    Coef.append(FitC['ConInt'][j][i])
+                VC = FitC['Function'](x, *Coef)
+                plt.plot(x,VC,'r--')
+
 
         plt.tight_layout()
         Nameout = PathImg+Name
