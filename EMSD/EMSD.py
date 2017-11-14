@@ -2121,7 +2121,7 @@ class EMSD(object):
         if op3 == None:
             op3 = op
 
-        DateM, DateMN, VM,VmaxM,VminM,VNF,VNNF = self.Ca_E(DateD,VD,1,2,op=op3,flagMa=True,flagDF=True)
+        DateM, DateMN, VM,VmaxM,VminM,VNF,VNNF = DMan.Ca_E(DateD,VD,1,2,op=op3,flagMa=True,flagDF=True)
         DatesC[DateLab[2]] = DateM
         DatesNC[DateNLab[2]] = DateMN
         VC[VLab[6]] = VM

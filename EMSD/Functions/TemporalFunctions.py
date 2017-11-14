@@ -40,7 +40,7 @@ def ClipSeries(DatesP,DataP,DatesS,DataS):
     INPUT:
         :param DatesP:  A ndArray, vector with Dates of first series.
         :param DataP:   A ndArray, vector with values of first series.
-        :param DatesS:  A ndArray, vector with Dates of second eries.
+        :param DatesS:  A ndArray, vector with Dates of second series.
         :param DataS:   A ndArray, vector with values of second series.
     _________________________________________________________________________
     OUTPUT:
