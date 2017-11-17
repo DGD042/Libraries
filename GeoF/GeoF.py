@@ -3,166 +3,253 @@
 #______________________________________________________________________________
 #
 #                       Coded by Daniel González Duque
-#                           Last revised 26/02/2016
+#                           Last revised 15/11/2017
 #______________________________________________________________________________
 #______________________________________________________________________________
 
-#______________________________________________________________________________
-#
-# DESCRIPCIÓN DE LA CLASE:
-#   En esta clase se incluyen las rutinas para tratar información de GIS.
-#   Esta librería necesita del módulo GDAL, se deben instalar
-#
-#   Esta libreria es de uso libre y puede ser modificada a su gusto, si tienen
-#   algún problema se pueden comunicar con el programador al correo:
-#   dagonzalezdu@unal.edu.co
-#______________________________________________________________________________
 
+# Data Management
 import numpy as np
+# System Management
 import sys
-import csv
-import xlrd # Para poder abrir archivos de Excel
-import xlsxwriter as xlsxwl
 import warnings
-
+import re
+# Map Management
 from osgeo import gdal
+from osgeo import osr
 from osgeo.gdalnumeric import *
 from osgeo.gdalconst import *
-
-# Se importan los paquetes para manejo de fechas
-from datetime import date, datetime, timedelta
-
+from pyproj import Proj, transform
 # ------------------
 # Personal Modules
 # ------------------
 # Importing Modules
-from Utilities import Utilities as utl
+try:
+    from GeoF.GeoTIFF import Functions as GF
+    from GeoF.NetCDF import Functions as NF
+except ImportError:
+    from GeoTIFF import Functions as GF
+    from NetCDF import Functions as NF
 
 class GeoF:
-
-    def __init__(self):
-
+    '''
+    DESCRIPTION:
+        This class opens and manipulates data related to the raster 
+        data.
+    _________________________________________________________________
+    INPUT:
+        :param Data:  A dict, a dictionary with the data, must have:
+                      'Data': A ndArray, 3x3 matrix with time in the
+                        first dimension.
+                      'longitude': Longitude.
+                      'latitude': Longitude.
+                      'EPSG': EPSG number.
+                      'Prj': wkt Projection.
+                      'geoTrans': tuple with 
+                        (xmin,xcellsize,0.0,ymax,0.0,ycellsize)
+    '''
+    def __init__(self,Data=None):
         '''
-            DESCRIPTION:
-
-        This is a build up function.
         '''
-    def GEOTiffEx(self,Ar,FlagGTD=False):
+        # ----------------
+        # Variables
+        # ----------------
+        Var = ['Data','longitude','latitude','EPSG','Prj','geoTrans']
+        # ----------------
+        # Error Managment
+        # ----------------
+        if not(isinstance(Data,dict)) or not(Data == None):
+            self.ShowError('__init__','GeoF','Data has to be a dictionary or None.')
+
+        if Data != None:
+            for v in Var:
+                try:
+                    a = Data[Var]
+                except KeyError:
+                    self.ShowError('__init__','GeoF','%s is not in the dictionary, review the information for parameter Data' %v)
+
+        self.Data = Data
+        return
+
+    def OpenNetCDFData(self,File,VarDict=None,VarRangeDict=None,EPSG=4326)
         '''
-            DESCRIPTION:
-        
-        Esta función pretende extraer la información de una banda de un GeoTiff
-        _________________________________________________________________________
+        DESCRIPTION:
+            This class opens and manipulates data related to the raster 
+            data.
+        ________________________________________________________________________
+        INPUT:
+            :param File:         A str, File that would be extracted including 
+                                 the path.
+            :param VarDict:      A dict, List of variables that would be 
+                                 extracted from the netCDF file. Defaulted 
+                                 to None.
+            :param VarRangeDict: A dict, Range of data that would be extracted 
+                                 per variable. It is defaulted to None if all 
+                                 the Range wants to be extracted.
+                                 It must be a list with two values for each 
+                                 variable.
+        ________________________________________________________________________
+        OUTPUT:
+           :return Data: A dict, dictionary with projection ('Ptj' and 'EPSG'). 
+        '''
+        self.Data = NetF.EDnetCDFFile(File,VarDict=VarDict,VarRangeDict=VarRangeDict)
+        if isinstance(self.Data,dict):
+            self.SetProj(EPSG=EPSG)
+        return
 
-            INPUT:
-        + Ar: Archivo GeoTiff.
-        + FlagGTD: Bandera para obtener los valores de tamaño de celda del GeoTiff.
-        _________________________________________________________________________
-        
-            OUTPUT:
-        - data1: Raster data
-        - xllcorner: Coordenadas de la esquina occidental.
-        - yllcorner: Coordenadas de la esquina sur.
-        - cellsize: Tamaño de la celda.
-        - geoTrans: Información de las coordenadas y el tamaño de celda.
+    def OpenGeoTIFFData(self,File,band=1)
+        '''
+        DESCRIPTION:
+            This class opens and manipulates data related to the raster 
+            data.
+        _________________________________________________________________
+        INPUT:
+            :param File: A str, File that would be open.
+            :param band: An int, band number in the raster that would
+                         be extracted.
+        '''
+        # ----------------
+        # Error Managment
+        # ----------------
+        if not(isinstance(File,str)):
+            self.ShowError('OpenGeoTIFFData','GeoF','File has to be a string')
+        if not(isinstance(band,int)):
+            self.ShowError('OpenGeoTIFFData','GeoF','band has to be an intenger')
+        # ----------------
+        # Open File
+        # ----------------
+        self.File = File
+        if File[-3:].lower() == 'tif' or File[-4:].lower() == 'tiff':
+            self.Data = GF.GeoTIFFEx(File,band=band)
+            a = re.compile('"EPSG",')
+            b = re.finditer(a,self.Data['Prj'])
+            c = [i.end() for i in b]
+            self.Data['EPSG'] = 'epsg:'+self.Data['Prj'][c[-1]+1:-3]
+        return
+
+    def SetProj(self,EPSG):
+        '''
+        DESCRIPTION:
+
+            This method projects the information of the raster to another 
+            coordinate system.
+        _______________________________________________________________________
+        INPUT:
+            :param EPSG: A int, epsg number of the new projection.
+        _______________________________________________________________________
+        OUTPUT:
+           :return Data: A dict, dictionary with projection ('Ptj' and 'EPSG'). 
+        '''
+        # ----------------
+        # Error Managment
+        # ----------------
+        if not(isinstance(EPSG,int)):
+            self.ShowError('ProjData','GeoF','EPSG has to be an integer')
+
+        # ----------------
+        # Projection
+        # ----------------
+        spatialRef = osr.SpatialReference()
+        spatialRef.ImportFromEPSG(EPSG)
+        self.Data['Prj'] = spatialRef.ExportToWkt()
+        self.Data['EPSG'] = 'epsg:'+str(EPSG)
+        return
+
+    def ProjData(self,EPSG):
+        '''
+        DESCRIPTION:
+
+            This method projects the information of the raster to another 
+            coordinate system.
+        _______________________________________________________________________
+        INPUT:
+            :param EPSG: A int, epsg number of the new projection.
+        _______________________________________________________________________
+        OUTPUT:
+           :return Data: A dict, Dict with the latitude and longitude 
+                         projected.
+        '''
+        # ----------------
+        # Error Managment
+        # ----------------
+        if not(isinstance(EPSG,int)):
+            self.ShowError('ProjData','GeoF','EPSG has to be an integer')
+        if len(Data['Data'].shape) > 4:
+            self.ShowError('ProjData','GeoF',''Data' key has too much indices')
+
+        # ----------------
+        # Constants
+        # ----------------
+        Data = self.Data
+        if len(Data['Data'].shape) == 3:
+            Data['Data'] = Data['Data'][0]
+        elif len(Data['Data'].shape) == 4:
+            Data['Data'] = Data['Data'][0]
+            Data['Data'] = Data['Data'][0]
+        OrProj = Proj(init=Data['EPSG'])
+        PrProj = Proj(init='epsg:'+str(EPSG))
+
+        # ----------------
+        # Project
+        # ----------------
+        # Projection
+        spatialRef = osr.SpatialReference()
+        spatialRef.ImportFromEPSG(EPSG)
+        Data['Prj'] = spatialRef.ExportToWkt()
+        Data['EPSG'] = 'epsg:'+str(EPSG)
+
+        longitude0, latitude0 = transform(OrProj,PrProj,Data['longitude'][0],Data['latitude'][0])
+        longitude1, latitude1 = transform(OrProj,PrProj,Data['longitude'][1],Data['latitude'][1])
+        Clat = latitude1-latitude0
+        Clon = longitude1-longitude0
+        geoTrans = (longitude0,Clon,0.0,latitude0,0.0,Clat)
+
+        # New Coordinates
+        _shape = Data['Data'].shape
+        latitude = np.empty(_shape[0])*np.nan
+        longitude = np.empty(_shape[1])*np.nan
+        # latitudeitude
+        for ilat in range(len(latitude)):
+            if ilat == 0:
+                latitude[ilat] = geoTrans[3]
+            else:
+                latitude[ilat] = latitude[ilat-1]+Clat
+        # longitudegitude
+        for ilon in range(len(longitude)):
+            if ilon == 0:
+                longitude[ilon] = geoTrans[0]
+            else:
+                longitude[ilon] = longitude[ilon-1]+Clon
+
+        # Save Coordinates
+        Data['latitude'] = latitude
+        Data['longitude'] = longitude
+        Data['geoTrans'] = geoTrans
+        self.Data = Data
+        return
+
+    def __str__(self):
+        '''
+        '''
+        a  = '\nFILE OPENED: '+self.File
+        b = '\nCOORDINATE SYSTEM INFO:\n'+self.Data['Prj']
+        return a+b
+
+    def ShowError(self,fn,cl,msg):
+        '''
+        DESCRIPTION:
+
+            This method manages errors, and shows them. 
+        _______________________________________________________________________
+        INPUT:
+            :param fn:  A str, Function that produced the error.
+            :param cl:  A str, Class that produced the error.
+            :param msg: A str, Message of the error.
+        _______________________________________________________________________
+        OUTPUT:
+           :return: An int, Error managment -1. 
         '''
 
-        # this allows GDAL to throw Python Exceptions
-        gdal.UseExceptions()
-
-        try:
-            src_ds = gdal.Open(Ar)
-        except RuntimeError:
-            print('Unable to open INPUT.tif')
-            sys.exit(1)
-
-        try:
-            srcband = src_ds.GetRasterBand(1)
-        except RuntimeError:
-            # for example, try GetRasterBand(10)
-            print ('Band ( %i ) not found' % band_num)
-            sys.exit(1)
-
-        # Se extrae la información
-        data1 = BandReadAsArray(srcband).astype(float)
-        NoDataValue = srcband.GetNoDataValue()
-        
-        x = np.where(data1 == NoDataValue)
-        
-        data1[x] = np.nan
-
-        # Se encuentran las coordenadas
-        geoTrans = src_ds.GetGeoTransform()
-
-        # Se arregla el yllcorner porque se encuentra en el norte.
-        a = data1.shape[0]
-        yllcorner = geoTrans[3]+(a*geoTrans[-1])
-
-        if FlagGTD:
-            return data1,(geoTrans[0])-(geoTrans[1]/2),yllcorner+(geoTrans[-1]/2),geoTrans[1],geoTrans
-        else:
-            return data1,(geoTrans[0])-(geoTrans[1]/2),yllcorner+(geoTrans[-1]/2),geoTrans[1]
-
-    def GEOTiffSave(self,T,cellsize_x,cellsize_y,x_min,y_max,Name,Pathout,Projection=0):
-        '''
-            DESCRIPTION:
-        
-        Esta función pretende guardar un archivo GEOTiff con información en una
-        sola banda.
-        _________________________________________________________________________
-
-            INPUT:
-        + T: Matriz con los valores que se quieren guardar.
-        + cellsize_x: Tamaño de celda en la latitud.
-        + cellsize_y: Tamaño de celda en la longitud.
-        + x_min: Longitud en el punto occidental.
-        + y_max: Latitud en el punto norte.
-        + Name: Nombre del documento.
-        + Pathout: Ruta de salida.
-        + Projection: Proyección de la información 
-                      0: Magna Bogotá.
-                      1: WGS84.
-        _________________________________________________________________________
-        
-            OUTPUT:
-        Se guarda un archivo GeoTiff.
-        '''
-
-        # Se crea la carpeta
-        utl.CrFolder(Pathout)
-
-        Nameout = Pathout + Name + '.tif'
-
-        x_pixels = T.shape[1]  # number of pixels in x
-        y_pixels = T.shape[0]  # number of pixels in y
-        
-        if Projection == 0:
-            # MAGNA SIRAS Bogotá
-            wkt_projection = 'PROJCS["MAGNA-SIRGAS / Colombia Bogota zone",GEOGCS["MAGNA-SIRGAS",DATUM["Marco_Geocentrico_Nacional_de_Referencia",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6686"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.01745329251994328,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4686"]],UNIT["metre",1,AUTHORITY["EPSG","9001"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",4.596200416666666],PARAMETER["central_meridian",-74.07750791666666],PARAMETER["scale_factor",1],PARAMETER["false_easting",1000000],PARAMETER["false_northing",1000000],AUTHORITY["EPSG","3116"],AXIS["Easting",EAST],AXIS["Northing",NORTH]]'
-        elif Projection == 1:
-            # WGS84
-            wkt_projection = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.01745329251994328,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]'
+        raise Exception('ERROR: Method <'+fn+'> Class <'+cl+'>: '+msg)
 
 
-        driver = gdal.GetDriverByName('GTiff')
-
-        dataset = driver.Create(
-            Nameout,
-            x_pixels,
-            y_pixels,
-            1,
-            gdal.GDT_Float32, )
-
-        dataset.SetGeoTransform((
-            x_min,    # 0
-            cellsize_x,  # 1
-            0,                      # 2
-            y_max,    # 3
-            0,                      # 4
-            -cellsize_y))
-
-        dataset.SetProjection(wkt_projection)
-        dataset.GetRasterBand(1).WriteArray(T)
-        Band = dataset.GetRasterBand(1)
-        Band.SetNoDataValue(-9999.0)
-        dataset.FlushCache()  # Write to disk.

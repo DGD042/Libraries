@@ -74,8 +74,9 @@ class DatesC(object):
         assert isinstance(Dates[0],str) or isinstance(Dates[0],datetime) or isinstance(Dates[0],date)
 
         if isinstance(Dates[0],str):
-            self.str = Dates
             self.datetime = DUtil.Dates_str2datetime(Dates,Date_Format=Date_Format,flagQuick=flagQuick)
+            self.str = DUtil.Dates_datetime2str(self.datetime,Date_Format=None)
+
         if isinstance(Dates[0],datetime) or isinstance(Dates[0],date):
             self.datetime = Dates
             self.str = DUtil.Dates_datetime2str(Dates)

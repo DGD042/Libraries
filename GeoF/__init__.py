@@ -7,7 +7,12 @@
 #______________________________________________________________________________
 
 try:
-    from GeoF.GeoF import GeoF
+    from GeoTIFF import *
+    from NetCDF import *
+    from GeoF import *
 except ImportError:
+    from GeoF import GeoTIFF
     from GeoF import GeoF
+    from GeoF import GeoTimeSeries
+
 
