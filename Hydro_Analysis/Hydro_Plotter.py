@@ -1547,7 +1547,7 @@ class Hydro_Plotter:
         if FlagA:
             return 
 
-    def ScatterGen(self,V1,V2,Fit='',Title='',xLabel='',yLabel='',Name='',PathImg='',FlagA=True,FlagAn=False,FlagInv=False,FlagInvAxis=False):
+    def ScatterGen(self,V1,V2,Fit='',Title='',xLabel='',yLabel='',Name='',PathImg='',FlagA=True,FlagAn=False,FlagInv=False,FlagInvAxis=False,Annotations=None):
         '''
         DESCRIPTION:
         
@@ -1564,10 +1564,11 @@ class Hydro_Plotter:
             :param FlagAn:   a bolean, Indicador para anotar el número del punto.
             :param FlagInv:  a bolean, Indicator to make inverse adjustment.
             :param FlagInvAxis:  a bolean, Indicator to make inverse adjustment.
+            :param Annotations:  a ndArray, annotations in the scatter plot.
         _________________________________________________________________________
         
-            OUTPUT:
-        Esta función arroja una gráfica y la guarda en la ruta desada.
+        OUTPUT:
+            This function saves an image.
         '''
 
         # Se calcula el ajuste
@@ -1618,10 +1619,13 @@ class Hydro_Plotter:
         plt.ylabel(yLabel,fontsize=16)
 
         if FlagAn:
-            # Número de cada punto
-            n = np.arange(0,len(V1))
-            for i, txt in enumerate(n):
-                plt.annotate(txt, (V1[i],V2[i]),fontsize=8)
+            if Annotations == None:
+                n = np.arange(0,len(V1))
+                for i, txt in enumerate(n):
+                    plt.annotate(txt, (V1[i],V2[i]),fontsize=8)
+            else:
+                for i, txt in enumerate(Annotations):
+                    plt.annotate(txt, (V1[i],V2[i]),fontsize=8)
 
         # Axes
         ax = plt.gca()

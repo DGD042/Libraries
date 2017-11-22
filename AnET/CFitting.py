@@ -206,13 +206,37 @@ class CFitting:
             sigma = var**0.5
             Results['ConInt'].append([p-sigma*tval,p+sigma*tval])
 
-        # Error de la estimación
+        # ---------------------
+        # Errors
+        # ---------------------
+        # Estimation Error
         SS = []
         VC = Results['Function'](X, *Results['Coef'])
         for iy,y in enumerate(VC):
             SS.append((Y[iy]-y)**2)
         EErr = np.sqrt((1/(n-2))*np.sum(np.array(SS)))
         Results['EErr'] = EErr
+        # RSME (Root Mean Square Error)
+        SS = []
+        VC = Results['Function'](X, *Results['Coef'])
+        for iy,y in enumerate(VC):
+            SS.append((y-Y[iy])**2)
+        RSME = np.sqrt((1/(n))*np.sum(np.array(SS)))
+        Results['RSME'] = RSME
+        # MBE (Mean Bias Error)
+        SS = []
+        VC = Results['Function'](X, *Results['Coef'])
+        for iy,y in enumerate(VC):
+            SS.append((y-Y[iy]))
+        RSME = np.sqrt((1/(n))*np.sum(np.array(SS)))
+        Results['MBE'] = RMSE 
+        # MPE (Mean Percentage Error)
+        SS = []
+        VC = Results['Function'](X, *Results['Coef'])
+        for iy,y in enumerate(VC):
+            SS.append(((y-Y[iy])/Y[iy])*100)
+        RSME = np.sqrt((1/(n))*np.sum(np.array(SS)))
+        Results['MPE'] = RMSE 
         return Results
 
     def FunctionsEqstr(self,funEq,Coef):

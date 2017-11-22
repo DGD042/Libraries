@@ -9,6 +9,7 @@
 try:
     from GeoTIFF import *
     from NetCDF import *
+    from Maps import *
     from GeoF import *
 except ImportError:
     from GeoF import GeoTIFF

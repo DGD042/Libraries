@@ -63,6 +63,7 @@ class BPumpL:
         '''
         self.dpi=300
         return
+
     def GraphIDEA(self,FechaN,PrecC,TempC,HRC,PresBC,Var,PathImg,Tot,V=1,Name=''):
         '''
             DESCRIPTION:
