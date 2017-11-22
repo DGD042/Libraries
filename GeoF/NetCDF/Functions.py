@@ -38,7 +38,7 @@ from EMSD.Functions import Gen_Functions as GFun
 # ------------------------
 
 
-def EDnetCDFFile(File,VarDict=None,VarRangeDict=None):
+def EDnetCDFFile(File,VarDict=None,VarRangeDict=None,time='time'):
     '''
     DESCRIPTION:
 
@@ -81,7 +81,7 @@ def EDnetCDFFile(File,VarDict=None,VarRangeDict=None):
             except KeyError:
                 utl.ShowError('EDNCFile','EDSM','Key %s not in the nc file.' %Var)
             if VarRangeDict == None:
-                if Var == 'time':
+                if Var == time:
                     Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,dataset.variables[Var].calendar)
                 else:
                     Data[Var] = dataset.variables[Var][:]
@@ -99,7 +99,7 @@ def EDnetCDFFile(File,VarDict=None,VarRangeDict=None):
                         Range[VarR] = [0,dataset.variables[VarR].shape[0]]
 
                 if LenD == 1:
-                    if Var == 'time':
+                    if Var == time:
                         Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,dataset.variables[Var].calendar)[slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
                     else:
                         Data[Var] = dataset.variables[Var][slice(Range[dimensions[0]][0],Range[dimensions[0]][1])]
