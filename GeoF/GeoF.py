@@ -26,10 +26,10 @@ from pyproj import Proj, transform
 # Importing Modules
 try:
     from GeoF.GeoTIFF import Functions as GF
-    from GeoF.NetCDF import Functions as NF
+    from GeoF.NetCDF import Functions as NetF
 except ImportError:
     from GeoTIFF import Functions as GF
-    from NetCDF import Functions as NF
+    from NetCDF import Functions as NetF
 
 class GeoF:
     '''
@@ -58,7 +58,7 @@ class GeoF:
         # ----------------
         # Error Managment
         # ----------------
-        if not(isinstance(Data,dict)) or not(Data == None):
+        if not(isinstance(Data,dict)) and not(Data == None):
             self.ShowError('__init__','GeoF','Data has to be a dictionary or None.')
 
         if Data != None:
@@ -71,7 +71,8 @@ class GeoF:
         self.Data = Data
         return
 
-    def OpenNetCDFData(self,File,VarDict=None,VarRangeDict=None,EPSG=4326)
+    def OpenNetCDFData(self,File,VarDict=None,VarRangeDict=None,time='time',EPSG=4326,Vars={'Data':None,
+        'latitude':None,'longitude':None,'time':None}):
         '''
         DESCRIPTION:
             This class opens and manipulates data related to the raster 
@@ -92,12 +93,22 @@ class GeoF:
         OUTPUT:
            :return Data: A dict, dictionary with projection ('Ptj' and 'EPSG'). 
         '''
-        self.Data = NetF.EDnetCDFFile(File,VarDict=VarDict,VarRangeDict=VarRangeDict)
-        if isinstance(self.Data,dict):
+        Var = ['Data','latitude','longitude','time']
+        for v in Var:
+            try:
+                a = Vars[v]
+            except KeyError:
+                Vars[v] = None
+        Data = NetF.EDnetCDFFile(File,VarDict=VarDict,VarRangeDict=VarRangeDict)
+        if isinstance(Data,dict):
+            self.Data = dict()
+            for v in Var:
+                if Vars[v] != None:
+                    self.Data[v] = Data[Vars[v]]
             self.SetProj(EPSG=EPSG)
         return
 
-    def OpenGeoTIFFData(self,File,band=1)
+    def OpenGeoTIFFData(self,File,band=1):
         '''
         DESCRIPTION:
             This class opens and manipulates data related to the raster 
@@ -175,7 +186,7 @@ class GeoF:
         if not(isinstance(EPSG,int)):
             self.ShowError('ProjData','GeoF','EPSG has to be an integer')
         if len(Data['Data'].shape) > 4:
-            self.ShowError('ProjData','GeoF',''Data' key has too much indices')
+            self.ShowError('ProjData','GeoF',"'Data' key has too much indices")
 
         # ----------------
         # Constants
