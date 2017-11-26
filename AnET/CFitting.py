@@ -229,14 +229,14 @@ class CFitting:
         for iy,y in enumerate(VC):
             SS.append((y-Y[iy]))
         RSME = np.sqrt((1/(n))*np.sum(np.array(SS)))
-        Results['MBE'] = RMSE 
+        Results['MBE'] = RSME 
         # MPE (Mean Percentage Error)
         SS = []
         VC = Results['Function'](X, *Results['Coef'])
         for iy,y in enumerate(VC):
             SS.append(((y-Y[iy])/Y[iy])*100)
         RSME = np.sqrt((1/(n))*np.sum(np.array(SS)))
-        Results['MPE'] = RMSE 
+        Results['MPE'] = RSME 
         return Results
 
     def FunctionsEqstr(self,funEq,Coef):

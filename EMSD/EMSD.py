@@ -2044,7 +2044,7 @@ class EMSD(object):
         else:
             return self.Dates,self.DatesN, self.Values
             
-    def Ca_EC(self,Date=None,V1=None,op='mean',key=None,dtm=None,op2=None,op3=None,flagHour=True):
+    def Ca_EC(self,Date=None,V1=None,op='mean',key=None,dtm=None,op2=None,op3=None,flagHour=True,flagDaily=True):
         '''
         DESCRIPTION:
 
@@ -2105,18 +2105,24 @@ class EMSD(object):
             D_Formats = DUtil.Date_Formats
             VH = V1
         # Daily data
-        if op2 == None:
-            op2 = op
-        if flagHour:
-            dt = 24
-            DateD, DateDN, VD,VmaxD,VminD = DMan.Ca_E(DateH,VH,dt,1,op=op2,flagMa=True,flagDF=False)
+        if flagDaily:
+            if op2 == None:
+                op2 = op
+            if flagHour:
+                dt = 24
+                DateD, DateDN, VD,VmaxD,VminD = DMan.Ca_E(DateH,VH,dt,1,op=op2,flagMa=True,flagDF=False)
+            else:
+                DateD, DateDN, VD,VmaxD,VminD = DMan.Ca_E(Date,V1,dtm,1,op=op2,flagMa=True,flagDF=False)
+            DatesC[DateLab[1]] = DateD
+            DatesNC[DateNLab[1]] = DateDN
+            VC[VLab[3]] = VD
+            VC[VLab[4]] = VmaxD
+            VC[VLab[5]] = VminD
         else:
-            DateD, DateDN, VD,VmaxD,VminD = DMan.Ca_E(Date,V1,dtm,1,op=op2,flagMa=True,flagDF=False)
-        DatesC[DateLab[1]] = DateD
-        DatesNC[DateNLab[1]] = DateDN
-        VC[VLab[3]] = VD
-        VC[VLab[4]] = VmaxD
-        VC[VLab[5]] = VminD
+            VC[VLab[3]] = V1
+            VD = V1
+            DateD = Date
+
 
         if op3 == None:
             op3 = op
