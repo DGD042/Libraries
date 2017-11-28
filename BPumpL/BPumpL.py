@@ -3788,22 +3788,23 @@ class BPumpL:
         '''
         DESCRIPTION:
     
-        Con esta función se pretende encontrar la tasa de cambio de una variable
-        junto con la duración de las diferentes diagramas de compuestos.
+            Con esta función se pretende encontrar la tasa de cambio de una 
+            variable junto con la duración de las diferentes diagramas de 
+            compuestos.
         _________________________________________________________________________
 
-            INPUT:
-        + VC: Diagrama de compuestos de la variable a estudiar.
-        + dt: delta de tiempo que se tienen en los diagramas de compuestos.
-        + M: Lugar donde se encuentra el mínimo o el máximo central.
-        + MinMax: Valor que se encuentra en el centro de los datos.
+        INPUT:
+            + VC: Diagrama de compuestos de la variable a estudiar.
+            + dt: delta de tiempo que se tienen en los diagramas de compuestos.
+            + M: Lugar donde se encuentra el mínimo o el máximo central.
+            + MinMax: Valor que se encuentra en el centro de los datos.
         _________________________________________________________________________
 
-            OUTPUT:
-        - VRateB: Tasa de cambio de la variable antes.
-        - VRateA: Tasa de cambio de la variable durante.
-        - VChangeB: Cambio de la variable antes.
-        - VChangeA: Cambio de la variable durante.
+        OUTPUT:
+            - VRateB: Tasa de cambio de la variable antes.
+            - VRateA: Tasa de cambio de la variable durante.
+            - VChangeB: Cambio de la variable antes.
+            - VChangeA: Cambio de la variable durante.
         '''
         
         # Se filtran las alertas
@@ -3868,11 +3869,6 @@ class BPumpL:
                     for P in range(M-1,int(M-2*(60/dt))-1,-1):
                         if VC[iC][P-1] < VC[iC][P] and VC[iC][P] >= -0.2:
                             MaxVarB = VC[iC][P]
-                            # print('---')
-                            # print(M)
-                            # print(MaxVarB)
-                            # print(VC[iC][:M])
-                            # print(P)
                             if P < 0:
                                 break
                             PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
@@ -3944,13 +3940,41 @@ class BPumpL:
                 else:
                     M = MP
                 if not(np.isnan(Results['DurVA'][iC])):
+                    # ---------------
+                    # Metodología 1
+                    # ---------------
                     # Se encuentra el valor mínimo antes
                     # Se utiliza como referencia 2 horas antes 
-                    MinVarB = np.nanmin(VC[iC][M-2*(60/dt):M])
-                    PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
-                    if MinVarB < -0.2:
-                        MinVarB = np.nanmin(VC[iC][M-3*(60/dt):M])
-                        PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
+                    # MinVarB = np.nanmin(VC[iC][M-2*(60/dt):M])
+                    # PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
+                    # if MinVarB < -0.2:
+                    #     MinVarB = np.nanmin(VC[iC][M-3*(60/dt):M])
+                    #     PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
+                    # ---------------
+                    # Metodología 2
+                    # ---------------
+                    # Se encuentra el primer máximo 
+                    for P in range(M-1,int(M-2*(60/dt))-1,-1):
+                        if VC[iC][P-1] > VC[iC][P] and VC[iC][P] <= -0.2:
+                            MinVarB = VC[iC][P]
+                            if P < 0:
+                                break
+                            PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
+                            break
+
+                    # Se guarda la posición
+                    try:
+                        Results['PosB'][iC] = PosB
+                    except: 
+                        Results['PosB'][iC] = np.nan
+                        Results['VRateB'][iC] = np.nan
+                        Results['VChangeB'][iC] = np.nan
+                        Results['DurVB'][iC] = np.nan
+                        Results['PosA'][iC] = np.nan
+                        Results['VRateA'][iC] = np.nan
+                        Results['VChangeA'][iC] = np.nan
+                        Results['DurVA'][iC] = np.nan
+                        continue
 
                     # Se guarda la posición
                     Results['PosB'][iC] = PosB
@@ -3960,6 +3984,16 @@ class BPumpL:
                     Results['DurVB'][iC] = (M-PosB)*dt/60
                     # Se obtiene la tasa de cambio
                     Results['VRateB'][iC] = Results['VChangeB'][iC]/Results['DurVB'][iC]
+                    if Results['VRateB'][iC] < 0:
+                        Results['PosB'][iC] = np.nan
+                        Results['VRateB'][iC] = np.nan
+                        Results['VChangeB'][iC] = np.nan
+                        Results['DurVB'][iC] = np.nan
+                    if Results['PosB'][iC] == -9999.0:
+                        Results['PosB'][iC] = np.nan
+                        Results['VRateB'][iC] = np.nan
+                        Results['VChangeB'][iC] = np.nan
+                        Results['DurVB'][iC] = np.nan
 
                     # ----
                     # Se encuentra el valor mínimo después
@@ -3978,6 +4012,16 @@ class BPumpL:
                     Results['DurVA'][iC] = (PosA)*dt/60
                     # Se obtiene la tasa de cambio
                     Results['VRateA'][iC] = Results['VChangeA'][iC]/Results['DurVA'][iC]
+                    if Results['VRateA'][iC] < 0 :
+                        Results['PosA'][iC] = np.nan
+                        Results['VRateA'][iC] = np.nan
+                        Results['VChangeA'][iC] = np.nan
+                        Results['DurVA'][iC] = np.nan
+                    if Results['PosA'][iC] == -9999.0:
+                        Results['PosA'][iC] = np.nan
+                        Results['VRateA'][iC] = np.nan
+                        Results['VChangeA'][iC] = np.nan
+                        Results['DurVA'][iC] = np.nan
 
         return Results
 

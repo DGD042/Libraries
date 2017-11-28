@@ -217,9 +217,11 @@ class Scatter_Gen(object):
         # Eventos con caidas de presión antes
         self.EvYes = []
         self.MEvYes = []
+        self.TempEvYes = []
         # Eventos sin caidas de presión antes
         self.EvNo = []
         self.MEvNo = []
+        self.TempEvNo = []
         for iC in range(len(self.f['PresC'])):
             xEv = np.where(DatesEvP[iC] == self.PrecCount['DatesEvst'][iC])[0][0]
             Bef = xEv-int(60/dt*3)
