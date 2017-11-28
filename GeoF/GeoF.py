@@ -27,9 +27,11 @@ from pyproj import Proj, transform
 try:
     from GeoF.GeoTIFF import Functions as GF
     from GeoF.NetCDF import Functions as NetF
+    from GeoF.GeoTimeSeries import GeoTimeSeries as GT
 except ImportError:
     from GeoTIFF import Functions as GF
     from NetCDF import Functions as NetF
+    from GeoTimeSeries import GeoTimeSeries as GT
 
 class GeoF:
     '''
@@ -72,7 +74,7 @@ class GeoF:
         return
 
     def OpenNetCDFData(self,File,VarDict=None,VarRangeDict=None,time='time',EPSG=4326,Vars={'Data':None,
-        'latitude':None,'longitude':None,'time':None}):
+        'latitude':None,'longitude':None,'time':None},eoTime=False):
         '''
         DESCRIPTION:
             This class opens and manipulates data related to the raster 
@@ -89,6 +91,13 @@ class GeoF:
                                  the Range wants to be extracted.
                                  It must be a list with two values for each 
                                  variable.
+            :param time:         A str, string denoting where the time is.
+            :param EPSG:         An int, epsg number of the new projection. 
+            :param Vars:         A dict, dictionary with the names of the 
+                                         variables in the NetCDF file.
+            :param GeoTime:      A bool, flag to convert the class in a 
+                                 GeoTimeSeries class, because it has time
+                                 in it.
         ________________________________________________________________________
         OUTPUT:
            :return Data: A dict, dictionary with projection ('Ptj' and 'EPSG'). 
@@ -99,13 +108,46 @@ class GeoF:
                 a = Vars[v]
             except KeyError:
                 Vars[v] = None
-        Data = NetF.EDnetCDFFile(File,VarDict=VarDict,VarRangeDict=VarRangeDict)
-        if isinstance(Data,dict):
+        Data = NetF.EDnetCDFFile(File,VarDict=VarDict,VarRangeDict=VarRangeDict,time=time)
+        try:
             self.Data = dict()
             for v in Var:
                 if Vars[v] != None:
                     self.Data[v] = Data[Vars[v]]
+            # Correct longitude
+            # x = np.where(self.Data['longitude'] <= -190)[0]
+            # if len(x) >= 1:
+            #     self.Data['longitude'] = self.Data['longitude']+180
+            # x = np.where(self.Data['longitude'] >= 190)[0]
+            # if len(x) >= 1:
+            #     self.Data['longitude'] = self.Data['longitude']-180
+
             self.SetProj(EPSG=EPSG)
+            x = np.where(self.Data['latitude'] == np.min(self.Data['latitude']))[0]
+            if x[0] == 0:
+                self.Data['latitude'] = self.Data['latitude'][::-1]
+                xlat = self.Data['latitude'].shape[0]
+                for iS,S in enumerate(self.Data['Data'].shape):
+                    if S == xlat:
+                        if iS == 0:
+                            self.Data['Data'] = self.Data['Data'][::-1]
+                        if iS == 1:
+                            self.Data['Data'] = self.Data['Data'][:,::-1]
+                        if iS == 2:
+                            self.Data['Data'] = self.Data['Data'][:,:,::-1]
+
+
+            Cellsizex = self.Data['longitude'][1] - self.Data['longitude'][0]
+            Cellsizey = self.Data['latitude'][1] - self.Data['latitude'][0]
+            self.Data['geoTrans'] = (self.Data['longitude'][0],
+                    Cellsizex,0.0,self.Data['latitude'][0],0.0,Cellsizey)
+            # if GeoTime:
+            #     GT()
+        except KeyError:
+            self.Data = Data
+            return
+
+
         return
 
     def OpenGeoTIFFData(self,File,band=1):

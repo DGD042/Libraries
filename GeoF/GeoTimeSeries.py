@@ -45,8 +45,8 @@ class GeoTimeSeries(object):
         :param Data:  A dict, a dictionary with the data, must have:
                       'Data': A ndArray, 3x3 matrix with time in the
                               first dimension.
-                      'Lon': Longitude.
-                      'Lat': Longitude.
+                      'lonigute': Longitude.
+                      'Latitude': Longitude.
                       'EPSG': EPSG number.
                       'Prj': wkt Projection.
                       'geoTrans': tuple with 
