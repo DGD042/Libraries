@@ -82,7 +82,10 @@ def EDnetCDFFile(File,VarDict=None,VarRangeDict=None,time='time'):
                 utl.ShowError('EDNCFile','EDSM','Key %s not in the nc file.' %Var)
             if VarRangeDict == None:
                 if Var == time:
-                    Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,dataset.variables[Var].calendar)
+                    if dataset.variables[Var].calendar == '360':
+                        Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,'366_day')
+                    else:
+                        Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,dataset.variables[Var].calendar)
                 else:
                     Data[Var] = dataset.variables[Var][:]
             else:
