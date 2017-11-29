@@ -80,7 +80,7 @@ def Oper_Det(Oper):
         OperRet = operations[Oper]
         return OperRet
     except KeyError:
-        return self.ShowError('Oper_Det','Data_Man','Operation or comparation not found, verify the given string')
+        raise KeyError('Operation or comparation not found, verify the given string')
 
 def NoNaN(X,Y,flagN=True):
     '''

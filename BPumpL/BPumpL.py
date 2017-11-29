@@ -3821,7 +3821,7 @@ class BPumpL:
         # Se verifican datos faltantes
         # --------------------------------------
         for iC in range(len(VC)):
-            if isinstance(MP,list):
+            if isinstance(MP,list) or isinstance(MP,np.ndarray):
                 M = MP[iC]
             else:
                 M = MP
@@ -3847,7 +3847,7 @@ class BPumpL:
         if MaxMin.lower() == 'min':
             # Ciclo para los datos
             for iC in range(len(VC)):
-                if isinstance(MP,list):
+                if isinstance(MP,list) or isinstance(MP,np.ndarray):
                     M = MP[iC]
                 else:
                     M = MP
@@ -3935,7 +3935,7 @@ class BPumpL:
         elif MaxMin.lower() == 'max':
             # Ciclo para los datos
             for iC in range(len(VC)):
-                if isinstance(MP,list):
+                if isinstance(MP,list) or isinstance(MP,np.ndarray):
                     M = MP[iC]
                 else:
                     M = MP
@@ -3955,7 +3955,7 @@ class BPumpL:
                     # ---------------
                     # Se encuentra el primer máximo 
                     for P in range(M-1,int(M-2*(60/dt))-1,-1):
-                        if VC[iC][P-1] > VC[iC][P] and VC[iC][P] <= -0.2:
+                        if VC[iC][P-1] > VC[iC][P] and VC[iC][P] <= 0:
                             MinVarB = VC[iC][P]
                             if P < 0:
                                 break

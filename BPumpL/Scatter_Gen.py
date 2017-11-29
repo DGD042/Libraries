@@ -194,6 +194,84 @@ class Scatter_Gen(object):
         self.var = self.f.keys()
         return
 
+    def EventsGenPrec(self,Var='PresC',oper=np.nanmin,Comp='<',ValComp=-0.3):
+        '''
+        DESCRIPTION:
+
+            Función para detectar los eventos que tuvieron cambios importantes
+            de alguna variable atmosférica con respecto al inicio de la 
+            precipitación.
+        _________________________________________________________________________
+
+        INPUT:
+            :param Var:     A str, string de la variable de cambio.
+            :param oper:    A function, función para encontrar el valor.
+            :param Comp:    A str, método de comparación que se evaluará.
+            :param ValComp: An float, número que se evaluará.
+        _________________________________________________________________________
+
+        OUTPUT:
+        '''
+        # -------------
+        # Parameters
+        # -------------
+        Comp = DM.Oper_Det(Comp)
+        dt = int(self.dtm)
+        # Se calculan los parámetros de precipitación
+        self.PrecCount = HyMF.PrecCount(self.f['PrecC'],self.f['FechaEv'],dt=dt,M=self.Middle)
+        # Se obtienen los meses 
+        self.Months = np.array([i.month for i in self.PrecCount['DatesEvst']])
+        DatesEvP = self.f['FechaEvP']
+        # Eventos con cambios
+        EvYes = []
+        MEvYes = []
+        # Eventos sin cambios
+        EvNo = []
+        MEvNo = []
+        # Posición del cambio
+        PosYes = []
+        PosNo = []
+        # ----
+        # Horas atras
+        TBef = 3
+        # minutos hacia adelante
+        TAft = 15
+        for iC in range(len(self.f['PresC'])):
+            # Se encuentra el inicio del evento
+            xEv = np.where(DatesEvP[iC] == self.PrecCount['DatesEvst'][iC])[0][0]
+            Bef = xEv-int(60/dt*TBef)
+            Aft = xEv+int(60/dt*(TAft/60)) 
+            if Bef <= 10:
+                EvNo.append(iC)
+                MEvNo.append(self.Months[iC])
+                PosNo.append(np.nan)
+                continue
+                
+            # Se encuentra el mínimo de presión
+            Min = oper(self.f[Var][iC][Bef:Aft])
+            xMin1 = np.where(self.f[Var][iC][:Aft]==Min)[0][-1]
+            if Comp(Min,ValComp):
+                EvYes.append(iC)
+                PosYes.append(xMin1)
+                MEvYes.append(self.Months[iC])
+            else:
+                EvNo.append(iC)
+                PosNo.append(xMin1)
+                MEvNo.append(self.Months[iC])
+
+        EvYes = np.array(EvYes)
+        MEvYes = np.array(MEvYes)
+        EvNo =  np.array(EvNo)
+        MEvNo =  np.array(MEvNo)
+        PosYes = np.array(PosYes)
+        PosNo =  np.array(PosNo)
+
+        Results = {'EvYes':EvYes,'MEvYes':MEvYes,
+                'EvNo':EvNo,'MEvNo':MEvNo,
+                'PosYes':PosYes,'PosNo':PosNo}
+
+        return Results
+
     def EventsPrecPresDetection(self):
         '''
         DESCRIPTION:
@@ -217,20 +295,25 @@ class Scatter_Gen(object):
         # Eventos con caidas de presión antes
         self.EvYes = []
         self.MEvYes = []
-        self.TempEvYes = []
         # Eventos sin caidas de presión antes
         self.EvNo = []
         self.MEvNo = []
-        self.TempEvNo = []
+        # ----
+        # Horas atras
+        TBef = 3
+        # minutos hacia adelante
+        TAft = 15
         for iC in range(len(self.f['PresC'])):
+            # Se encuentra el inicio del evento
             xEv = np.where(DatesEvP[iC] == self.PrecCount['DatesEvst'][iC])[0][0]
-            Bef = xEv-int(60/dt*3)
-            Aft = xEv+int(60/dt*(15/60)) 
+            Bef = xEv-int(60/dt*TBef)
+            Aft = xEv+int(60/dt*(TAft/60)) 
             if Bef <= 10:
                 self.EvNo.append(iC)
                 self.MEvNo.append(self.Months[iC])
                 continue
                 
+            # Se encuentra el mínimo de presión
             Min = np.nanmin(self.f['PresC'][iC][Bef:Aft])
             xMin1 = np.where(self.f['PresC'][iC][:Aft]==Min)[0][-1]
             if Min < -0.3:
@@ -358,9 +441,11 @@ class Scatter_Gen(object):
                 #         'Perc_Temp_No':len(self.EvDNo['PrecC_Temp'])/len(self.f['PrecC_Temp'])})
         return
 
-    def EventsSeriesGenGraph(self,ImgFolder='',Evmax=1,EvType='Tot',
+    def EventsSeriesGenGraph(self,R=None,
+            ImgFolder='',Evmax=1,EvType='Tot',
             flags={'TC':False,'PresC':False,'HRC':False,'qC':False,'WC':False},
-            flagAver=False,flagBig=False):
+            flagAver=False,flagBig=False,DataV=None,DataKeyV=['DatesEvst','DatesEvend'],
+            GraphInfoV={'color':['-.b','-.g'],'label':['Inicio del Evento','Fin del Evento']}):
         '''
         DESCRIPTION:
             Con esta función se pretenden graficar los diferentes eventos de 
@@ -404,15 +489,26 @@ class Scatter_Gen(object):
         Vars += '_Events'
 
 
-        EvTot = dict()
-        if EvType == 'Tot':
-            EvTot = self.f
-        elif EvType == 'Yes':
-            for iLab,Lab in enumerate(Labels+['PrecC']):
-                EvTot[Lab] = self.f[Lab][self.EvYes]
-        elif EvType == 'No':
-            for iLab,Lab in enumerate(Labels+['PrecC']):
-                EvTot[Lab] = self.f[Lab][self.EvNo]
+        if isinstance(R,dict):
+            EvTot = dict()
+            if EvType == 'Tot':
+                EvTot = self.f
+            elif EvType == 'Yes':
+                for iLab,Lab in enumerate(Labels+['PrecC']):
+                    EvTot[Lab] = self.f[Lab][R['EvYes']]
+            elif EvType == 'No':
+                for iLab,Lab in enumerate(Labels+['PrecC']):
+                    EvTot[Lab] = self.f[Lab][R['EvNo']]
+        else:
+            EvTot = dict()
+            if EvType == 'Tot':
+                EvTot = self.f
+            elif EvType == 'Yes':
+                for iLab,Lab in enumerate(Labels+['PrecC']):
+                    EvTot[Lab] = self.f[Lab][self.EvYes]
+            elif EvType == 'No':
+                for iLab,Lab in enumerate(Labels+['PrecC']):
+                    EvTot[Lab] = self.f[Lab][self.EvNo]
 
         if flagAver:
             # Se grafican los eventos en promedio
@@ -423,7 +519,7 @@ class Scatter_Gen(object):
                 if flags[Lab]:
                     Data[Lab] = np.nanmean(EvTot[Lab],axis=0)
             BP.EventsSeriesGen(self.f['FechaEv'][0],Data,self.PrecCount,
-                    DataKeyV=['DatesEvst','DatesEvend'],DataKey=DataKeys,
+                    DataKeyV=DataKeyV,DataKey=DataKeys,
                     PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
                     Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
                     GraphInfo={'ylabel':Units,'color':Color,
@@ -441,14 +537,13 @@ class Scatter_Gen(object):
                     for iLab,Lab in enumerate(Labels):
                         if flags[Lab]:
                             Data[Lab] = EvTot[Lab][iEv]
-                    BP.EventsSeriesGen(self.f['FechaEv'][iEv],Data,self.PrecCount,
+                    BP.EventsSeriesGen(self.f['FechaEv'][iEv],Data,DataV,
                             DataKeyV=['DatesEvst','DatesEvend'],DataKey=DataKeys,
                             PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
                             Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
                             GraphInfo={'ylabel':Units,'color':Color,
                                 'label':Label},
-                            GraphInfoV={'color':['-.b','-.g'],
-                                'label':['Inicio del Evento','Fin del Evento']},
+                            GraphInfoV=GrapInfoV,
                             flagBig=flagBig,vm={'vmax':[None],'vmin':[0]},Ev=iEv,
                             Date=DUtil.Dates_datetime2str([self.PrecCount['DatesEvst'][iEv]])[0])
 
@@ -668,6 +763,161 @@ class Scatter_Gen(object):
         else:
             print('No se tiene información de precipitación para generar los conteos')
         self.var = self.f.keys()
+        return
+
+    def Calc_Changes(self,DatesEv,Prec,VC,Pos=None,MaxMin='min',Var='Pres',EvType='Tot',MPP=None):
+        '''
+        DESCRIPTION:
+
+            Función para obtener los valores de Duración, tasas y cambios de 
+            cualquier variable con los datos dados. 
+
+            Requiere que se corra el método de EventsGenPrec antes de utilizar
+            este método ya que requiere unas cuentas adicionales.
+        _________________________________________________________________________
+
+        INPUT:
+            + Prec: Compuestos de precipitación.
+            + VC: Compuestos de la variable
+            + Pos: Posición inicial del cambio en la variable, se relaciona
+                   a los datos de comienzo del evento de precipitación.
+            + MinMax: Valor que se encuentra en el centro de los datos.
+            + EvType: Key para el diccionario de resultados.
+        _________________________________________________________________________
+
+        OUTPUT:
+            Se generan diferentes variables o se cambian las actuales.
+        '''
+        # ---------------
+        # Parameters
+        # ---------------
+        # Se incluyen los valores de la clase
+        dt = int(self.dtm)
+        MP = self.Middle # Minimo de precipitación
+        try:
+            self.Res_Prec[Var] = dict()
+        except AttributeError:
+            self.Res_Prec = dict()
+            self.Res_Prec[Var] = dict()
+        # -----------------
+        # Calculos
+        # -----------------
+        # Se calcula la duración de la tormenta
+        self.Res_Prec[Var][EvType] = HyMF.PrecCount(Prec,DatesEv,dt=dt,M=MP)
+        # Datos de las variables de cambio
+        Results = BP.C_Rates_Changes(VC,dt=dt,MP=Pos,MaxMin=MaxMin)
+        self.Res_Prec[Var][EvType].update(Results)
+        # -----------------
+        # Posiciones
+        # -----------------
+        # print(self.Res_Prec[Var][EvType]['PosB'])
+        # self.Res_Prec[Var][EvType]['DatesMidVC'] = []
+        # self.Res_Prec[Var][EvType]['DatesBVC']   = []
+        # self.Res_Prec[Var][EvType]['DatesAVC']   = []
+        # for i in range(len(DatesEv)):
+        #     self.Res_Prec[Var][EvType]['DatesMidVC'].append(DatesEv[i][MPP[i]])
+        #     self.Res_Prec[Var][EvType]['DatesBVC'].append(DatesEv[i][int(self.Res_Prec[Var][EvType]['PosB'][i])])
+        #     self.Res_Prec[Var][EvType]['DatesAVC'].append(DatesEv[i][int(self.Res_Prec[Var][EvType]['PosA'][i])])
+
+        return
+
+    def GraphChanges(self,Var='Pres',EvType='Tot',Var2=None,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+        '''
+        DESCRIPTION:
+
+            Función para obtener los valores de Duración, tasas y cambios de presión
+            y de temperatura.
+        _________________________________________________________________________
+
+        INPUT:
+            + DatesEv: Fechas de los diagramas de compuestos.
+            + Prec: Compuestos de precipitación.
+            + Pres: Compuestos de presión.
+            + MP: Valor donde comienza a buscar para los datos de
+                  precipitación.
+            + MPres: Valor medio donde comienza a buscar presión.
+            + flagEV: Bandera para graficar los eventos.
+            + flagIng: Bander para saber si se lleva a inglés los ejes.
+            + ImgFolder_Scatter: Ruta donde se guardará el documento.
+        _________________________________________________________________________
+
+            OUTPUT:
+        Se generan diferentes variables o se cambian las actuales.
+        '''
+
+        # -----------------
+        # Parameters
+        # -----------------
+        # Información para hacer el gráfico
+        self.ImgFolder_Scatter = ImgFolder_Scatter
+        ImgFolder_Scatter_Specific_Pres = ImgFolder_Scatter+Var+'/'+EvType+'/'+Specific_Folder+'/'
+
+        # Datos para los gráficos
+        Variables = {'DurPrec': 'Duración del Evento [h]',
+                'IntPrec': 'Intensidad del Evento [mm/h]',
+                'MaxPrec': 'Máximo de Precipitación [mm]',
+                'TotalPrec': 'Total de Precipitación [mm]',
+                'IntPrecMax': 'Intensidad Máxima del Evento [mm/h]',
+                'Pindex': 'Relación de Intensidades',
+                'TasaPrec': 'Tasa de Cambio de Precipitación [mm/h]'}
+        VarVC = {'Pres' : {'VRateB': 'Tasa de Cambio de Presión Antes [hPa/h]',
+                'VRateA':'Tasa de Cambio de Presión Durante [hPa/h]',
+                'VChangeB':'Cambio de Presión Antes [hPa]',
+                'VChangeA':'Cambio de Presión Durante [hPa]'},
+                'Temp' : {'VRateB': 'Tasa de Cambio de Temperatura Antes [°C/h]',
+                'VRateA':'Tasa de Cambio de Temperatura Durante [°C/h]',
+                'VChangeB':'Cambio de Temperatura Antes [°C]',
+                'VChangeA':'Cambio de Temperatura Durante [°C]'}}
+
+        Abre = {'DurPrec': 'DP',
+                'IntPrec': 'IP',
+                'MaxPrec': 'MP',
+                'TotalPrec': 'TP',
+                'IntPrecMax':'IPM',
+                'Pindex':'Pi','TasaPrec':'RPr'}
+        AbreVC = {'Pres' : {'VRateB':'RPB',
+                    'VRateA':'RPA',
+                    'VChangeB':'CPB',
+                    'VChangeA':'CPA'},
+                   'Temp' : {'VRateB':'TPB',
+                    'VRateA':'RTA',
+                    'VChangeB':'CTB',
+                    'VChangeA':'CTA'}}
+        VPrec = ['DurPrec','IntPrec','MaxPrec','TotalPrec',
+                'IntPrecMax','Pindex','TasaPrec']
+        VCC = ['VRateB','VRateA','VChangeB','VChangeA']
+
+        # --------------
+        # Data
+        # --------------
+        R1 = self.Res_Prec[Var][EvType]
+        if Var2 is None:
+            V1 = VPrec
+            V2 = VCC
+            R2 = self.Res_Prec[Var][EvType]
+            VarL1 = Variables
+            VarL2 = VarVC[Var]
+            AbreL1 = Abre
+            AbreL2 = AbreVC[Var]
+        else:
+            V1 = VCC
+            V2 = VCC
+            R2 = self.Res_Prec[Var2][EvType]
+            VarL1 = VarVC[Var]
+            VarL2 = VarVC[Var2]
+            AbreL1 = AbreVC[Var]
+            AbreL2 = AbreVC[Var2]
+
+        for Vi1 in V1:
+            for Vi2 in V2:
+                HyPl.SPvDPPotGen(R1[Vi1],R2[Vi2],
+                    Fit='',Title='Diagrama de Dispersión',
+                    xLabel=VarL1[Vi1],
+                    yLabel=VarL2[Vi2],
+                    Name=self.NamesArch[self.irow]+'_'+AbreL1[Vi1]+'v'+AbreL2[Vi2],
+                    PathImg=self.PathImg+ImgFolder_Scatter+Var+'/'+EvType+'/'+'Adjusted/',
+                    FlagA=True,FlagAn=False)
+
         return
 
     def VC_VR_DP(self,DatesEv,Prec,Pres,MP=None,MPres=None,flagEv_Pres=False,LimitEvP=1000,flagEv_T=False,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
