@@ -228,6 +228,8 @@ class GeoTimeSeries(object):
            :return: File in .mat format.
         '''
         utl.CrFolder(Pathout)
+        Data = self.Data
+        Data['DatesC'] = self.Dates.str
         Nameout = Pathout + Name + '.mat'
         sio.savemat(Nameout,self.Data)
         return

@@ -73,8 +73,8 @@ class GeoF:
         self.Data = Data
         return
 
-    def OpenNetCDFData(self,File,VarDict=None,VarRangeDict=None,time='time',EPSG=4326,Vars={'Data':None,
-        'latitude':None,'longitude':None,'time':None},eoTime=False):
+    def OpenNetCDFData(self,File,VarDict=None,VarRangeDict=None,time='time',DateI=None,EPSG=4326,Vars={'Data':None,
+        'latitude':None,'longitude':None,'time':None},GeoTime=False):
         '''
         DESCRIPTION:
             This class opens and manipulates data related to the raster 
@@ -98,6 +98,8 @@ class GeoF:
             :param GeoTime:      A bool, flag to convert the class in a 
                                  GeoTimeSeries class, because it has time
                                  in it.
+            :param DateI:        A date or datetime, object with the initial
+                                 date.
         ________________________________________________________________________
         OUTPUT:
            :return Data: A dict, dictionary with projection ('Ptj' and 'EPSG'). 
@@ -108,7 +110,8 @@ class GeoF:
                 a = Vars[v]
             except KeyError:
                 Vars[v] = None
-        Data = NetF.EDnetCDFFile(File,VarDict=VarDict,VarRangeDict=VarRangeDict,time=time)
+        Data = NetF.EDnetCDFFile(File,VarDict=VarDict,VarRangeDict=VarRangeDict,time=time,
+                DateI=DateI)
         try:
             self.Data = dict()
             for v in Var:
@@ -141,14 +144,15 @@ class GeoF:
             Cellsizey = self.Data['latitude'][1] - self.Data['latitude'][0]
             self.Data['geoTrans'] = (self.Data['longitude'][0],
                     Cellsizex,0.0,self.Data['latitude'][0],0.0,Cellsizey)
-            # if GeoTime:
-            #     GT()
+            if GeoTime:
+                Dates = self.Data['time']
+                self.Data.pop('time',None)
+                return GT(Dates,self.Data)
         except KeyError:
             self.Data = Data
             return
-
-
         return
+
 
     def OpenGeoTIFFData(self,File,band=1):
         '''

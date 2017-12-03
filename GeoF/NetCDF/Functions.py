@@ -38,7 +38,7 @@ from EMSD.Functions import Gen_Functions as GFun
 # ------------------------
 
 
-def EDnetCDFFile(File,VarDict=None,VarRangeDict=None,time='time'):
+def EDnetCDFFile(File,VarDict=None,VarRangeDict=None,time='time',DateI=None):
     '''
     DESCRIPTION:
 
@@ -57,6 +57,10 @@ def EDnetCDFFile(File,VarDict=None,VarRangeDict=None,time='time'):
                              the Range wants to be extracted.
                              It must be a list with two values for each 
                              variable.
+        :param time:         A str, key string of the time data in the
+                             NetCDF file.
+        :param DateI:        A date or datetime, object with the initial
+                             date.
     _______________________________________________________________________
     
     OUTPUT:
@@ -83,7 +87,20 @@ def EDnetCDFFile(File,VarDict=None,VarRangeDict=None,time='time'):
             if VarRangeDict == None:
                 if Var == time:
                     if dataset.variables[Var].calendar == '360':
-                        Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,'366_day')
+                        FlagMonths = False
+                        MStr = re.compile('months')
+                        MMatch = re.search(MStr,dataset.variables[Var].units)
+                        Data[Var] = []
+                        if not(MMatch is None):
+                            if not(DateI is None):
+                                for An in range(DateI.year,DateI.year+int(len(dataset.variables[Var][:])/12)):
+                                    for M in range(1,13):
+                                        if M < DateI.month and A == DateI.year:
+                                            continue
+                                        else:
+                                            Data[Var].append(date(An,M,1))
+                                Data[Var] = np.array(Data[Var])
+
                     else:
                         Data[Var] = nc.num2date(dataset.variables[Var][:],dataset.variables[Var].units,dataset.variables[Var].calendar)
                 else:
