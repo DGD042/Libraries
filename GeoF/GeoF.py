@@ -231,7 +231,7 @@ class GeoF:
         # ----------------
         if not(isinstance(EPSG,int)):
             self.ShowError('ProjData','GeoF','EPSG has to be an integer')
-        if len(Data['Data'].shape) > 4:
+        if len(self.Data['Data'].shape) > 4:
             self.ShowError('ProjData','GeoF',"'Data' key has too much indices")
 
         # ----------------
