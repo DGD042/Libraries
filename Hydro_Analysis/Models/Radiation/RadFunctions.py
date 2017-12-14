@@ -311,6 +311,24 @@ def AngstromPrescottEq2(RelN,a,b):
     '''
     return a+b*RelN
 
+def AngstromPrescottEqInv(RelN,H0,a,b):
+    '''
+    DESCRIPTION:
+    
+        This function contains the Angstrom-Prescott model to calculate the
+        regresion from the relation of radiation and the relation of the 
+        day length.
+    _________________________________________________________________________
+
+    INPUT:
+        :param n:  a ndArray, sunshine duration in hours.
+    _________________________________________________________________________
+    
+    OUTPUT:
+        :return Eq: Equation or result of data.
+    '''
+    return (a*H0)+(b*RelN*H0)
+
 def AngstromPrescottEq3(RelN,m1,m2,m3,b):
     '''
     DESCRIPTION:

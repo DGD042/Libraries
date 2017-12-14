@@ -44,8 +44,6 @@ from AnET.CFitting import CFitting as CF;
 from EMSD.Dates.DatesC import DatesC
 from Hydro_Analysis.Models.Radiation import RadFunctions as RadM
 
-
-
 class Model_AngstromPrescott(object):
     '''
     DESCRIPTION:
@@ -148,6 +146,8 @@ class Model_AngstromPrescott(object):
         self.Lat = Lat
         # Parameters
         self.Parameters = Parameters
+        if not(self.Parameters is None):
+            self.Parameters['Fun'] = RadM.AngstromPrescottEqInv
         # ---------------------------
         # Calculations
         # ---------------------------
@@ -155,8 +155,9 @@ class Model_AngstromPrescott(object):
         self.Data['H0'],self.Data['N'] = self.CalcRadN()
         self.Data['H'] = Rad
         self.Data['n'] = SD
+        self.Data['DatesC'] = Dates.str
+        self.RelN = self.Data['n']/self.Data['N']
         if not(Rad is None):
-            self.RelN = self.Data['n']/self.Data['N']
             self.RelRad = self.Data['H']/self.Data['H0']
 
         return
@@ -457,6 +458,17 @@ class Model_AngstromPrescott(object):
         S.insert_chart(32+25,1,chart,{'x_offset':0,'y_offset':0,'x_scale':1.5,'y_scale':1.5})
         B.close()
 
+    def CalcInv(self,FlagConv=True):
+        '''
+        DESCRIPTION:
+            This calculates the Radiation from the Sunshine duration and the parameters.
+        '''
+        self.Data['H'] = self.Parameters['Fun'](self.RelN,self.Data['H0'],self.Parameters['a'],self.Parameters['b'])
+        if FlagConv:
+            self.Data['H'] = self.Data['H']*277.778
+
+        return 
+
     def Error(self,Cl,method,msg):
         raise Exception('ERROR: in class <'+Cl+'> in method <'+method+'>\n'+msg)
 
@@ -471,7 +483,7 @@ class Model_AngstromPrescott(object):
             L3 = '\nNo parameters added or calculated yet'
         else:
             L3 = '\nParameters: '+str(self.Parameters)
-            Label = '\nEquation: '+self.R['FunctionEq'][1:-1]+'\n\t'+r'  R^2 = %.3f'
-            return L1+L2+L3+Label %tuple(list(self.R['Coef'])+[self.R['R2']])
+            # Label = '\nEquation: '+self.R['FunctionEq'][1:-1]+'\n\t'+r'  R^2 = %.3f'
+            return L1+L2+L3#+Label %tuple(list(self.R['Coef'])+[self.R['R2']])
         return L1+L2+L3
 

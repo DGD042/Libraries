@@ -2009,10 +2009,7 @@ class Hydro_Plotter:
         # Labels
         # Título
         if FlagTitle:
-            if FEn:
-                plt.title(Title)
-            else:
-                plt.title(Title)
+            plt.title(Title)
         plt.xlabel(Var)  # Colocamos la etiqueta en el eje x
         if M == 'porcen':
             plt.ylabel('Porcentaje [%]')  # Colocamos la etiqueta en el eje y
