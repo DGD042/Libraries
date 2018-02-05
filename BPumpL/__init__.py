@@ -20,3 +20,4 @@ from BPumpL.BPumpL import BPumpL
 from BPumpL.Proc import Proc
 from BPumpL.Scatter_Gen import Scatter_Gen
 from BPumpL.Data_Man import Load_Data
+from BPumpL.Cases import *

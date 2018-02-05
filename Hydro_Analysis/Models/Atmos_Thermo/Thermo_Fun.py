@@ -38,27 +38,28 @@ import warnings
 # Atmospheric Thermodynamics Equations
 def PVTs(Z,T,Flagline=True,Zmax=4000,Zmin=1000):
     '''
-        DESCRIPTION:
+    DESCRIPTION:
     
-    This function calculates the Vertical Temperature Profile (PVT, in spanish).
+        This function calculates the Vertical Temperature Profile 
+        (PVT, in spanish).
 
-    Both, Altitude and Temperature vectores must have the same lenght.
+        Both, Altitude and Temperature vectores must have the same lenght.
     _________________________________________________________________________
 
-        INPUT:
-    + Z: Altitude.
-    + T: Temperature.
-    + Flagline: Flag to know a line is needed for a graph.
-    + Zmax: maximum value of altitude for the line.
-    + Zmin: minimum value of altitude for the line.
+    INPUT:
+        :param Z: Altitude.
+        :param T: Temperature.
+        :param Flagline: Flag to know a line is needed for a graph.
+        :param Zmax: maximum value of altitude for the line.
+        :param Zmin: minimum value of altitude for the line.
     _________________________________________________________________________
     
-        OUTPUT:
-    - slope: Slope of the regressio.
-    - intercept: Intercept of the regression.
-    - r_value: Correlation.
-    - M0: Values of temperature for the line.
-    - M1: Values of altitude for the line.
+    OUTPUT:
+        :return slope: Slope of the regressio.
+        :return intercept: Intercept of the regression.
+        :return r_value: Correlation.
+        :return M0: Values of temperature for the line.
+        :return M1: Values of altitude for the line.
     '''
     
     XX,YY,NminD = DM.NoNaN(Z,T)
@@ -71,19 +72,21 @@ def PVTs(Z,T,Flagline=True,Zmax=4000,Zmin=1000):
 
 def ESeq(T,HR=0):
     '''
-        DESCRIPTION:
+    DESCRIPTION:
     
-    This function calculates the saturated vapor pressure from the Clausius
-    Clapeyron equation and the real pressure using the relative humidity.
+        This function calculates the saturated vapor pressure 
+        from the Clausius Clapeyron equation and the real pressure using 
+        the relative humidity.
     _________________________________________________________________________
 
-        INPUT:
-    + T: Temperature.
+    INPUT:
+        :param T:  Temperature.
+        :param RH: Relative Humidity.
     _________________________________________________________________________
     
-        OUTPUT:
-    - e_s: Saturated vapor Pressure
-    - e: Real Vapor Pressure if you have HR.
+    OUTPUT:
+        :return e_s: Saturated vapor Pressure
+        :return e: Real Vapor Pressure if you have HR.
     '''
 
     #e_s = np.exp(26.66082-0.0091379024*(T+273.15)-(6106.396/(T+273.15)))
@@ -100,21 +103,20 @@ def ESeq(T,HR=0):
 
 def qeq(p,HR,T):
     '''
-        DESCRIPTION:
+    DESCRIPTION:
     
-    This function calculates the specific humidity from the pressure, 
-    temperature and relative humidity.
+        This function calculates the specific humidity from the pressure, 
+        temperature and relative humidity.
     _________________________________________________________________________
 
-        INPUT:
-    
-    + p: Pressure.
-    + HR: Relative Humidity.
-    + T: Temperature
+    INPUT:
+        :param p: Pressure.
+        :param HR: Relative Humidity.
+        :param T: Temperature
     _________________________________________________________________________
     
-        OUTPUT:
-    - q: Specific Humidity.
+    OUTPUT:
+        :return q: Specific Humidity.
     '''
 
     epsilon = 0.622 # Constante del planeta
