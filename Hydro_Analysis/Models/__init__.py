@@ -25,9 +25,9 @@ try:
     import Hydro_Analysis.Models.Radiation
     import Hydro_Analysis.Models.Atmos_Thermo
 except ImportError:
+    from Radiation import *
+    from Atmos_Thermo import *
+except ImportError:
     import Models.Radiation
     import Models.Atmos_Thermo
-except ImportError:
-    import Radiation
-    import Atmos_Thermo
 

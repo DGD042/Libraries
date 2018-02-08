@@ -20,9 +20,5 @@ problem please contact the programmer to the following e-mails:
 ____________________________________________________________________________
 
 '''
-
-try:
-    from Hydro_Analysis.Models.Atmos_Thermo import Thermo_Fun
-except ImportError:
-    from Hydro_Analysis.Models.Atmos_Thermo import Thermo_Fun
+__all__ = ['Thermo_Fun']
 

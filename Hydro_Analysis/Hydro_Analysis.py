@@ -763,23 +763,23 @@ class Hydro_Analysis(object):
 
     def EstAnom(self,VMes):
         '''
-            DESCRIPTION:
+        DESCRIPTION:
         
-        This function takes the monthly data and generates the data anomalies and the
-        standarized data.
+            This function takes the monthly data and generates the data 
+            anomalies and the standarized data.
 
-        The calculation is done using the following equation:
+            The calculation is done using the following equation:
 
-            Z = \frac{x-\mu}{\sigma}
+                Z = \frac{x-\mu}{\sigma}
         _______________________________________________________________________
 
-            INPUT:
-        + VMes: Mounthly average of the variable.
+        INPUT:
+            :param VMes: a listo or ndArray, Mounthly average of the variable.
         _______________________________________________________________________
         
-            OUTPUT:
-        - Anom: Anomalie data results.
-        - StanA: Standarized data results.
+        OUTPUT:
+        :param Anom:  a ndArray, Anomalie data results.
+        :param StanA: a ndArray, Standarized data results.
         '''
 
         # Variable initialization

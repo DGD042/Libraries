@@ -20,9 +20,5 @@ problem please contact the programmer to the following e-mails:
 ____________________________________________________________________________
 
 '''
-
-try:
-    from Hydro_Analysis.Models.Radiation import RadModels 
-except ImportError:
-    from Hydro_Analysis.Models.Radiation import RadModels
+__all__ = ['RadFunctions','RadModels']
 

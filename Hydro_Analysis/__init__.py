@@ -38,5 +38,5 @@ except ImportError:
     import Gen_Functions
     import Meteo 
     import Climate
-    import Models 
+    from Models import *
 
