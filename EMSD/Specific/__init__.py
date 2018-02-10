@@ -25,5 +25,4 @@ problem please contact the programmer to the following e-mails:
 ____________________________________________________________________________
 
 '''
-from EMSD.Specific import Wunder
-
+__all__ = ['Wunder']

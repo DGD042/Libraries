@@ -36,13 +36,18 @@ ____________________________________________________________________________
 
 try:
     from EMSD.EMSD import EMSD
+    from EMSD.Data_Man import *
+    from EMSD.Extract_Data import *
+    from EMSD.Functions import *
+    from EMSD.Specific import *
+    from EMSD.Write_Data import *
+    from EMSD.Dates import *
 except ImportError:
     from EMSD import EMSD
-
-from EMSD import Data_Man
-from EMSD import Extract_Data
-from EMSD import Functions
-from EMSD import Specific
-from EMSD import Write_Data
-from EMSD import Dates
+    from Data_Man import *
+    from Extract_Data import *
+    from Functions import *
+    from Specific import *
+    from Write_Data import *
+    from Dates import *
 

@@ -33,9 +33,5 @@ control of the full class.
 ____________________________________________________________________________
 
 '''
-
-try:
-    from EMSD.Data_Man import Data_Man
-except ImportError:
-    from EMSD.Data_Man import EMSD
+__all__ = ['Data_Man']
 

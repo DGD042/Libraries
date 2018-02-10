@@ -8,14 +8,10 @@
 
 '''
 
-    
-This class replaces the ExtractD class to make a better and 
-efficient way of Extracting Manipulating and Saving Data 
-(EMSD). Functions in this class aims to manipulate times series 
-information with a preference for climate data, however you can 
-extract data from any file.
+The different classes provided in this package has all the specific data
+extraction from different sources.
 
-This class is of free use and can be modify, if you have some 
+This package is of free use and can be modify, if you have some 
 problem please contact the programmer to the following e-mails:
 
 - danielgondu@gmail.com 
@@ -26,11 +22,7 @@ problem please contact the programmer to the following e-mails:
  How to use the library
 --------------------------------------
 
-You can use any function of the class separatley but using the 
-function Open_Data first would allow you to have a better 
-control of the full class.
-
 ____________________________________________________________________________
 
 '''
-__all__ = ['DatesC','DatesFunctions']
+__all__ = ['Write_Data']
