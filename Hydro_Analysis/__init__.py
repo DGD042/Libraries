@@ -30,6 +30,10 @@ try:
     from Hydro_Analysis.Hydro_Analysis import Hydro_Analysis 
     from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter
     from Hydro_Analysis.Evap_Models import Evap_Models
+    from Hydro_Analysis.Gen_Functions import *
+    from Hydro_Analysis.Meteo import *
+    from Hydro_Analysis.Climate import *
+    from Hydro_Analysis.Models import *
 except ImportError:
     from Hydro_Analysis import Hydro_Analysis 
     from Hydro_Plotter import Hydro_Plotter

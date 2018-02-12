@@ -152,6 +152,8 @@ class Medellin(object):
                     self.vmax[Lab].append(np.nanmax(self.SC.f[Lab][xi:xf+1]))
                     self.vmin[Lab].append(np.nanmin(self.SC.f[Lab][xi:xf+1]))
 
+        self.vmax2 = self.vmax.copy()
+        self.vmin2 = self.vmin.copy()
         for Lab in Labels[1:]:
             self.vmax[Lab] = np.nanmax(self.vmax[Lab])+0.1
             if Lab == 'Prec':
@@ -213,6 +215,9 @@ class Medellin(object):
                 if len(xEv) == 1:
                     FilesA.append(self.ArchRadar[xEv[0]][len(self.PathRadar):])
                 RadarFile = self.Opengz(FilesA[-1],self.PathRadar,self.PathRadar)
+                # Se verifican los datos de Radar
+                if RadarFile == -1:
+                    continue
                 # Se corrige la información de Radar
                 VELH = RadarFile.fields['VELH']
                 DBZH  = RadarFile.fields['DBZH']
@@ -251,7 +256,11 @@ class Medellin(object):
         INPUT:
         '''
         os.system('gzip -d --keep ' + PathData2 + File)
-        RadarFile = CFR.read_cfradial(PathData+File[:-3])
+        try:
+            RadarFile = CFR.read_cfradial(PathData+File[:-3])
+        except OSError:
+            return -1
+
         os.remove(PathData+File[:-3])
         return RadarFile
 
@@ -267,11 +276,11 @@ class Medellin(object):
         # -------------
         # Radar Graph
         # -------------
-        plt.rcParams.update({'font.size': 18,'font.family': 'sans-serif'\
+        plt.rcParams.update({'font.size': 25,'font.family': 'sans-serif'\
             ,'font.sans-serif': 'Arial'\
-            ,'xtick.labelsize': 18,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.labelsize': 25,'xtick.major.size': 6,'xtick.minor.size': 4\
             ,'xtick.major.width': 1,'xtick.minor.width': 1\
-            ,'ytick.labelsize': 18,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.labelsize': 25,'ytick.major.size': 12,'ytick.minor.size': 4\
             ,'ytick.major.width': 1,'ytick.minor.width': 1\
             ,'axes.linewidth':1\
             ,'grid.alpha':0.1,'grid.linestyle':'-'})
@@ -285,7 +294,7 @@ class Medellin(object):
              lat_0=RadarFile.latitude['data'][0],
              lon_0=RadarFile.longitude['data'][0],
              title=DateT,
-             colorbar_flag=False,
+             colorbar_flag=True,
              colorbar_label='Reflectividad horizontal equivalente [dBZ]',ax=ax1
              )
 
@@ -306,15 +315,32 @@ class Medellin(object):
 
         # Station Points
         for iID,ID in enumerate(self.ID):
+            Fecha = self.DataSt[ID]['FechaCP']
+            x = np.where(Fecha==DateTP)
             if ID == '68' or ID == '202' or ID == '201' or ID == '203':
-                display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
-                        symbol='o',color='gray',markersize=10,markeredgecolor='k',
-                        )#label_text=ID)
+                if self.DataSt[ID]['Prec'][x] > 0:
+                    display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
+                            symbol='o',color='dodgerblue',markersize=15,markeredgecolor='k',)
+                elif np.isnan(self.DataSt[ID]['Prec'][x]):
+                    display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
+                            symbol='o',color='gray',markersize=15,markeredgecolor='k',)
+                else:
+                    display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
+                            symbol='o',color='w',markersize=15,markeredgecolor='k',)
+                    
             else:
-                display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
-                        symbol='o',color='gray',markersize=10,markeredgecolor='k',
-                        label_text=ID)
-
+                if self.DataSt[ID]['Prec'][x] > 0:
+                    display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
+                            symbol='o',color='dodgerblue',markersize=15,markeredgecolor='k',
+                            label_text=ID)
+                elif np.isnan(self.DataSt[ID]['Prec'][x]):
+                    display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
+                            symbol='o',color='gray',markersize=15,markeredgecolor='k',
+                            label_text=ID)
+                else:
+                    display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
+                            symbol='o',color='w',markersize=15,markeredgecolor='k',
+                            label_text=ID)
         # plot range rings at 10, 20, 30 and 40km
         display.plot_range_ring(10.0, line_style='k-')
         display.plot_range_ring(20.0, line_style='k--')
@@ -358,34 +384,37 @@ class Medellin(object):
         GraphH = 0.17
         Rows = [0.80,0.56,0.31,0.06]
         Col = [0.04,0.38,0.72]
-        x = 0
+        Sec = []
+        for C in Col:
+            for R in Rows:
+                Sec.append([C,R])
         xx = 0
-        for R in Rows:
-            for C in Col:
-                if xx == 4 or xx == 7:
-                    xx += 1
-                    continue
-                ID = self.ID[x]
-                pos2 = [C,R,GraphL,GraphH]
-                ax = host_subplot(111, axes_class=AA.Axes)
-                ax.set_position(pos2)
-                DataV = {'Tiempo':[DateTP]}
-                DataKeyV = ['Tiempo']
-                self.EventsSeriesGen(ax,self.DataSt[ID]['FechaCP'],self.DataSt[ID],
-                        DataV,DataKeyV,DataKey=['Prec','Pres_F','T_F'],
-                    PathImg='',Name=self.St_Info[ID][Var],NameArch='',
-                    GraphInfo={'ylabel':['Precipitación [mm]','Presión [hPa]','Temperatura [°C]'],
-                        'color':['b','k','r'],'label':['Precipitación','Presión','Temperatura']},
-                    GraphInfoV={'color':['-.r'],'label':['Inicio del Evento']},
-                    flagBig=True,
-                    vm={'vmax':[self.vmax['Prec'],self.vmax['Pres_F'],self.vmax['T_F']],
-                        'vmin':[self.vmin['Prec'],self.vmin['Pres_F'],self.vmin['T_F']]},Ev=0,flagV=True,
-                    flagAverage=False,dt=1,Date='',flagEvent=False)
-                x += 1
+        for i in range(len(self.ID)):
+            if self.vmax2['Prec'][i] == 0:
+                continue
+            if xx == 5 or xx == 6 or xx > 7:
                 xx += 1
+                continue
+            ID = self.ID[i]
+            pos2 = [Sec[xx][0],Sec[xx][1],GraphL,GraphH]
+            ax = host_subplot(111, axes_class=AA.Axes)
+            ax.set_position(pos2)
+            DataV = {'Tiempo':[DateTP]}
+            DataKeyV = ['Tiempo']
+            self.EventsSeriesGen(ax,self.DataSt[ID]['FechaCP'],self.DataSt[ID],
+                    DataV,DataKeyV,DataKey=['Prec','Pres_F','T_F'],
+                PathImg='',Name=self.St_Info[ID][Var],NameArch='',
+                GraphInfo={'ylabel':['Precipitación [mm]','Presión [hPa]','Temperatura [°C]'],
+                    'color':['b','k','r'],'label':['Precipitación','Presión','Temperatura']},
+                GraphInfoV={'color':['-.r'],'label':['Inicio del Evento']},
+                flagBig=True,
+                vm={'vmax':[self.vmax['Prec'],self.vmax['Pres_F'],self.vmax['T_F']],
+                    'vmin':[self.vmin['Prec'],self.vmin['Pres_F'],self.vmin['T_F']]},Ev=0,flagV=True,
+                flagAverage=False,dt=1,Date='',flagEvent=False)
+            xx += 1
 
         # Se grafica el mapa pequeño
-        axx = plt.axes([0.51,0.27,0.2,0.2])
+        axx = plt.axes([0.555,0.27,0.2,0.2])
         display.plot_ppi_map('DBZH', 0,vmin=vmin,vmax=vmax,
                  projection='lcc',
                  min_lon=-75.60,max_lon=-75.55,
@@ -399,9 +428,18 @@ class Medellin(object):
 
         for iID,ID in enumerate(self.ID):
             if ID == '68' or ID == '202' or ID == '201' or ID == '203':
-                display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
-                        symbol='o',label_text=ID,color='gray',
-                        markersize=15,label_offset=[-0.005,0.003])
+                if self.DataSt[ID]['Prec'][x] > 0:
+                    display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
+                            symbol='o',color='dodgerblue',markersize=15,markeredgecolor='k',
+                            label_text=ID,label_offset=[-0.005,0.003])
+                elif np.isnan(self.DataSt[ID]['Prec'][x]):
+                    display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
+                            symbol='o',color='gray',markersize=15,markeredgecolor='k',
+                            label_text=ID,label_offset=[-0.005,0.003])
+                else:
+                    display.plot_point(self.St_Info[ID]['Longitud'],self.St_Info[ID]['Latitud'],
+                            symbol='o',color='w',markersize=15,markeredgecolor='k',
+                            label_text=ID,label_offset=[-0.005,0.003])
 
         # plot range rings at 10, 20, 30 and 40km
         display.plot_range_ring(10.0, line_style='k-')

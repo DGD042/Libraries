@@ -450,19 +450,19 @@ class Hydro_Plotter:
         _______________________________________________________________________
 
         INPUT:
-            + MonthsMM: Variable of days for months.
-            + PathImg: Path for the Graph.
-            + Name: Name of the graph.
-            + NameSt: Name of the Name of the Sation.
-            + FlagMan: Flag to get the same cbar values.
-            + vmax: Maximum value of the cbar.
-            + vmin: Maximum value of the cbar.
-            + VarL: Variable label with units.
-            + VarLL: Variable label without units.
-            + VarInd: Variable indicative (example: Prec).
-            + Flagcbar: Flag to plot the cbar.
-            + FlagIng: Flag to convert labels to english.
-            + FlagSeveral: Flag to make big labels.
+            :param MonthsMM: Variable of days for months.
+            :param PathImg: Path for the Graph.
+            :param Name: Name of the graph.
+            :param NameSt: Name of the Name of the Sation.
+            :param FlagMan: Flag to get the same cbar values.
+            :param vmax: Maximum value of the cbar.
+            :param vmin: Maximum value of the cbar.
+            :param VarL: Variable label with units.
+            :param VarLL: Variable label without units.
+            :param VarInd: Variable indicative (example: Prec).
+            :param Flagcbar: Flag to plot the cbar.
+            :param FlagIng: Flag to convert labels to english.
+            :param FlagSeveral: Flag to make big labels.
         _______________________________________________________________________
         
         OUTPUT:
@@ -478,9 +478,6 @@ class Hydro_Plotter:
             MM = ['Jan','Mar','May','Jul','Sep','Nov','Jan']
         else:
             MM = ['Ene','Mar','May','Jul','Sep','Nov','Ene']
-
-        
-
 
         # Input data from 7 to 7 and from Jan to Jan
         x = np.arange(0,24)
@@ -2013,6 +2010,9 @@ class Hydro_Plotter:
         plt.xlabel(Var)  # Colocamos la etiqueta en el eje x
         if M == 'porcen':
             plt.ylabel('Porcentaje [%]')  # Colocamos la etiqueta en el eje y
+        else:
+            plt.ylabel('Número de Datos')  # Colocamos la etiqueta en el eje y
+
         # Se arreglan los ejes
         ax = plt.gca()
         # Se cambia el label de los eje
