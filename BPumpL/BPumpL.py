@@ -3866,8 +3866,8 @@ class BPumpL:
                     # Metodología 2
                     # ---------------
                     # Se encuentra el primer máximo
-                    for P in range(M-1,int(M-2*(60/dt))-1,-1):
-                        if VC[iC][P-1] < VC[iC][P] and VC[iC][P] >= -0.2:
+                    for P in range(M,int(M-2*(60/dt))-1,-1):
+                        if VC[iC][P-1] < VC[iC][P] and VC[iC][P] >= -0.1:
                             MaxVarB = VC[iC][P]
                             if P < 0:
                                 break
@@ -3953,9 +3953,9 @@ class BPumpL:
                     # ---------------
                     # Metodología 2
                     # ---------------
-                    # Se encuentra el primer máximo 
+                    # Se encuentra el primer mínimo
                     for P in range(M-1,int(M-2*(60/dt))-1,-1):
-                        if VC[iC][P-1] > VC[iC][P] and VC[iC][P] <= 0:
+                        if VC[iC][P-1] > VC[iC][P] and VC[iC][P] <= 0.2:
                             MinVarB = VC[iC][P]
                             if P < 0:
                                 break
@@ -4427,6 +4427,11 @@ class BPumpL:
                                                         offset=(offset, 0))
                         axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
                     else:
+                        offset = 0
+                        new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
+                        axi[ilab-1].axis["right"] = new_fixed_axis(loc="right",
+                                                        axes=axi[ilab-1],
+                                                        offset=(offset, 0))
                         axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
 
                     # Se organizan los ejes 

@@ -530,7 +530,7 @@ class Scatter_Gen(object):
                     flagV=False,flagAverage=True,dt=dt)
         else:
             # Se grafican los eventos
-            for iEv in range(len(EvTot)):
+            for iEv in range(len(EvTot['PrecC'])):
                 if iEv <= Evmax:
                     Data = dict()
                     Data['PrecC'] = EvTot['PrecC'][iEv]
@@ -538,12 +538,12 @@ class Scatter_Gen(object):
                         if flags[Lab]:
                             Data[Lab] = EvTot[Lab][iEv]
                     BP.EventsSeriesGen(self.f['FechaEv'][iEv],Data,DataV,
-                            DataKeyV=['DatesEvst','DatesEvend'],DataKey=DataKeys,
+                            DataKeyV=DataKeyV,DataKey=DataKeys,
                             PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
                             Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
                             GraphInfo={'ylabel':Units,'color':Color,
                                 'label':Label},
-                            GraphInfoV=GrapInfoV,
+                            GraphInfoV=GraphInfoV,
                             flagBig=flagBig,vm={'vmax':[None],'vmin':[0]},Ev=iEv,
                             Date=DUtil.Dates_datetime2str([self.PrecCount['DatesEvst'][iEv]])[0])
 
@@ -807,17 +807,25 @@ class Scatter_Gen(object):
         # Datos de las variables de cambio
         Results = BP.C_Rates_Changes(VC,dt=dt,MP=Pos,MaxMin=MaxMin)
         self.Res_Prec[Var][EvType].update(Results)
+        self.Res_Prec[Var][EvType]['PosI'] = Pos
         # -----------------
         # Posiciones
         # -----------------
         # print(self.Res_Prec[Var][EvType]['PosB'])
-        # self.Res_Prec[Var][EvType]['DatesMidVC'] = []
-        # self.Res_Prec[Var][EvType]['DatesBVC']   = []
-        # self.Res_Prec[Var][EvType]['DatesAVC']   = []
-        # for i in range(len(DatesEv)):
-        #     self.Res_Prec[Var][EvType]['DatesMidVC'].append(DatesEv[i][MPP[i]])
-        #     self.Res_Prec[Var][EvType]['DatesBVC'].append(DatesEv[i][int(self.Res_Prec[Var][EvType]['PosB'][i])])
-        #     self.Res_Prec[Var][EvType]['DatesAVC'].append(DatesEv[i][int(self.Res_Prec[Var][EvType]['PosA'][i])])
+        self.Res_Prec[Var][EvType]['DatesMidVC'] = []
+        self.Res_Prec[Var][EvType]['DatesBVC']   = []
+        self.Res_Prec[Var][EvType]['DatesAVC']   = []
+        for i in range(len(DatesEv)):
+            DatesEvP = DUtil.Dates_str2datetime(DatesEv[i])
+            self.Res_Prec[Var][EvType]['DatesMidVC'].append(DatesEvP[MPP[i]])
+            if not(np.isnan(self.Res_Prec[Var][EvType]['PosB'][i])):
+                self.Res_Prec[Var][EvType]['DatesBVC'].append(DatesEvP[int(self.Res_Prec[Var][EvType]['PosB'][i])])
+            else:
+                self.Res_Prec[Var][EvType]['DatesBVC'].append(np.nan)
+            if not(np.isnan(self.Res_Prec[Var][EvType]['PosA'][i])):
+                self.Res_Prec[Var][EvType]['DatesAVC'].append(DatesEvP[int(self.Res_Prec[Var][EvType]['PosA'][i])])
+            else:
+                self.Res_Prec[Var][EvType]['DatesAVC'].append(np.nan)
 
         return
 

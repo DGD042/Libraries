@@ -60,6 +60,9 @@ class Hydro_Plotter:
         # Image resolution
         self.dpi = 300
 
+        # Image font size
+        self.fontsize=15
+
     def monthlab(self,Date):
         '''             
             DESCRIPTION:
@@ -85,26 +88,28 @@ class Hydro_Plotter:
 
     def DalyS(self,Date,Value,Var_LUn,Var='',flagT=True,v='',PathImg='',**args):
         '''
-            DESCRIPTION:
+        DESCRIPTION:
         
-        Esta función permite hacer las gráficas de series temporales parecidas a
-        a las presentadas en Excel para el proyecto.
+            Esta función permite hacer las gráficas de series temporales parecidas a
+            a las presentadas en Excel para el proyecto.
 
         _________________________________________________________________________
 
-            INPUT:
-        + Date: Vector de fechas en formato date.
-        + Value: Vector de valores de lo que se quiere graficar.
-        + Var_LUn: Label de la variable con unidades, por ejemplo Precipitación (mm).
-        + Var: Nombre de la imagen.
-        + flagT: Flag para saber si se incluye el título.
-        + v: Titulo de la Figura.
-        + PathImg: Ruta donde se quiere guardar el archivo.
-        + **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
+        INPUT:
+            :param Date: Vector de fechas en formato date.
+            :param Value: Vector de valores de lo que se quiere graficar.
+            :param Var_LUn: Label de la variable con unidades, por ejemplo 
+                            Precipitación (mm).
+            :param Var: Nombre de la imagen.
+            :param flagT: Flag para saber si se incluye el título.
+            :param v: Titulo de la Figura.
+            :param PathImg: Ruta donde se quiere guardar el archivo.
+            :param **args: Argumentos adicionales para la gráfica, como 
+                   color o ancho de la línea.
         _________________________________________________________________________
         
-            OUTPUT:
-        Esta función arroja una gráfica y la guarda en la ruta desada.
+        OUTPUT:
+            Esta función arroja una gráfica y la guarda en la ruta desada.
         '''
         # Tamaño de la Figura
         fH = self.fH # Largo de la Figura
@@ -115,11 +120,11 @@ class Hydro_Plotter:
         # Se genera la gráfica
         F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
-        plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+        plt.rcParams.update({'font.size': self.fontsize,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
-            ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.labelsize': self.fontsize,'xtick.major.size': 6,'xtick.minor.size': 4\
             ,'xtick.major.width': 1,'xtick.minor.width': 1\
-            ,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.labelsize': self.fontsize+1,'ytick.major.size': 12,'ytick.minor.size': 4\
             ,'ytick.major.width': 1,'ytick.minor.width': 1\
             ,'axes.linewidth':1\
             ,'grid.alpha':0.1,'grid.linestyle':'-'})
@@ -149,8 +154,8 @@ class Hydro_Plotter:
             tick.set_rotation(45)
         # Labels
         if flagT:
-            plt.title(v,fontsize=15)
-        plt.ylabel(Var_LUn,fontsize=16)
+            plt.title(v,fontsize=self.fontsize)
+        plt.ylabel(Var_LUn,fontsize=self.fontsize+1)
         # Se arregla el espaciado de la figura
         plt.tight_layout()
         # Se guarda la figura
@@ -292,24 +297,27 @@ class Hydro_Plotter:
         plt.savefig(PathImg + Var +'_NaN_Mens' + '.png',format='png',dpi=self.dpi )
         plt.close('all')
 
-    def DalyCycle(self,HH,CiDT,ErrT,VarL,VarLL,Name,NameA,PathImg,**args):
+    def DalyCycle(self,HH,CiDT,ErrT,VarL='',VarLL='',MaxMin=None,Name='',NameA='Figura',PathImg='',**args):
         '''
-            DESCRIPTION:
+        DESCRIPTION:
         
-        Esta función permite hacer las gráficas del ciclo diurno
-
+            Esta función permite hacer las gráficas del ciclo diurno
         _________________________________________________________________________
 
-            INPUT:
-        + HH: Vector de horas.
-        + CiDT: Vector de datos horarios promedio.
-        + ErrT: Barras de error de los datos.
-        + VarL: Label de la variable con unidades, por ejemplo Precipitación (mm).
-        + VarLL: Label de la variable sin unidades.
-        + Name: Nombre de la Estación.
-        + NameA: Nombre del archivo.
-        + PathImg: Ruta donde se quiere guardar el archivo.
-        + **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
+        INPUT:
+            :param HH:      Vector de horas.
+            :param CiDT:    Vector de datos horarios promedio.
+            :param ErrT:    Barras de error de los datos.
+            :param VarL:    Label de la variable con unidades, por ejemplo 
+                            Precipitación (mm).
+            :param VarLL:   Label de la variable sin unidades.
+            :param MaxMin:  A ndarray, array with the Maximum and Minimum values
+                            to be graph.
+            :param Name:    Nombre de la Estación.
+            :param NameA:   Nombre del archivo.
+            :param PathImg: Ruta donde se quiere guardar el archivo.
+            :param **args:  Argumentos adicionales para la gráfica, como color 
+                            o ancho de la línea.
         _________________________________________________________________________
         
             OUTPUT:
@@ -324,11 +332,11 @@ class Hydro_Plotter:
         # Se genera la gráfica
         F = plt.figure(figsize=DM.cm2inch(fH,fV))
         # Parámetros de la Figura
-        plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+        plt.rcParams.update({'font.size': self.fontsize,'font.family': 'sans-serif'\
             ,'font.sans-serif': self.font\
-            ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.labelsize': self.fontsize,'xtick.major.size': 6,'xtick.minor.size': 4\
             ,'xtick.major.width': 1,'xtick.minor.width': 1\
-            ,'ytick.labelsize': 16,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.labelsize': self.fontsize,'ytick.major.size': 12,'ytick.minor.size': 4\
             ,'ytick.major.width': 1,'ytick.minor.width': 1\
             ,'axes.linewidth':1\
             ,'grid.alpha':0.1,'grid.linestyle':'-'})
@@ -340,10 +348,19 @@ class Hydro_Plotter:
         plt.tick_params(axis='y',which='major',direction='inout') 
         plt.grid()
         # Argumentos que se deben incluir color=C,label=VarLL,lw=1.5
-        plt.errorbar(HH,CiDT,yerr=ErrT,fmt='-',**args)
-        plt.title('Ciclo Diurno de ' + VarLL + ' en ' + Name,fontsize=16 )  # Colocamos el título del gráfico
-        plt.ylabel(VarL,fontsize=16)  # Colocamos la etiqueta en el eje x
-        plt.xlabel('Horas',fontsize=16)  # Colocamos la etiqueta en el eje y
+        if MaxMin is None:
+            plt.errorbar(HH,CiDT,yerr=ErrT,fmt='-',**args)
+        else:
+            plt.plot(HH,CiDT,**args)
+            plt.plot(HH,MaxMin[0,:],'--',**args)
+            plt.plot(HH,MaxMin[1,:],'--',**args)
+
+        if self.fontsize > 19:
+            plt.title(Name,fontsize=self.fontsize)  # Colocamos el título del gráfico
+        else:
+            plt.title('Ciclo Diurno de ' + VarLL + ' en ' + Name,fontsize=self.fontsize)  # Colocamos el título del gráfico
+        plt.ylabel(VarL,fontsize=self.fontsize)  # Colocamos la etiqueta en el eje x
+        plt.xlabel('Horas',fontsize=self.fontsize)  # Colocamos la etiqueta en el eje y
         ax = plt.gca()
         plt.xlim([0,23])
 
