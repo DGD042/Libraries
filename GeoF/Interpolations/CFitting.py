@@ -1,0 +1,264 @@
+# -*- coding: utf-8 -*-
+#______________________________________________________________________________
+#______________________________________________________________________________
+#
+#                       Coded by Daniel González Duque
+#                           Last revised 13/06/2016
+#______________________________________________________________________________
+#______________________________________________________________________________
+
+#______________________________________________________________________________
+#
+# CLASS DESCRIPTION:
+#   This class pretend to fit different functions in different sets of data.
+#______________________________________________________________________________
+# Manipulate Data
+import numpy as np
+import scipy.io as sio # To use .mat files
+from scipy import stats as st # To make linear regressions
+from scipy.optimize import curve_fit # To do curve fitting
+from scipy.stats.distributions import t # t distribution
+# System
+import sys
+import os
+import warnings
+import re
+
+# ------------------
+# Personal Modules
+# ------------------
+# Importing Modules
+from Utilities import Utilities as utl
+from Utilities import Data_Man as DM
+
+
+# The functions are defined
+def Spherical(h,c0,a0):
+    return c0*((3/2)*(h/a0)-(1/2)*(h/a0)**3)
+def Gaussian(h,c0,a0):
+    return c0*(1-np.exp((-h**2/a0**2)))
+def Exponential(h,c0,a0):
+    return c0*(1-np.exp(-h/a0))
+def Power(h,c0,a0):
+    return c0*h**a0
+
+class CFitting:
+
+    def __init__(self):
+        '''
+        '''
+        self.Adj = {'spherical':Spherical,
+                    'gaussian':Gaussian,
+                    'exponential':Exponential,
+                    'power':Power,
+                    }
+
+        self.AdjF = {'spherical':r'$\gamma = %.4f ((3h/2%.4f)-(h/2%.4f)^3)$',
+                    'gaussian':r'$\gamma = %.4f (1-e^{-h^2/%.4f^2})$',
+                    'exponential':r'$\gamma = %.4f (1-e^{-h/%.4f})$',
+                    'power':r'$\gamma = %.4fh^{%.4f}$',
+                    }
+        return
+
+    def addfun(self,fun,key='New',funeq=''):
+        '''
+        DESCRIPTION:
+        
+            This function add a new function to the directory of functions to
+            be fitted.
+        _______________________________________________________________________
+
+        INPUT:
+            + fun: Function to be added.
+            + key: Name of the function.
+        _______________________________________________________________________
+        
+        '''
+        self.Adj[key] = fun
+        self.AdjF[key] = funeq
+        return
+
+    def FF(self,xdata,ydata,F='lineal',alpha=0.05,flagParabolic=False):
+        '''
+        DESCRIPTION:
+        
+            This function takes x and y data and makes a fitting of the data with
+            the function that wants to be added.
+        _______________________________________________________________________
+
+        INPUT:
+            :param xdata:         A ndArray, Data in the x axis.
+            :param ydata:         A ndArray, Data in the y axis.
+            :param F:             A str, Function that wants to be fitted, 
+                                  by default is 'lineal'.
+            :param alpha:         A float, significance level.
+            :param flagParabolic: A boolean, flag to adjust Parabolic in 
+                                  automatic.
+
+                 The functions that are defaulted to fit are the following:
+
+        _______________________________________________________________________
+        
+        OUTPUT:
+            This function return a dictionary with the following data:
+                - Coef: Ceofficients
+                - perr: Standard deviation errors of the parameters.
+                - R2: Coefficient of determination.
+        '''
+        # --------------------------------
+        # Error Managment and Parameters
+        # --------------------------------
+
+        if isinstance(F,str) == False and F != 0:
+            utl.ShowError('FF','CFitting','Given parameter F is not on the listed functions.')
+
+        keys = list(self.Adj)
+        if F == '' or F == 0:
+            flagfitbest = True
+        else:
+            key = F.lower()
+            flagfitbest = False
+            try:
+                fun = self.Adj[key]
+            except KeyError:
+                utl.ShowError('FF','CFitting','Given parameter F is not on the listed functions.')
+                
+
+        # -----------------
+        # Calculations
+        # -----------------
+        X,Y = DM.NoNaN(xdata,ydata,False)
+        Results = dict()
+
+        if flagfitbest:
+            CoefT = dict()
+            perrT = dict()
+            keysT = []
+            R2T = []
+            keys2 = []
+
+            for ikey,key in enumerate(keys):
+                if not(flagParabolic) and key == 'parabolic':
+                    continue
+                try:
+                    keys2.append(key)
+                    fun = self.Adj[key]
+                    # Fitting
+                    Coef, pcov = curve_fit(fun,X,Y)
+                    # R2 calculations
+                    ss_res = np.dot((Y - fun(X, *Coef)),(Y - fun(X, *Coef)))
+                    ymean = np.mean(Y)
+                    ss_tot = np.dot((Y-ymean),(Y-ymean))
+                    R2T.append(1-(ss_res/ss_tot))
+
+                    perrT[key] = np.sqrt(np.diag(pcov))
+                    CoefT[key] = Coef
+                except RuntimeError:
+                    print('WARNING: Cannot fit a',key)
+                    perrT[key] = np.nan
+                    CoefT[key] = np.nan
+                    R2T.append(np.nan)
+                    continue
+
+            # Verify the maximum R^2
+            x = np.where(np.array(R2T) == np.nanmax(np.array(R2T)))[0]
+            if len(x) > 1:
+                x = x[0]
+            key = np.array(keys2)[x][0]
+            Results['Coef'] = CoefT[key]
+            Results['perr'] = perrT[key]
+            Results['R2'] = np.array(R2T)[x][0]
+            Results['Functionkey'] = key
+            Results['Function'] = self.Adj[key]
+            Results['FunctionEq'] = self.AdjF[key]
+        else:
+            # Fitting
+            Coef, pcov = curve_fit(fun,X,Y)
+            ss_res = np.dot((Y - fun(X, *Coef)),(Y - fun(X, *Coef)))
+            perr = np.sqrt(np.diag(pcov))
+            ymean = np.mean(Y)
+            ss_tot = np.dot((Y-ymean),(Y-ymean))
+            R2 = 1-(ss_res/ss_tot)
+            Results['Coef'] = Coef
+            Results['perr'] = perr
+            Results['R2'] = R2
+            Results['Functionkey'] = key
+            Results['Function'] = fun
+            Results['FunctionEq'] = self.FunctionsEqstr(self.AdjF[key],Coef)
+
+        # Confidence intervals of the parameters
+        n = len(Y)  # Number of data
+        p = len(Results['Coef']) # Number of parameters
+        dof = max(0,n-p) # Number of degrees of freedom
+        # Student-t value for the dof and confidence level
+        tval = t.ppf(1.0-alpha/2.0, dof)
+
+        Results['ConInt'] = []
+        for i, p, var in zip(range(n),Results['Coef'],np.diag(pcov)):
+            sigma = var**0.5
+            Results['ConInt'].append([p-sigma*tval,p+sigma*tval])
+
+        # ---------------------
+        # Errors
+        # ---------------------
+        # Estimation Error
+        SS = []
+        VC = Results['Function'](X, *Results['Coef'])
+        for iy,y in enumerate(VC):
+            SS.append((Y[iy]-y)**2)
+        EErr = np.sqrt((1/(n-2))*np.sum(np.array(SS)))
+        Results['EErr'] = EErr
+        # RSME (Root Mean Square Error)
+        SS = []
+        VC = Results['Function'](X, *Results['Coef'])
+        for iy,y in enumerate(VC):
+            SS.append((y-Y[iy])**2)
+        RSME = np.sqrt((1/(n))*np.sum(np.array(SS)))
+        Results['RSME'] = RSME
+        # MBE (Mean Bias Error)
+        SS = []
+        VC = Results['Function'](X, *Results['Coef'])
+        for iy,y in enumerate(VC):
+            SS.append((y-Y[iy]))
+        RSME = np.sqrt((1/(n))*np.sum(np.array(SS)))
+        Results['MBE'] = RSME 
+        # MPE (Mean Percentage Error)
+        SS = []
+        VC = Results['Function'](X, *Results['Coef'])
+        for iy,y in enumerate(VC):
+            SS.append(((y-Y[iy])/Y[iy])*100)
+        RSME = np.sqrt((1/(n))*np.sum(np.array(SS)))
+        Results['MPE'] = RSME 
+        return Results
+
+    def FunctionsEqstr(self,funEq,Coef):
+        '''
+        DESCRIPTION:
+            
+            Method to correct the functions strings if a parameter is
+            negative.
+        _______________________________________________________________________
+        '''
+
+        Par = re.compile('\%.4f')
+        S = re.finditer(Par,funEq)
+        SList = [i for i in S]
+        Sse = [(i.start(),i.end()) for i in SList]
+
+        for iC,C in enumerate(Coef):
+            if C < 0:
+                if funEq[Sse[iC][0]-2] == '+':
+                    L = funEq[Sse[iC][0]-2].replace('+','')
+                    funEq = funEq[:Sse[iC][0]-2]+L+funEq[Sse[iC][0]-1:]
+
+        return funEq
+
+
+
+
+
+
+
+
+
+
