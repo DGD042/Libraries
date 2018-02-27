@@ -95,7 +95,7 @@ def GeoTIFFEx(Ar,band=1):
 
     return Data
 
-def GeoTIFFSave(T,geoTrans,Projection=None,Name='Results',Pathout=''):
+def GeoTIFFSave(T,geoTrans,Projection=None,Name='Results',Pathout='',pixeltype='float'):
     '''
     DESCRIPTION:
         This Functions saves one a raster in GeoTIFF format (.tif) in one
@@ -120,6 +120,12 @@ def GeoTIFFSave(T,geoTrans,Projection=None,Name='Results',Pathout=''):
     # ------------------
     x_pixels = T.shape[1]  # number of pixels in x
     y_pixels = T.shape[0]  # number of pixels in y
+    if pixeltype == 'float':
+        Pixel = gdal.GDT_Float32
+    elif pixeltype == 'int':
+        Pixel = gdal.GDT_Int32
+
+
 
     # ------------------
     # Save File
@@ -141,13 +147,16 @@ def GeoTIFFSave(T,geoTrans,Projection=None,Name='Results',Pathout=''):
         x_pixels,
         y_pixels,
         1,
-        gdal.GDT_Float32, )
+        Pixel, )
 
     dataset.SetGeoTransform(geoTrans)
 
     dataset.SetProjection(wkt_projection)
     dataset.GetRasterBand(1).WriteArray(T)
     Band = dataset.GetRasterBand(1)
-    Band.SetNoDataValue(-9999.0)
+    if pixeltype == 'float':
+        Band.SetNoDataValue(-9999.0)
+    elif pixeltype == 'int':
+        Band.SetNoDataValue(-9999)
     dataset.FlushCache()  # Write to disk.
     return 
