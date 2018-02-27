@@ -529,3 +529,20 @@ def MALR(slope,intercept,Zmax=7000,Zmin=1000,LCLp=1800,FlagGraph=False,PathImg='
     # Se reportan los resultados
     return Al,TM
 
+def HeatVaporization(Ta):
+    '''
+    DESCRIPTION:
+    
+        This function calculates the heat vaporization.
+    _________________________________________________________________________
+
+    INPUT:
+        :param Ta: A float o ndarray, Ambient Temperature in °C.
+    _________________________________________________________________________
+    OUTPUT:
+        :return Lambda: A float or ndarray, Heath Vaporization in MJ/kg.
+    '''
+    Lambda = 2.501 - (2.361*10**(-3)*Ta)
+    
+    return Lambda
+
