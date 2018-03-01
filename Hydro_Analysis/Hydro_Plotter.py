@@ -1561,7 +1561,7 @@ class Hydro_Plotter:
         if FlagA:
             return 
 
-    def ScatterGen(self,V1,V2,Fit='',Title='',xLabel='',yLabel='',Name='',PathImg='',FlagA=True,FlagAn=False,FlagInv=False,FlagInvAxis=False,Annotations=None):
+    def ScatterGen(self,V1,V2,Fit='',Title='',xLabel='',yLabel='',Name='',PathImg='',FlagA=True,FlagAn=False,FlagInv=False,FlagInvAxis=False,Annotations=None,**args):
         '''
         DESCRIPTION:
         
@@ -1627,7 +1627,7 @@ class Hydro_Plotter:
         plt.tick_params(axis='y',which='major',direction='inout') 
         plt.grid()
         # Precipitación
-        plt.scatter(V1,V2,color='dodgerblue',alpha=0.7)
+        plt.scatter(V1,V2,**args)
         plt.title(Title,fontsize=16)
         plt.xlabel(xLabel,fontsize=16)
         plt.ylabel(yLabel,fontsize=16)
