@@ -92,6 +92,8 @@ class Hydro_Analysis(object):
     '''
 
     def __init__(self,DateH=None,VarH=None,DateM=None,VarM=None,DTH=24,PathImg='',Info=['Image','Nombre','Precipitación','Precipitación [mm]','b']):
+        '''
+        '''
         # Parameters
         self.operations = DM.operations
         if not(DateH is None):
@@ -464,7 +466,7 @@ class Hydro_Analysis(object):
 
         return MesesM1, MesesMM1, MesesMD1,MesesME1,CiDT1,DesT1,ErrT1, MesesM2, MesesMM2, MesesMD2,MesesME2,CiDT2,DesT2,ErrT2
 
-    def CiclDP(self,MonthsM,PathImg='',Name='',NameSt='',FlagMan=False,vmax=None,vmin=None,Flagcbar=True,FlagIng=False,Oper='Percen',VarInd='',VarL='Precipitación [%]'):
+    def CiclDP(self,MonthsM,PathImg='',Name='',NameSt='',FlagMan=False,vmax=None,vmin=None,Flagcbar=True,FlagIng=False,Oper='Percen',VarInd='',VarL='Precipitación [%]',FlagG=True,FlagSeveral=False):
         '''
         DESCRIPTION:
             
@@ -509,93 +511,8 @@ class Hydro_Analysis(object):
                 MonthsMP[i] = MonthsM[i]
                 ProcP[ii,:] = np.nanmean(MonthsMP[i],axis=0)
 
-        HyPl.DalyAnCycle(ProcP,PathImg=PathImg,Name=Name,NameSt=NameSt,VarL=VarL,VarLL='Precipitación',VarInd=VarInd,FlagMan=FlagMan,vmax=vmax,vmin=vmin,Flagcbar=Flagcbar,FlagIng=FlagIng,FlagSeveral=True)
-        # x = np.arange(0,24)
-        # x3 = np.arange(0,25)
-        # # for i in range(8):
-        # #     ProcP = np.roll(ProcP,1,axis=1)
-        # #     x = np.roll(x,1,axis=1)
-
-        # ProcP2 = np.hstack((ProcP[:,7:],ProcP[:,:7]))
-        # x2 = np.hstack((x[7:],x[:7]))
-        # for i in range(len(ProcP2)):
-        #   ProcP22 = 0
-        #   ProcP22 = np.hstack((ProcP2[i,:],ProcP2[i,0]))
-        #   if i == 0:
-        #       ProcP3 = ProcP22
-        #   else:
-        #       ProcP3 = np.vstack((ProcP3,ProcP22))
-
-        # ProcP3 = np.vstack((ProcP3,ProcP3[0,:]))
-        
-        # # Datos para las gráficas
-        # if vmax != None:
-        #   v = np.linspace(vmin, vmax, 9, endpoint=True)
-        #   bounds = np.arange(0,vmax+0.1,1)
-
-        # x2 = np.hstack((x2,x2[0]))
-        # x22 = np.array([x2[i] for i in range(0,len(x2),3)])
-
-        # # Tamaño de la Figura
-        # fH=20 # Largo de la Figura
-        # fV = fH*(2.0/3.0) # Ancho de la Figura
-        # # Se crea la carpeta para guardar la imágen
-        # utl.CrFolder(PathImg)
-
-        # # Se genera la gráfica
-        # # Parámetros de la Figura
-        # plt.rcParams.update({'font.size': 28,'font.family': 'sans-serif'\
-        #   ,'font.sans-serif': 'Arial'\
-        #   ,'xtick.labelsize': 28,'xtick.major.size': 6,'xtick.minor.size': 4\
-        #   ,'xtick.major.width': 1,'xtick.minor.width': 1\
-        #   ,'ytick.labelsize': 28,'ytick.major.size': 6,'ytick.minor.size': 4\
-        #   ,'ytick.major.width': 1,'ytick.minor.width': 1\
-        #   ,'axes.linewidth':1\
-        #   ,'grid.alpha':0.1,'grid.linestyle':'-'})
-        # F = plt.figure(figsize=DM.cm2inch(fH,fV))
-        # plt.tick_params(axis='x',which='both',bottom='on',top='off',\
-        #   labelbottom='on',direction='out')
-        # plt.tick_params(axis='x',which='major',direction='out')
-        # plt.tick_params(axis='y',which='both',left='on',right='off',\
-        #   labelleft='on',direction='out')
-        # plt.tick_params(axis='y',which='major',direction='out') 
-        # plt.grid()
-
-        # if FlagMan:
-        #   plt.contourf(x3,np.arange(1,14),ProcP3,v,vmax=vmax,vmin=vmin)
-        # else:
-        #   plt.contourf(x3,np.arange(1,14),ProcP3)
-        # plt.title(NameSt,fontsize=32)  # Colocamos el título del gráfico
-        # # plt.ylabel('Meses',fontsize=15)  # Colocamos la etiqueta en el eje x
-        # # plt.xlabel('Horas',fontsize=15)  # Colocamos la etiqueta en el eje y
-        # axs = plt.gca()
-        # axs.yaxis.set_ticks(np.arange(1,14,2))
-        # axs.set_yticklabels(MM)
-        # axs.xaxis.set_ticks(np.arange(0,25,3))
-        # axs.set_xticklabels(x22)
-        # plt.tight_layout()
-        # if Flagcbar:
-        #   if FlagMan:
-        #       cbar = plt.colorbar(boundaries=bounds,ticks=v)
-        #   else:
-        #       cbar = plt.colorbar()
-        #   cbar.set_label('Precipitación [%]')
-        # plt.gca().invert_yaxis()
-        # plt.legend(loc=1)
-        # plt.grid()
-        # # The minor ticks are included
-        # ax = plt.gca()
-        # xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
-        # MxL = (xTL[1]-xTL[0])/3 # minorLocatorx value
-        # minorLocatorx = MultipleLocator(MxL)
-        # yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
-        # MyL = (yTL[1]-yTL[0])/2 # minorLocatory value
-        # minorLocatory = MultipleLocator(MyL)
-        # plt.gca().xaxis.set_minor_locator(minorLocatorx)
-        # plt.gca().yaxis.set_minor_locator(minorLocatory)
-        # plt.tight_layout()
-        # plt.savefig(PathImg + 'TPrec_' + Name+'.png',format = 'png',dpi=300 )
-        # plt.close('all')
+        if FlagG:
+            HyPl.DalyAnCycle(ProcP,PathImg=PathImg,Name=Name,NameSt=NameSt,VarL=VarL,VarLL='Precipitación',VarInd=VarInd,FlagMan=FlagMan,vmax=vmax,vmin=vmin,Flagcbar=Flagcbar,FlagIng=FlagIng,FlagSeveral=FlagSeveral)
 
         return  MonthsMP,ProcP
 

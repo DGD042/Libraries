@@ -2095,7 +2095,7 @@ class EMSD(object):
             dt = int(60/dtm)
             if dt != 60:
                 # Hourly
-                DateH, DateHN, VH,VmaxH,VminH = DMan.Ca_E(Date,V1,dt,0,op=op,flagMa=True,flagDF=False)
+                DateH, DateHN, VH,VmaxH,VminH = DMan.Ca_E(Date,V1,dt,0,op=op,flagMa=True,flagDF=False,flagNaN=True)
                 DatesC[DateLab[0]] = DateH
                 DatesNC[DateNLab[0]] = DateHN
                 VC[VLab[0]] = VH

@@ -96,13 +96,14 @@ def CiclA(VMes,Years,flagA=False,oper='mean'):
     for i in range(12):
         q = sum(~np.isnan(VarM[:,i]))
         VarMNT.append(sum(~np.isnan(VarM[:,i])))
-        if q <= len(VarM[:,i])*0.70:
+        if q < round(len(VarM[:,i])*0.70,0):
             MesM[i] = np.nan
         else:
             MesM[i] = np.nanmean(VarM[:,i]) # Multianual Mean
     
     MesD = np.nanstd(VarM,axis=0) # annual strandard deviation.
     MesE = np.array([k/np.sqrt(VarMNT[ii]) for ii,k in enumerate(MesD)]) # annual Error
+
     # --------------------
     # Annual Series
     # --------------------

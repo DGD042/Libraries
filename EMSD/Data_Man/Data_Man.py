@@ -264,7 +264,7 @@ def Ca_E(FechaC,V1C,dt=24,escala=1,op='mean',flagMa=False,flagDF=False,flagNaN=T
                   en los datos que se dan diarios.
                 True: Para calcularlos.
                 False: Para no calcularos.
-        + flagNaN: Flag to know if the user watns to include the data with low data.
+        + flagNaN: Flag to know if the user wants to include the data with low data.
     _______________________________________________________________________
     
     OUTPUT:
@@ -288,13 +288,15 @@ def Ca_E(FechaC,V1C,dt=24,escala=1,op='mean',flagMa=False,flagDF=False,flagNaN=T
     # Se inicializan las variables que se utilizarán
     FechaNN = ["" for k in range(1)]
     FechaEs = ["" for k in range(1)]
-    VE = ["" for k in range(1)]
-    VEMax = ["" for k in range(1)]
-    VEMin = ["" for k in range(1)]
+    VE = []
+    VEMax = []
+    VEMin = []
 
     NF = [] # Porcentaje de datos faltantes
     NNF = [] # Porcentaje de datos no faltantes
     rr = 0
+
+    Oper = {'sum':np.nansum,'mean':np.nanmean}
 
     # -------------------------------------------
     # Vector de fechas
@@ -368,229 +370,77 @@ def Ca_E(FechaC,V1C,dt=24,escala=1,op='mean',flagMa=False,flagDF=False,flagNaN=T
             # Ciclo para realizar el agregamiento de los datos
             for i in range(0,len(V1C),dt): 
                 dtt = dtt + dt # Se aumenta el número de filas en el contador
-                if i == 0:
-                    q = np.isnan(V1C[i:dtt])
-                    qq = sum(q)
-                    qYes = sum(~np.isnan(V1C[i:dtt]))
-                    if (qq > dt/2 and flagNaN) or qYes == 0:
-                        VE[0] = float('nan')
-                        if flagMa == True:
-                            VEMax[0] = float('nan')
-                            VEMin[0] = float('nan')
-                    else:
-                        try:
-                            VE[0] = float(np.nanmean(V1C[i:dtt]))
-                        except ValueError:
-                            VE[0] = float('nan')
-                        if flagMa == True:
-                            try:
-                                VEMax[0] = float(np.nanmax(V1C[i:dtt]))
-                            except ValueError:
-                                VEMax[0] = float('nan')
-                            try:
-                                VEMin[0] = float(np.nanmin(V1C[i:dtt]))
-                            except ValueError:
-                                VEMin[0] = float('nan')
+                q = np.isnan(V1C[i:dtt])
+                qq = sum(q)
+                qYes = sum(~np.isnan(V1C[i:dtt]))
+                if (qq > dt/2 and flagNaN) or qYes == 0:
+                    VE.append(np.nan)
+                    if flagMa == True:
+                        VEMax.append(np.nan)
+                        VEMin.append(np.nan)
                 else:
-                    q = np.isnan(V1C[i:dtt])
-                    qq = sum(q)
-                    qYes = sum(~np.isnan(V1C[i:dtt]))
-                    if (qq > dt/2 and flagNaN) or qYes == 0:
-                        VE.append(float('nan'))
-                        if flagMa == True:
-                            VEMax.append(float('nan'))
-                            VEMin.append(float('nan'))
-                    else:
+                    try:
+                        VE.append(float(np.nanmean(V1C[i:dtt])))
+                    except ValueError:
+                        VE.append(np.nan)
+                    if flagMa == True:
                         try:
-                            VE.append(float(np.nanmean(V1C[i:dtt])))
+                            VEMax.append(float(np.nanmax(V1C[i:dtt])))
                         except ValueError:
-                            VE.append(float('nan'))
-                        if flagMa == True:
-                            try:
-                                VEMax.append(float(np.nanmax(V1C[i:dtt])))
-                            except ValueError:
-                                VEMax.append(float('nan'))
-                            try:
-                                VEMin.append(float(np.nanmin(V1C[i:dtt])))
-                            except ValueError:
-                                VEMin.append(float('nan'))
-        elif escala == 2: # promedio mensual
-            d = 0
-            for i in range(int(yeari),int(yearf)+1):
-                for j in range(1,13):
-                    Fi = date(i,j,1)
-                    if j == 12:
-                        Ff = date(i+1,1,1)
-                    else:
-                        Ff = date(i,j+1,1)
-                    DF = Ff-Fi
-                    dtt = dtt + DF.days # Delta de días
-                    if i == int(yeari) and j == 1:
-                        q = np.isnan(V1C[d:dtt])
-                        qq = sum(q)
-                        NF.append(qq/len(V1C[d:dtt]))
-                        NNF.append(1-NF[-1])    
-                        qYes = sum(~np.isnan(V1C[i:dtt]))
-                        if (qq > DF.days/2 and flagNaN) or qYes == 0:
-                            VE[0] = float('nan')
-                            if flagMa == True:
-                                VEMax[0] = float('nan')
-                                VEMin[0] = float('nan')
-                        else:
-                            try:
-                                VE[0] = float(np.nanmean(V1C[d:dtt]))
-                            except ValueError:
-                                VE[0] = float('nan')
-                            if flagMa == True:
-                                try:
-                                    VEMax[0] = float(np.nanmax(V1C[d:dtt]))
-                                except ValueError:
-                                    VEMax[0] = float('nan')
-                                try:
-                                    VEMin[0] = float(np.nanmin(V1C[d:dtt]))
-                                except ValueError:
-                                    VEMin[0] = float('nan')
-                    else:
-                        q = np.isnan(V1C[d:dtt])
-                        qq = sum(q)
-                        NF.append(qq/len(V1C[d:dtt]))
-                        NNF.append(1-NF[-1])
-                        qYes = sum(~np.isnan(V1C[i:dtt]))
-                        if (qq > DF.days/2 and flagNaN) or qYes == 0:
-                            VE.append(float('nan'))
-                            if flagMa == True:
-                                VEMax.append(float('nan'))
-                                VEMin.append(float('nan'))
-                        else:
-                            try:
-                                VE.append(float(np.nanmean(V1C[d:dtt])))
-                            except ValueError:
-                                VE.append(float('nan'))
-                            if flagMa == True:
-                                try:
-                                    VEMax.append(float(np.nanmax(V1C[d:dtt])))
-                                except ValueError:
-                                    VEMax.append(float('nan'))
-                                try:
-                                    VEMin.append(float(np.nanmin(V1C[d:dtt])))
-                                except ValueError:
-                                    VEMin.append(float('nan'))
-                    d = dtt
-
+                            VEMax.append(np.nan)
+                        try:
+                            VEMin.append(float(np.nanmin(V1C[i:dtt])))
+                        except ValueError:
+                            VEMin.append(np.nan)
 
     elif op == 'sum':
         if escala == 0 or escala == -1 or escala == 1: 
             # Ciclo para realizar el agregamiento de los datos
             for i in range(0,len(V1C),dt): 
                 dtt = dtt + dt # Se aumenta el número de filas en el contador
-                if i == 0:
-                    q = np.isnan(V1C[i:dtt])
-                    qq = sum(q)
-                    qYes = sum(~np.isnan(V1C[i:dtt]))
-                    if (qq > dt/2 and flagNaN) or qYes == 0:
-                        VE[0] = float('nan')
-                        if flagMa == True:
-                            VEMax[0] = float('nan')
-                            VEMin[0] = float('nan')
-                    else:
-                        try:
-                            VE[0] = float(np.nansum(V1C[i:dtt]))
-                        except ValueError:
-                            VE[0] = float('nan')
-                        if flagMa == True:
-                            try:
-                                VEMax[0] = float(np.nanmax(V1C[i:dtt]))
-                            except ValueError:
-                                VEMax[0] = float('nan')
-                            try:
-                                VEMin[0] = float(np.nanmin(V1C[i:dtt]))
-                            except ValueError:
-                                VEMin[0] = float('nan')
+                q = np.isnan(V1C[i:dtt])
+                qq = sum(q)
+                qYes = sum(~np.isnan(V1C[i:dtt]))
+                if (qq > dt/2 and flagNaN) or qYes == 0:
+                    VE.append(np.nan)
+                    if flagMa == True:
+                        VEMax.append(np.nan)
+                        VEMin.append(np.nan)
                 else:
-                    q = np.isnan(V1C[i:dtt])
-                    qq = sum(q)
-                    qYes = sum(~np.isnan(V1C[i:dtt]))
-                    if (qq > dt/2 and flagNaN) or qYes == 0:
-                        VE.append(float('nan'))
-                        if flagMa == True:
-                            VEMax.append(float('nan'))
-                            VEMin.append(float('nan'))
-                    else:
+                    try:
+                        VE.append(float(np.nansum(V1C[i:dtt])))
+                    except ValueError:
+                        VE.append(np.nan)
+                    if flagMa == True:
                         try:
-                            VE.append(float(np.nansum(V1C[i:dtt])))
+                            VEMax.append(float(np.nanmax(V1C[i:dtt])))
                         except ValueError:
-                            VE.append(float('nan'))
-                        if flagMa == True:
-                            try:
-                                VEMax.append(float(np.nanmax(V1C[i:dtt])))
-                            except ValueError:
-                                VEMax.append(float('nan'))
-                            try:
-                                VEMin.append(float(np.nanmin(V1C[i:dtt])))
-                            except ValueError:
-                                VEMin.append(float('nan'))
-        elif escala == 2: # Agregamiento mensual
-            d = 0
-            for i in range(int(yeari),int(yearf)+1):
-                for j in range(1,13):
-                    Fi = date(i,j,1)
-                    if j == 12:
-                        Ff = date(i+1,1,1)
-                    else:
-                        Ff = date(i,j+1,1)
-                    DF = Ff-Fi
-                    dtt = dtt + DF.days # Delta de días
-                    if i == int(yeari) and j == 1:
-                        q = np.isnan(V1C[d:dtt])
-                        qq = sum(q)
-                        NF.append(qq/len(V1C[d:dtt]))
-                        NNF.append(1-NF[-1])    
-                        qYes = sum(~np.isnan(V1C[i:dtt]))
-                        if (qq > DF.days/2 and flagNaN) or qYes == 0:
-                            VE[0] = float('nan')
-                            if flagMa == True:
-                                VEMax[0] = float('nan')
-                                VEMin[0] = float('nan')
-                        else:
-                            try:
-                                VE[0] = float(np.nansum(V1C[d:dtt]))
-                            except ValueError:
-                                VE[0] = float('nan')
-                            if flagMa == True:
-                                try:
-                                    VEMax[0] = float(np.nanmax(V1C[d:dtt]))
-                                except ValueError:
-                                    VEMax[0] = float('nan')
-                                try:
-                                    VEMin[0] = float(np.nanmin(V1C[d:dtt]))
-                                except ValueError:
-                                    VEMin[0] = float('nan')
-                    else:
-                        q = np.isnan(V1C[d:dtt])
-                        qq = sum(q)
-                        NF.append(qq/len(V1C[d:dtt]))
-                        NNF.append(1-NF[-1])
-                        qYes = sum(~np.isnan(V1C[i:dtt]))
-                        if (qq > DF.days/2 and flagNaN) or qYes == 0:
-                            VE.append(float('nan'))
-                            if flagMa == True:
-                                VEMax.append(float('nan'))
-                                VEMin.append(float('nan'))
-                        else:
-                            try:
-                                VE.append(float(np.nansum(V1C[d:dtt])))
-                            except ValueError:
-                                VE.append(float('nan'))
-                            if flagMa == True:
-                                try:
-                                    VEMax.append(float(np.nanmax(V1C[d:dtt])))
-                                except ValueError:
-                                    VEMax.append(float('nan'))
-                                try:
-                                    VEMin.append(float(np.nanmin(V1C[d:dtt])))
-                                except ValueError:
-                                    VEMin.append(float('nan'))
-                    d = dtt
+                            VEMax.append(np.nan)
+                        try:
+                            VEMin.append(float(np.nanmin(V1C[i:dtt])))
+                        except ValueError:
+                            VEMin.append(np.nan)
+
+    if escala == 2:
+        YearMonthData = np.array([str(i.year)+'/'+str(i.month) for i in DatesO])
+        YearMonth = np.array([str(date(i,j,1).year)+'/'+str(date(i,j,1).month) for i in range(int(yeari),int(yearf)+1) for j in range(1,13)])
+        VE = np.empty(YearMonth.shape)*np.nan
+        VEMax = np.empty(YearMonth.shape)*np.nan
+        VEMin = np.empty(YearMonth.shape)*np.nan
+
+        NF = np.empty(YearMonth.shape)*np.nan
+        NNF = np.empty(YearMonth.shape)*np.nan
+
+        for iYM, YM in enumerate(YearMonth):  
+            x = np.where(YearMonthData == YM)[0]
+            if len(x) != 0:
+                q = sum(~np.isnan(V1C[x]))
+                NF[iYM] = (q/len(x))
+                NNF[iYM] = (1-NF[-1])
+                if q >= round(len(x)*0.7,0):
+                    VE[iYM] = Oper[op](V1C[x])
+                    VEMax[iYM] = np.nanmax(V1C[x])
+                    VEMin[iYM] = np.nanmin(V1C[x])
 
     # -------------------------------------------
     # Se dan los resultados

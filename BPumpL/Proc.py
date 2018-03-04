@@ -627,4 +627,4 @@ class Proc(object):
         # Se grafica el ciclo diurno
         BP.Graph_CiclD(CH['Prec'],CH['T'],CH['HR'],CH['Pres'],Var,PathImg,Name=Name)
         BP.Graph_CiclA(CM['Prec'],CM['T'],CM['HR'],CM['Pres'],Var,PathImg,Name=Name)
-        return
+        return 
