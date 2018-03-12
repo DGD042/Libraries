@@ -259,6 +259,9 @@ class Scatter_Gen(object):
                 PosNo.append(xMin1)
                 MEvNo.append(self.Months[iC])
 
+        EvTot = np.array(EvYes+EvNo)
+        MEvTot = np.array(MEvYes+MEvNo)
+        PosTot = np.array(PosYes+PosNo)
         EvYes = np.array(EvYes)
         MEvYes = np.array(MEvYes)
         EvNo =  np.array(EvNo)
@@ -266,7 +269,9 @@ class Scatter_Gen(object):
         PosYes = np.array(PosYes)
         PosNo =  np.array(PosNo)
 
-        Results = {'EvYes':EvYes,'MEvYes':MEvYes,
+        Results = {'EvTot':EvTot,'MEvTot':MEvTot,
+                'PosTot':PosTot,
+                'EvYes':EvYes,'MEvYes':MEvYes,
                 'EvNo':EvNo,'MEvNo':MEvNo,
                 'PosYes':PosYes,'PosNo':PosNo}
 
@@ -445,6 +450,7 @@ class Scatter_Gen(object):
             ImgFolder='',Evmax=1,EvType='Tot',
             flags={'TC':False,'PresC':False,'HRC':False,'qC':False,'WC':False},
             flagAver=False,flagBig=False,DataV=None,DataKeyV=['DatesEvst','DatesEvend'],
+            vm = {'vmax':[None],'vmin':[0]},
             GraphInfoV={'color':['-.b','-.g'],'label':['Inicio del Evento','Fin del Evento']}):
         '''
         DESCRIPTION:
@@ -467,7 +473,7 @@ class Scatter_Gen(object):
 
         Labels = ['PresC','TC','HRC','qC','WC']
         UnitsDict = {'TC':'Temperatura [°C]','PresC':'Presión [hPa]','HRC':'Humedad Relativa [%]',
-                'qC':'Humedad Específica [kg/g]','WC':'Relación de Mezcla [kg/g]'}
+                'qC':'Humedad Específica [g/kg]','WC':'Relación de Mezcla [g/kg]'}
         ColorDict = {'TC':'r','PresC':'k','HRC':'g',
                 'qC':'g','WC':'m'}
         LabelDict = {'TC':'Temperatura','PresC':'Presión','HRC':'Humedad Relativa',
@@ -526,7 +532,7 @@ class Scatter_Gen(object):
                         'label':Label},
                     GraphInfoV={'color':['-.b','-.g'],
                         'label':['Inicio del Evento','Fin del Evento']},
-                    flagBig=flagBig,vm={'vmax':[None],'vmin':[0]},Ev=0,
+                    flagBig=flagBig,vm=vm,Ev=0,
                     flagV=False,flagAverage=True,dt=dt)
         else:
             # Se grafican los eventos
@@ -829,7 +835,7 @@ class Scatter_Gen(object):
 
         return
 
-    def GraphChanges(self,Var='Pres',EvType='Tot',Var2=None,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+    def GraphChanges(self,Var='Pres',EvType='Tot',Var2=None,flagIng=False,ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3',H=''):
         '''
         DESCRIPTION:
 
@@ -923,7 +929,7 @@ class Scatter_Gen(object):
                     xLabel=VarL1[Vi1],
                     yLabel=VarL2[Vi2],
                     Name=self.NamesArch[self.irow]+'_'+AbreL1[Vi1]+'v'+AbreL2[Vi2],
-                    PathImg=self.PathImg+ImgFolder_Scatter+Var+'/'+EvType+'/'+'Adjusted/',
+                    PathImg=self.PathImg+ImgFolder_Scatter+Var+'/'+EvType+'/'+'Adjusted/'+H+'/',
                     FlagA=True,FlagAn=False)
 
         return

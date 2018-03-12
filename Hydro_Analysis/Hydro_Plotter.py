@@ -297,7 +297,7 @@ class Hydro_Plotter:
         plt.savefig(PathImg + Var +'_NaN_Mens' + '.png',format='png',dpi=self.dpi )
         plt.close('all')
 
-    def DalyCycle(self,HH,CiDT,ErrT,VarL='',VarLL='',MaxMin=None,Name='',NameA='Figura',PathImg='',**args):
+    def DalyCycle(self,HH,CiDT,ErrT,VarL='',VarLL='',MaxMin=None,Name='',NameA='Figura',PathImg='',vlimits=None,**args):
         '''
         DESCRIPTION:
         
@@ -316,6 +316,8 @@ class Hydro_Plotter:
             :param Name:    Nombre de la Estación.
             :param NameA:   Nombre del archivo.
             :param PathImg: Ruta donde se quiere guardar el archivo.
+            :param vlimits: A list, 2 length list with the min and max y axis 
+                            limit.
             :param **args:  Argumentos adicionales para la gráfica, como color 
                             o ancho de la línea.
         _________________________________________________________________________
@@ -363,6 +365,8 @@ class Hydro_Plotter:
         plt.xlabel('Horas',fontsize=self.fontsize)  # Colocamos la etiqueta en el eje y
         ax = plt.gca()
         plt.xlim([0,23])
+        if not(vlimits is None):
+            plt.ylim([vlimits[0],vlimits[1]])
 
         # The minor ticks are included
         xTL = ax.xaxis.get_ticklocs() # List of Ticks in x

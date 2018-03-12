@@ -4329,15 +4329,18 @@ class BPumpL:
 
 
         if flagBig:
-            lensize=17
-            plt.rcParams.update({'font.size': 20,'font.family': 'sans-serif'\
+            fH=30 # Largo de la Figura
+            fV = fH*(2/3) # Ancho de la Figura
+            lensize=16
+            plt.rcParams.update({'font.size': 28,'font.family': 'sans-serif'\
                 ,'font.sans-serif': 'Arial Narrow'\
-                ,'xtick.labelsize': 20,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.labelsize': 28,'xtick.major.size': 6,'xtick.minor.size': 4\
                 ,'xtick.major.width': 1,'xtick.minor.width': 1\
-                ,'ytick.labelsize': 20,'ytick.major.size': 12,'ytick.minor.size': 4\
+                ,'ytick.labelsize': 28,'ytick.major.size': 12,'ytick.minor.size': 4\
                 ,'ytick.major.width': 1,'ytick.minor.width': 1\
                 ,'axes.linewidth':1\
                 ,'grid.alpha':0.1,'grid.linestyle':'-'})
+            offNew = 10
         else:
             lensize=15
             plt.rcParams.update({'font.size': 18,'font.family': 'sans-serif'\
@@ -4348,6 +4351,7 @@ class BPumpL:
                 ,'ytick.major.width': 1,'ytick.minor.width': 1\
                 ,'axes.linewidth':1\
                 ,'grid.alpha':0.1,'grid.linestyle':'-'})
+            offNew = 0
 
         plt.xticks(rotation=45)
         f = plt.figure(figsize=DM.cm2inch(fH,fV))
@@ -4412,7 +4416,7 @@ class BPumpL:
                             axi[ilab-1].set_ylim(ymin=vm['vmin'][ilab])
 
                     if ilab == 2:
-                        offset = 80
+                        offset = 80+offNew
                         new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
                         axi[ilab-1].axis["right"] = new_fixed_axis(loc="right",
                                                         axes=axi[ilab-1],
@@ -4420,7 +4424,7 @@ class BPumpL:
                         axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
                     elif ilab == 3:
                         # axi[ilab-1].spines['right'].set_position(('axes',-0.25))
-                        offset = -65
+                        offset = -65-offNew
                         new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
                         axi[ilab-1].axis["right"] = new_fixed_axis(loc="left",
                                                         axes=axi[ilab-1],
@@ -4444,12 +4448,15 @@ class BPumpL:
         if flagAverage:
             ax.set_xlabel('Tiempo [h]')
             ax.set_title(r"Diagrama de Compuestos en "+Name)
+            if flagBig:
+                ax.set_title(Name)
         else:
             if Date == '':
                 ax.set_title(Name)
             else:
                 ax.set_title(Name+r" Evento "+Date)
-        plt.legend(loc=4,framealpha=0.6,fontsize=lensize)
+        if not(flagBig):
+            plt.legend(loc=4,framealpha=0.6,fontsize=lensize)
         # plt.grid()
         if flagAverage:
             # Se crea la carpeta para guardar la imágen

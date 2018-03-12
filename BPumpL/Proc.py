@@ -344,6 +344,7 @@ class Proc(object):
                     self.f[Var2[v]] = anet.AnomGen(self.f[Var2[v]],h12)
                     # Se promedia cada 24 horas
                     self.f[Var2[v]] = anet.AnomGen(self.f[Var2[v]],h24)
+        print(Var2[v])
         return
 
     def EventSeparation(self,Ci=60,Cf=60,m=0.2,M=100,mP=-1,MP=-0.5,mT=0.5,MT=1):
