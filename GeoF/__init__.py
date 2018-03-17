@@ -6,17 +6,20 @@
 #______________________________________________________________________________
 #______________________________________________________________________________
 
-try:
-    from GeoTIFF import *
-    from NetCDF import *
-    from Maps import *
-    from Interpolations import *
-    from GeoF import *
-except ImportError:
-    from GeoF import GeoTIFF
-    from GeoF import GeoF
-    from GeoF import Interpolations
-    from GeoF import Maps
-    from GeoF import GeoTimeSeries
+__all__=['GeoTIFF','Interpolations','Maps','NetCDF']
+
+# try:
+#     from GeoTIFF import *
+#     from NetCDF import *
+#     from Maps import *
+#     from Interpolations import *
+#     from GeoF import *
+#     from GeoF.TimeSeries import *
+# except ImportError:
+#     from GeoF.GeoTIFF import GeoTIFF
+#     from GeoF import GeoF
+#     from GeoF.Interpolations import Interpolations
+#     from GeoF.Maps import Maps
+#     from GeoF import GeoTimeSeries
 
 

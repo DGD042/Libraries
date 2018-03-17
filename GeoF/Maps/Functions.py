@@ -46,7 +46,7 @@ from EMSD.Functions import Gen_Functions as GFun
 # ------------------------
 
 
-def MapsShape_Raster(Raster,Shape=None,Var='Data',Name='Results',PathImg='',*args)
+def MapsShape_Raster(Raster,Shape=None,Var='Data',Name='Results',PathImg='',*args):
     '''
     DESCRIPTION:
 
