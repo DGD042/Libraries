@@ -47,18 +47,19 @@ import warnings
 # Importing Modules
 from Utilities import Utilities as utl
 from Utilities import Data_Man as DM
-from Utilities import DatesUtil as DUtil; DUtil=DUtil()
 
 try:
     from Hydro_Analysis.Hydro_Plotter import Hydro_Plotter as HyPl; HyPl=HyPl()
     from Hydro_Analysis.Gen_Functions.Functions import *
     from Hydro_Analysis.Meteo import Cycles as MCy
     from Hydro_Analysis.Climate import Cycles as CCy
+    from Hydro_Analysis.Dates.DatesC import DatesC
 except ImportError:
     from Hydro_Plotter import Hydro_Plotter as HyPl; HyPl=HyPl()
     from Gen_Functions.Functions import *
     from Meteo import Cycles as MCy
     from Climate import Cycles as CCy
+    from Dates.DatesC import DatesC
 
 class Hydro_Analysis(object):
     '''
@@ -97,23 +98,17 @@ class Hydro_Analysis(object):
         # Parameters
         self.operations = DM.operations
         if not(DateH is None):
-            if isinstance(DateH[0],str):
-                self.DateH = DUtil.Dates_str2datetime(DateH)
-            elif isinstance(DateH[0],datetime):
-                self.DateH = DateH
+            DatesH = DatesC(DateH)
+            if isinstance(DateH[0],str) or isinstance(DateH[0],datetime):
+                self.DateH = DatesH.datetime
             else:
                 self.DateH = None
         else:
             self.DateH = None
         if not(DateM is None):
-            if isinstance(DateM[0],str):
-                if len(DateM[0]) <= 7:
-                    DateM2 = [i+'/01' for i in DateM]
-                else:
-                    DateM2 = DateM
-                self.DateM = DUtil.Dates_str2datetime(DateM2)
-            elif isinstance(DateM[0],datetime):
-                self.DateM = DateM
+            DatesM = DatesC(DateM)
+            if isinstance(DateM[0],str) or isinstance(DateM[0],datetime):
+                self.DateM = DatesM.datetime
             else:
                 self.DateM = None
         else:

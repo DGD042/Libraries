@@ -34,6 +34,7 @@ try:
     from Hydro_Analysis.Meteo import *
     from Hydro_Analysis.Climate import *
     from Hydro_Analysis.Models import *
+    from Hydro_Analysis.Dates import *
 except ImportError:
     from Hydro_Analysis import Hydro_Analysis 
     from Hydro_Plotter import Hydro_Plotter
@@ -41,4 +42,5 @@ except ImportError:
     from Meteo import *
     from Climate import *
     from Models import *
+    from Dates import *
 

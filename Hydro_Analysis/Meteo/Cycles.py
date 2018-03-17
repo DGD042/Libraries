@@ -36,7 +36,7 @@ import warnings
 # ------------------
 # Importing Modules
 from Utilities import Utilities as utl
-from Utilities import DatesUtil as DUtil; DUtil=DUtil()
+from Hydro_Analysis.Dates import DatesFunctions as DUtil 
 from Hydro_Analysis.Gen_Functions.Functions import *
 
 
@@ -124,11 +124,20 @@ def CiclD(Var,Years=None,Dates=None,DTH=24,flagZeros=False):
         MonthsMM[i], MonthsMD[i], MonthsME[i] =  MeanError(MonthsM[i],axis=0)
         MaxV.append(np.nanmax(MonthsMM[i])+np.nanmax(MonthsME[i]*1.2))
         MinV.append(np.nanmin(MonthsMM[i])-np.abs(np.nanmin(MonthsME[i]*1.2)))
+
+    Trimes = {1:[12,1,2],
+            2: [3,4,5],
+            3:[6,7,8],
+            4:[9,10,11]}
+    for i in range(1,5):
+        TriM[i] = np.reshape(np.copy(Var)[(Months == Trimes[i][0])|(Months == Trimes[i][1])|(Months == Trimes[i][2])],(-1,DTH))
+        TriMM[i], TriMD[i], TriME[i] =  MeanError(TriM[i],axis=0)
     
     # Reshaped variable
     VarM = np.reshape(np.copy(Var),(-1,DTH))
     CiDT, DesT, ErrT =  MeanError(VarM,axis=0)
-    Results = {'MonthsM':MonthsM,'MonthsMM':MonthsMM,'MonthsME':MonthsME,'CiDT':CiDT,'ErrT':ErrT}
+    Results = {'MonthsM':MonthsM,'MonthsMM':MonthsMM,'MonthsME':MonthsME,
+            'CiDT':CiDT,'ErrT':ErrT,'TriM':TriM,'TriMM':TriMM,'TriMD':TriMD,'TriME':TriME}
 
     return Results
 
