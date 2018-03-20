@@ -90,4 +90,23 @@ def PrecPor(VM):
             VP[i,j] = VM[i,j]/VS
     return VP
 
+def FreqPrec(Prec):
+    '''
+    DESCRIPTION:
+        
+        Function that calculates the frequency of precipitation from
+        a series of intensities or a series of total prec.
+    _____________________________________________________________________
+    INPUT:
+        :param Prec: A ndarray, Array with values.
+    _____________________________________________________________________
+    OUTPUT:
+        :retun R: A dict, Dictionary with the following keys:
+                  argsorted values:   'argsort'
+                  Percentiles values: 'percentiles'
+                  prec sorted values: 'precsort'
+    '''
+    x = np.argsort(Prec)
+    xx = np.arange(1,Prec.shape[0]+1)/Prec.shape[0]*100
+    return {'argsort':x,'percentiles':xx,'precsort':Prec[x]}
 

@@ -162,6 +162,88 @@ class Hydro_Plotter:
         plt.savefig(PathImg + Var + '.png',format='png',dpi=self.dpi)
         plt.close('all')
 
+    def FreqPrec(self,Percen,Value,PerVer=None,Var_LUn='',Var='',flagT=True,v='',PathImg='',**args):
+        '''
+        DESCRIPTION:
+        
+            Function to plot the Precipitation Frequency. 
+
+        _________________________________________________________________________
+
+        INPUT:
+            :param Percen: A ndarray, Percentiles.
+            :param Value: A ndarray, vector of sorted values.
+            :param PerVer: A list, Vertical Percentiles.
+            :param Var_LUn: Label de la variable con unidades, por ejemplo 
+                            Precipitación (mm).
+            :param Var: Nombre de la imagen.
+            :param flagT: Flag para saber si se incluye el título.
+            :param v: Titulo de la Figura.
+            :param PathImg: Ruta donde se quiere guardar el archivo.
+            :param **args: Argumentos adicionales para la gráfica, como 
+                   color o ancho de la línea.
+        _________________________________________________________________________
+        
+        OUTPUT:
+            Esta función arroja una gráfica y la guarda en la ruta desada.
+        '''
+        # Tamaño de la Figura
+        fH = self.fH # Largo de la Figura
+        fV = self.fV # Ancho de la Figura
+        # Se crea la carpeta para guardar la imágen
+        utl.CrFolder(PathImg)
+
+        # Se genera la gráfica
+        F = plt.figure(figsize=DM.cm2inch(fH,fV))
+        # Parámetros de la Figura
+        plt.rcParams.update({'font.size': self.fontsize,'font.family': 'sans-serif'\
+            ,'font.sans-serif': self.font\
+            ,'xtick.labelsize': self.fontsize,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.major.width': 1,'xtick.minor.width': 1\
+            ,'ytick.labelsize': self.fontsize+1,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.major.width': 1,'ytick.minor.width': 1\
+            ,'axes.linewidth':1\
+            ,'grid.alpha':0.1,'grid.linestyle':'-'})
+        plt.rcParams['agg.path.chunksize'] = 20000
+        plt.tick_params(axis='x',which='both',bottom='on',top='off',\
+            labelbottom='on',direction='out')
+        plt.tick_params(axis='y',which='both',left='on',right='off',\
+            labelleft='on')
+        plt.tick_params(axis='y',which='major',direction='inout') 
+        plt.grid()
+        # Se realiza la figura 
+        plt.plot(Percen,Value,**args)
+        if not(PerVer is None):
+            axes = plt.gca()
+            yTL = axes.yaxis.get_ticklocs() # List of Ticks in x
+            Lines = ['--','-.',':']
+            for iV,V in enumerate(PerVer):
+                plt.plot([V,V],[yTL[0],yTL[-1]],Lines[iV],color='r',label=str(V))
+            plt.legend(loc=0)
+        # Se arreglan los ejes
+        axes = plt.gca()
+        # plt.xlim([-1,101]) # Incluyen todas las fechas
+        # Se incluyen los valores de los minor ticks
+        yTL = axes.yaxis.get_ticklocs() # List of Ticks in y
+        MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+        minorLocatory = MultipleLocator(MyL)
+        plt.gca().yaxis.set_minor_locator(minorLocatory)
+        xTL = axes.xaxis.get_ticklocs() # List of Ticks in x
+        MxL = (xTL[1]-xTL[0])/5 # Minor tick value
+        minorLocatorx = MultipleLocator(MxL)
+        plt.gca().xaxis.set_minor_locator(minorLocatorx)
+        # Se cambia el label de los ejes
+        xTL = axes.xaxis.get_ticklocs() # List of position in x
+        # Labels
+        if flagT:
+            plt.title(v,fontsize=self.fontsize)
+        plt.ylabel(Var_LUn,fontsize=self.fontsize+1)
+        # Se arregla el espaciado de la figura
+        plt.tight_layout()
+        # Se guarda la figura
+        plt.savefig(PathImg + Var + '.png',format='png',dpi=self.dpi)
+        plt.close('all')
+
     def NaNMGr(self,Date,NNF,NF,Var='',flagT=True,Var_L='',Names='',PathImg=''):
         '''
             DESCRIPTION:
