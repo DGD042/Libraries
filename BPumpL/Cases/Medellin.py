@@ -71,7 +71,7 @@ class Medellin(object):
         :param endingmat: A str, string denoting the end of the .mat
                           file.
     '''
-    def __init__(self,DateI,DateE,endingmat=''):
+    def __init__(self,DateI,DateE,endingmat='',Var=''):
         '''
         '''
         # ----------------
@@ -95,7 +95,8 @@ class Medellin(object):
             self.DatesSt.append(self.DatesSt[-1]+timedelta(0,60))
         self.DatesSt = np.array(self.DatesSt)
         DatesStr = DUtil.Dates_datetime2str([DateI],Date_Format='%Y%m')[0]
-        self.PathImg = 'Tesis_MscR/02_Docs/01_Tesis_Doc/Kap5/Img/Cases/'+DatesStr+'/'
+        self.PathImg = 'Tesis_MscR/02_Docs/01_Tesis_Doc/Kap5/Img/Cases_'+Var+'/'+DatesStr+'/'
+        self.VarA = Var
         # ----------------
         # Load Information
         # ----------------
@@ -383,8 +384,40 @@ class Medellin(object):
         GraphL = 0.19
         GraphH = 0.17
         Rows = [0.80,0.56,0.31,0.06]
-        Col = [0.04,0.38,0.72]
+        Col = [0.09,0.45,0.72]
         Sec = []
+
+
+        if self.VarA == 'W':
+            Dataclips = {'DataKey':['Prec','Pres_F','T_F','W_F'],
+                    'ylabel':['Precipitación [mm]','Presión [hPa]','Temperatura [°C]','Relación de Mezcla [g/kg]'],
+                    'color':['b','k','r','m'],'label':['Precipitación','Presión','Temperatura','Relación de Mezcla'],
+                    'vmax':[self.vmax['Prec'],self.vmax['Pres_F'],self.vmax['T_F'],self.vmax['W_F']],
+                    'vmin':[self.vmin['Prec'],self.vmin['Pres_F'],self.vmin['T_F'],self.vmin['W_F']],
+                    } 
+        elif self.VarA == 'q':
+            Dataclips = {'DataKey':['Prec','Pres_F','T_F','q_F'],
+                    'ylabel':['Precipitación [mm]','Presión [hPa]','Temperatura [°C]','Humedad Específico [g/kg]'],
+                    'color':['b','k','r','g'],'label':['Precipitación','Presión','Temperatura','Humedad Específica'],
+                    'vmax':[self.vmax['Prec'],self.vmax['Pres_F'],self.vmax['T_F'],self.vmax['q_F']],
+                    'vmin':[self.vmin['Prec'],self.vmin['Pres_F'],self.vmin['T_F'],self.vmin['q_F']],
+                    } 
+        elif self.VarA == 'HR':
+            Dataclips = {'DataKey':['Prec','Pres_F','T_F','HR_F'],
+                    'ylabel':['Precipitación [mm]','Presión [hPa]','Temperatura [°C]','Humedad Relativa[%]'],
+                    'color':['b','k','r','g'],'label':['Precipitación','Presión','Temperatura','Humedad Relativa'],
+                    'vmax':[self.vmax['Prec'],self.vmax['Pres_F'],self.vmax['T_F'],self.vmax['HR_F']],
+                    'vmin':[self.vmin['Prec'],self.vmin['Pres_F'],self.vmin['T_F'],self.vmin['HR_F']],
+                    } 
+        elif self.VarA == '':
+            Dataclips = {'DataKey':['Prec','Pres_F','T_F'],
+                    'ylabel':['Precipitación [mm]','Presión [hPa]','Temperatura [°C]'],
+                    'color':['b','k','r'],'label':['Precipitación','Presión','Temperatura'],
+                    'vmax':[self.vmax['Prec'],self.vmax['Pres_F'],self.vmax['T_F']],
+                    'vmin':[self.vmin['Prec'],self.vmin['Pres_F'],self.vmin['T_F']],
+
+                    } 
+
         for C in Col:
             for R in Rows:
                 Sec.append([C,R])
@@ -402,14 +435,14 @@ class Medellin(object):
             DataV = {'Tiempo':[DateTP]}
             DataKeyV = ['Tiempo']
             self.EventsSeriesGen(ax,self.DataSt[ID]['FechaCP'],self.DataSt[ID],
-                    DataV,DataKeyV,DataKey=['Prec','Pres_F','T_F'],
+                    DataV,DataKeyV,DataKey=Dataclips['DataKey'],
                 PathImg='',Name=self.St_Info[ID][Var],NameArch='',
-                GraphInfo={'ylabel':['Precipitación [mm]','Presión [hPa]','Temperatura [°C]'],
-                    'color':['b','k','r'],'label':['Precipitación','Presión','Temperatura']},
+                GraphInfo={'ylabel':Dataclips['ylabel'],
+                    'color':Dataclips['color'],'label':Dataclips['label']},
                 GraphInfoV={'color':['-.r'],'label':['Inicio del Evento']},
                 flagBig=True,
-                vm={'vmax':[self.vmax['Prec'],self.vmax['Pres_F'],self.vmax['T_F']],
-                    'vmin':[self.vmin['Prec'],self.vmin['Pres_F'],self.vmin['T_F']]},Ev=0,flagV=True,
+                vm={'vmax':Dataclips['vmax'],
+                    'vmin':Dataclips['vmin']},Ev=0,flagV=True,
                 flagAverage=False,dt=1,Date='',flagEvent=False)
             xx += 1
 
@@ -608,7 +641,7 @@ class Medellin(object):
                         axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
                     elif ilab == 3:
                         # axi[ilab-1].spines['right'].set_position(('axes',-0.25))
-                        offset = -65
+                        offset = -60
                         new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
                         axi[ilab-1].axis["right"] = new_fixed_axis(loc="left",
                                                         axes=axi[ilab-1],
