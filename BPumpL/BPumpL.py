@@ -3820,13 +3820,13 @@ class BPumpL:
         # --------------------------------------
         # Se verifican datos faltantes
         # --------------------------------------
-        for iC in range(len(VC)):
+        if len(VC.shape) == 1:
             if isinstance(MP,list) or isinstance(MP,np.ndarray):
                 M = MP[iC]
             else:
                 M = MP
-            qNaN = sum(~np.isnan(VC[iC][M-2*(60/dt):M+2*(60/dt)]))
-            qT = len(VC[iC][M-2*(60/dt):M+2*(60/dt)])
+            qNaN = sum(~np.isnan(VC[M-2*(60/dt):M+2*(60/dt)]))
+            qT = len(VC[M-2*(60/dt):M+2*(60/dt)])
 
             if qNaN < qT*0.60:
                 for Lab in ResVar:
@@ -3834,6 +3834,21 @@ class BPumpL:
             else:
                 for Lab in ResVar:
                     Results[Lab].append(-9999.0)
+        else:
+            for iC in range(len(VC)):
+                if isinstance(MP,list) or isinstance(MP,np.ndarray):
+                    M = MP[iC]
+                else:
+                    M = MP
+                qNaN = sum(~np.isnan(VC[iC][M-2*(60/dt):M+2*(60/dt)]))
+                qT = len(VC[iC][M-2*(60/dt):M+2*(60/dt)])
+
+                if qNaN < qT*0.60:
+                    for Lab in ResVar:
+                        Results[Lab].append(np.nan)
+                else:
+                    for Lab in ResVar:
+                        Results[Lab].append(-9999.0)
 
         for Lab in ResVar:
             Results[Lab] = np.array(Results[Lab]).astype(float)
@@ -3844,9 +3859,13 @@ class BPumpL:
         # --------------------------------------
         # Valores mínimos o máximos
         # --------------------------------------
+        if len(VC.shape) == 1:
+            VVC = 1
+        else:
+            VVC = len(VC)
         if MaxMin.lower() == 'min':
             # Ciclo para los datos
-            for iC in range(len(VC)):
+            for iC in range(VVC):
                 if isinstance(MP,list) or isinstance(MP,np.ndarray):
                     M = MP[iC]
                 else:
@@ -3867,12 +3886,20 @@ class BPumpL:
                     # ---------------
                     # Se encuentra el primer máximo
                     for P in range(M,int(M-2*(60/dt))-1,-1):
-                        if VC[iC][P-1] < VC[iC][P] and VC[iC][P] >= -0.1:
-                            MaxVarB = VC[iC][P]
-                            if P < 0:
+                        if VVC == 1:
+                            if VC[P-1] < VC[P] and VC[P] >= -0.1:
+                                MaxVarB = VC[P]
+                                if P < 0:
+                                    break
+                                PosB = np.where(VC[:M] == MaxVarB)[0][-1]
                                 break
-                            PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
-                            break
+                        else:
+                            if VC[iC][P-1] < VC[iC][P] and VC[iC][P] >= -0.1:
+                                MaxVarB = VC[iC][P]
+                                if P < 0:
+                                    break
+                                PosB = np.where(VC[iC][:M] == MaxVarB)[0][-1]
+                                break
 
                     # Se guarda la posición
                     try:
@@ -3888,7 +3915,10 @@ class BPumpL:
                         Results['DurVA'][iC] = np.nan
                         continue
                     # Se obtiene el cambio de la variable
-                    Results['VChangeB'][iC] = MaxVarB-VC[iC][M]
+                    if VVC == 1:
+                        Results['VChangeB'][iC] = MaxVarB-VC[M]
+                    else:
+                        Results['VChangeB'][iC] = MaxVarB-VC[iC][M]
                     # Se obtiene la duración en horas
                     Results['DurVB'][iC] = (M-PosB)*dt/60
                     # Se obtiene la tasa de cambio
@@ -3908,16 +3938,27 @@ class BPumpL:
                     # ----
                     # Se encuentra el valor máximo después
                     # Se utiliza como referencia 2 horas antes 
-                    MaxVarA = np.nanmax(VC[iC][M:M+2*(60/dt)])
-                    PosA = np.where(VC[iC][M:] == MaxVarA)[0][0]
-                    if MaxVarA < -0.2:
-                        MaxVarA = np.nanmax(VC[iC][M:M+3*(60/dt)])
+
+                    if VVC == 1:
+                        MaxVarA = np.nanmax(VC[M:M+2*(60/dt)])
+                        PosA = np.where(VC[M:] == MaxVarA)[0][0]
+                        if MaxVarA < -0.2:
+                            MaxVarA = np.nanmax(VC[M:M+3*(60/dt)])
+                            PosA = np.where(VC[M:] == MaxVarA)[0][0]
+                    else:
+                        MaxVarA = np.nanmax(VC[iC][M:M+2*(60/dt)])
                         PosA = np.where(VC[iC][M:] == MaxVarA)[0][0]
+                        if MaxVarA < -0.2:
+                            MaxVarA = np.nanmax(VC[iC][M:M+3*(60/dt)])
+                            PosA = np.where(VC[iC][M:] == MaxVarA)[0][0]
 
                     # Se guarda la posición
                     Results['PosA'][iC] = PosA+M
                     # Se obtiene el cambio de la variable
-                    Results['VChangeA'][iC] = MaxVarA-VC[iC][M]
+                    if VVC == 1:
+                        Results['VChangeA'][iC] = MaxVarA-VC[M]
+                    else:
+                        Results['VChangeA'][iC] = MaxVarA-VC[iC][M]
                     # Se obtiene la duración en horas
                     Results['DurVA'][iC] = (PosA)*dt/60
                     # Se obtiene la tasa de cambio
@@ -3934,7 +3975,7 @@ class BPumpL:
                         Results['DurVA'][iC] = np.nan
         elif MaxMin.lower() == 'max':
             # Ciclo para los datos
-            for iC in range(len(VC)):
+            for iC in range(VVC):
                 if isinstance(MP,list) or isinstance(MP,np.ndarray):
                     M = MP[iC]
                 else:
@@ -3955,12 +3996,20 @@ class BPumpL:
                     # ---------------
                     # Se encuentra el primer mínimo
                     for P in range(M-1,int(M-2*(60/dt))-1,-1):
-                        if VC[iC][P-1] > VC[iC][P] and VC[iC][P] <= 0.2:
-                            MinVarB = VC[iC][P]
-                            if P < 0:
+                        if VVC == 1:
+                            if VC[P-1] > VC[P] and VC[P] <= 0.2:
+                                MinVarB = VC[P]
+                                if P < 0:
+                                    break
+                                PosB = np.where(VC[:M] == MinVarB)[0][-1]
                                 break
-                            PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
-                            break
+                        else:
+                            if VC[iC][P-1] > VC[iC][P] and VC[iC][P] <= 0.2:
+                                MinVarB = VC[iC][P]
+                                if P < 0:
+                                    break
+                                PosB = np.where(VC[iC][:M] == MinVarB)[0][-1]
+                                break
 
                     # Se guarda la posición
                     try:
@@ -3979,7 +4028,10 @@ class BPumpL:
                     # Se guarda la posición
                     Results['PosB'][iC] = PosB
                     # Se obtiene el cambio de la variable
-                    Results['VChangeB'][iC] = VC[iC][M]-MinVarB
+                    if VVC == 1:
+                        Results['VChangeB'][iC] = VC[M]-MinVarB
+                    else:
+                        Results['VChangeB'][iC] = VC[iC][M]-MinVarB
                     # Se obtiene la duración en horas
                     Results['DurVB'][iC] = (M-PosB)*dt/60
                     # Se obtiene la tasa de cambio
@@ -3998,16 +4050,26 @@ class BPumpL:
                     # ----
                     # Se encuentra el valor mínimo después
                     # Se utiliza como referencia 2 horas antes 
-                    MinVarA = np.nanmin(VC[iC][M:M+2*(60/dt)])
-                    PosA = np.where(VC[iC][M:] == MinVarA)[0][0]
-                    if MinVarA < -0.2:
-                        MinVarA = np.nanmin(VC[iC][M:M+3*(60/dt)])
+                    if VVC == 1:
+                        MinVarA = np.nanmin(VC[M:M+2*(60/dt)])
+                        PosA = np.where(VC[M:] == MinVarA)[0][0]
+                        if MinVarA < -0.2:
+                            MinVarA = np.nanmin(VC[M:M+3*(60/dt)])
+                            PosA = np.where(VC[M:] == MinVarA)[0][0]
+                    else:
+                        MinVarA = np.nanmin(VC[iC][M:M+2*(60/dt)])
                         PosA = np.where(VC[iC][M:] == MinVarA)[0][0]
+                        if MinVarA < -0.2:
+                            MinVarA = np.nanmin(VC[iC][M:M+3*(60/dt)])
+                            PosA = np.where(VC[iC][M:] == MinVarA)[0][0]
 
                     # Se guarda la posición
                     Results['PosA'][iC] = PosA+M
                     # Se obtiene el cambio de la variable
-                    Results['VChangeA'][iC] = VC[iC][M]-MinVarA
+                    if VVC == 1:
+                        Results['VChangeA'][iC] = VC[M]-MinVarA
+                    else:
+                        Results['VChangeA'][iC] = VC[iC][M]-MinVarA
                     # Se obtiene la duración en horas
                     Results['DurVA'][iC] = (PosA)*dt/60
                     # Se obtiene la tasa de cambio
@@ -4391,7 +4453,7 @@ class BPumpL:
         # Se grafican las líneas verticales
         if flagV:
             for ilab,lab in enumerate(DataKeyV):
-                ax.plot([DataV[lab][Ev],DataV[lab][Ev]],[yTL[0],yTL[-1]],
+                ax.plot([DataV[lab],DataV[lab]],[yTL[0],yTL[-1]],
                         GraphInfoV['color'][ilab],label=GraphInfoV['label'][ilab])
 
         # Se organizan los ejes 

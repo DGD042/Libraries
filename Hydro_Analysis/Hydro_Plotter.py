@@ -162,7 +162,7 @@ class Hydro_Plotter:
         plt.savefig(PathImg + Var + '.png',format='png',dpi=self.dpi)
         plt.close('all')
 
-    def FreqPrec(self,Percen,Value,PerVer=None,Var_LUn='',Var='',flagT=True,v='',PathImg='',**args):
+    def FreqPrec(self,Percen,Value,PerVer=None,limits=None,Var_LUn='',Var='',flagT=True,v='',PathImg='',**args):
         '''
         DESCRIPTION:
         
@@ -213,6 +213,8 @@ class Hydro_Plotter:
         plt.grid()
         # Se realiza la figura 
         plt.plot(Percen,Value,**args)
+        if not(limits is None):
+            plt.ylim([limits[0],limits[1]])
         if not(PerVer is None):
             axes = plt.gca()
             yTL = axes.yaxis.get_ticklocs() # List of Ticks in x
@@ -2066,7 +2068,7 @@ class Hydro_Plotter:
         plt.tick_params(axis='y',which='major',direction='out') 
         # Se realiza la figura 
         # p1 = plt.bar(DBin[:-1],DH,color='dodgerblue',width=widthD,edgecolor='k')
-        p1 = plt.bar(centerD,DH,color='dodgerblue',width=widthD,edgecolor='k')
+        p1 = plt.bar(centerD,DH,color='dodgerblue',width=widthD,edgecolor=['k']*len(centerD))
         # Se cambia el valor de los ejes.
         plt.xticks(centerD) # Se cambia el valor de los ejes
         ax = plt.gca()
