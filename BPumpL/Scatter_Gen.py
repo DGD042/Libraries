@@ -241,7 +241,8 @@ class Scatter_Gen(object):
             xEv = np.where(DatesEvP[iC] == self.PrecCount['DatesEvst'][iC])[0][0]
             Bef = xEv-int(60/dt*TBef)
             Aft = xEv+int(60/dt*(TAft/60)) 
-            if Bef <= 10:
+            q = sum(~np.isnan(self.f[Var][iC][Bef:Aft]))
+            if Bef <= 10 or q <= 0.7*len(self.f[Var][iC][Bef:Aft]):
                 EvNo.append(iC)
                 MEvNo.append(self.Months[iC])
                 PosNo.append(np.nan)
@@ -500,11 +501,15 @@ class Scatter_Gen(object):
             if EvType == 'Tot':
                 EvTot = self.f
             elif EvType == 'Yes':
-                for iLab,Lab in enumerate(Labels+['PrecC']):
+                for iLab,Lab in enumerate(Labels+['PrecC','FechaEv','FechaEvP']):
                     EvTot[Lab] = self.f[Lab][R['EvYes']]
             elif EvType == 'No':
-                for iLab,Lab in enumerate(Labels+['PrecC']):
+                for iLab,Lab in enumerate(Labels+['PrecC','FechaEv','FechaEvP']):
                     EvTot[Lab] = self.f[Lab][R['EvNo']]
+        elif isinstance(R,np.ndarray):
+            EvTot = dict()
+            for iLab,Lab in enumerate(Labels+['PrecC','FechaEv','FechaEvP']):
+                EvTot[Lab] = self.f[Lab][R]
         else:
             EvTot = dict()
             if EvType == 'Tot':
@@ -524,7 +529,7 @@ class Scatter_Gen(object):
             for iLab,Lab in enumerate(Labels):
                 if flags[Lab]:
                     Data[Lab] = np.nanmean(EvTot[Lab],axis=0)
-            BP.EventsSeriesGen(self.f['FechaEv'][0],Data,self.PrecCount,
+            BP.EventsSeriesGen(EvTot['FechaEv'][0],Data,self.PrecCount,
                     DataKeyV=DataKeyV,DataKey=DataKeys,
                     PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
                     Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
@@ -539,17 +544,20 @@ class Scatter_Gen(object):
             for iEv in range(len(EvTot['PrecC'])):
                 if iEv <= Evmax:
                     Data = dict()
+                    DataVer = dict()
                     Data['PrecC'] = EvTot['PrecC'][iEv]
                     for iLab,Lab in enumerate(Labels):
                         if flags[Lab]:
                             Data[Lab] = EvTot[Lab][iEv]
-                    BP.EventsSeriesGen(self.f['FechaEv'][iEv],Data,DataV,
+                    for iLab,Lab in enumerate(DataKeyV):
+                        DataVer[Lab] = DataV[Lab][iEv]
+                    BP.EventsSeriesGen(EvTot['FechaEv'][iEv],Data,DataVer,
                             DataKeyV=DataKeyV,DataKey=DataKeys,
                             PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
                             Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
                             GraphInfo={'ylabel':Units,'color':Color,
                                 'label':Label},
-                            GraphInfoV=GraphInfoV,
+                            GraphInfoV=GraphInfoV,flagV=False,
                             flagBig=flagBig,vm={'vmax':[None],'vmin':[0]},Ev=iEv,
                             Date=DUtil.Dates_datetime2str([self.PrecCount['DatesEvst'][iEv]])[0])
 
@@ -881,7 +889,12 @@ class Scatter_Gen(object):
                 'Temp' : {'VRateB': 'Tasa de Cambio de Temperatura Antes [°C/h]',
                 'VRateA':'Tasa de Cambio de Temperatura Durante [°C/h]',
                 'VChangeB':'Cambio de Temperatura Antes [°C]',
-                'VChangeA':'Cambio de Temperatura Durante [°C]'}}
+                'VChangeA':'Cambio de Temperatura Durante [°C]'},
+                'HR' : {'VRateB': 'Tasa de Cambio de Hum. Rel. Antes [°C/h]',
+                'VRateA':'Tasa de Cambio de Hum. Rel. Durante [°C/h]',
+                'VChangeB':'Cambio de Hum. Rel. Antes [°C]',
+                'VChangeA':'Cambio de Hum. Rel. Durante [°C]'},
+                }
 
         Abre = {'DurPrec': 'DP',
                 'IntPrec': 'IP',
@@ -893,10 +906,15 @@ class Scatter_Gen(object):
                     'VRateA':'RPA',
                     'VChangeB':'CPB',
                     'VChangeA':'CPA'},
-                   'Temp' : {'VRateB':'TPB',
+                   'Temp' : {'VRateB':'TTB',
                     'VRateA':'RTA',
                     'VChangeB':'CTB',
-                    'VChangeA':'CTA'}}
+                    'VChangeA':'CTA'},
+                   'HR' : {'VRateB':'PHRB',
+                    'VRateA':'RHRA',
+                    'VChangeB':'CHRB',
+                    'VChangeA':'CHRA'},
+                   }
         VPrec = ['DurPrec','IntPrec','MaxPrec','TotalPrec',
                 'IntPrecMax','Pindex','TasaPrec']
         VCC = ['VRateB','VRateA','VChangeB','VChangeA']
@@ -1282,7 +1300,7 @@ class Scatter_Gen(object):
                     PathImg=self.PathImg+ImgFolder_Scatter+'Histograms/',
                     M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst)
             
-    def HistGraphSel(self,Var1,EndImg='T',EndFold='',ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
+    def HistGraphSel(self,Var1,Var='Pres',Name=None,EndImg='T',EndFold='',ImgFolder_Scatter='/Manizales/Scatter/',Specific_Folder='Events_3'):
         '''
         DESCRIPTION:
 
@@ -1306,6 +1324,23 @@ class Scatter_Gen(object):
         # Se incluyen los valores de la clase
         dt = int(self.dtm)
 
+        if Name is None:
+            Name = self.NamesArch[self.irow]
+
+        if Var == 'Pres':
+            Var2 = 'Presión'
+            Uni = 'hPa'
+            Ind = 'P'
+        elif Var == 'T' or Var == 'Temp':
+            Var2 = 'Temperatura'
+            Uni = '°C'
+            Ind = 'T'
+        elif Var == 'HR':
+            Var2 = 'Hum. Rel.'
+            Uni = '%'
+            Ind = 'HR'
+
+
         # Datos para los gráficos
         Variables = {'DurPrec': 'Duración del Evento [h]',
                 'IntPrec': 'Intensidad del Evento [mm/h]',
@@ -1314,24 +1349,11 @@ class Scatter_Gen(object):
                 'IntPrecMax': 'Intensidad Máxima del Evento [mm/h]',
                 'Pindex': 'Relación de Intensidades',
                 'TasaPrec': 'Tasa de Cambio de Precipitación [mm/h]',
-                'VRateB': 'Tasa de Cambio de Presión Antes [hPa/h]',
-                'VRateA':'Tasa de Cambio de Presión Durante [hPa/h]',
-                'VChangeB':'Cambio de Presión Antes [hPa]',
-                'VChangeA':'Cambio de Presión Durante [hPa]',
+                'VRateB': 'Tasa de Cambio de {} Antes [{}/h]'.format(Var2,Uni),
+                'VRateA':'Tasa de Cambio de {} Durante [{}/h]'.format(Var2,Uni),
+                'VChangeB':'Cambio de {} Antes [{}]'.format(Var2,Uni),
+                'VChangeA':'Cambio de {} Durante [{}]'.format(Var2,Uni),
                 'Hour': 'Hora del Evento [LT]'}
-
-        Variables = {'DurPrec': 'Duración del Evento',
-                'IntPrec': 'Intensidad del Evento',
-                'MaxPrec': 'Máximo de Precipitación',
-                'TotalPrec': 'Total de Precipitación',
-                'IntPrecMax': 'Intensidad Máxima del Evento',
-                'Pindex': 'Relación de Intensidades',
-                'TasaPrec': 'Tasa de Cambio de Precipitación',
-                'VRateB': 'Tasa de Cambio de Presión Antes',
-                'VRateA':'Tasa de Cambio de Presión Durante',
-                'VChangeB':'Cambio de Presión Antes',
-                'VChangeA':'Cambio de Presión Durante',
-                'Hour': 'Hora del Evento'}
 
         Abre = {'DurPrec': 'DP',
                 'IntPrec': 'IP',
@@ -1339,11 +1361,11 @@ class Scatter_Gen(object):
                 'TotalPrec': 'TP',
                 'IntPrecMax':'IPM',
                 'Pindex':'Pi',
-                'TasaPrec':'RPr',
-                'VRateB': 'RPB',
-                'VRateA':'RPA',
-                'VChangeB':'CPB',
-                'VChangeA':'CPA',
+                'TasaPrec':'R{}r'.format(Ind),
+                'VRateB': 'R{}B'.format(Ind),
+                'VRateA':'R{}A'.format(Ind),
+                'VChangeB':'C{}B'.format(Ind),
+                'VChangeA':'C{}A'.format(Ind),
                 'Hour': 'HEv'}
 
         V1 = ['Hour','DurPrec','IntPrec','MaxPrec','TotalPrec','IntPrecMax','Pindex',
@@ -1352,7 +1374,7 @@ class Scatter_Gen(object):
 
         Bins2d=12
         for iV1,Vi1 in enumerate(V1):
-            if iV1 !=0:
+            if Vi1 == 'Hour':
                 continue
             if Vi1 == 'Hour':
                 FlagHour = True
@@ -1364,21 +1386,29 @@ class Scatter_Gen(object):
                 flagEst = False
                 Bins=12
                 vmax = None
-            # for iV2,Vi2 in enumerate(V1[iV1:]):
-            #     if Vi1 != Vi2:
-            #         # Total
-            #         HyPl.Histogram2d(Var1[Vi1],Var1[Vi2],
-            #                 [Bins,Bins2d],Title='Dimensiones',
-            #                 Var1=Variables[Vi1],Var2=Variables[Vi2],
-            #                 Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_'
-            #                 +Abre[Vi2]+'_Ev'+EndImg,
-            #                 PathImg=self.PathImg+ImgFolder_Scatter+'Histograms2d'+EndFold+'/',
-            #                 M=True,
-            #                 FlagHour=False) 
             # Total
             HyPl.HistogramNP(Var1[Vi1],Bins,Title=' Frecuencias',
                     Var=Variables[Vi1],
-                    Name=self.NamesArch[self.irow]+'_'+Abre[Vi1]+'_Ev'+EndImg,
+                    Name=Name+'_'+Abre[Vi1]+'_Ev'+EndImg,
+                    PathImg=self.PathImg+ImgFolder_Scatter+'Histograms'+EndFold+'/',
+                    M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst,
+                    FlagBig=True,vmax=vmax)
+
+        for iV1,Vi1 in enumerate(V2):
+            if Vi1 == 'Hour':
+                FlagHour = True
+                flagEst = False
+                Bins=np.arange(0,24)
+                vmax = None
+            else:
+                FlagHour = False
+                flagEst = False
+                Bins=12
+                vmax = None
+            # Total
+            HyPl.HistogramNP(Var1[Vi1],Bins,Title=' Frecuencias',
+                    Var=Variables[Vi1],
+                    Name=Name+'_'+Abre[Vi1]+'_Ev'+EndImg,
                     PathImg=self.PathImg+ImgFolder_Scatter+'Histograms'+EndFold+'/',
                     M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst,
                     FlagBig=True,vmax=vmax)
