@@ -142,7 +142,7 @@ def CompD(Dates,V,dtm=None):
     try:
         VC[x] = V
     except ValueError:
-        VC = np.array(['' for i in range(len(DatesN))]).astype('<U4')
+        VC = np.array(['' for i in range(len(DatesN))]).astype('<U20')
         VC[x] = V
     
     DatesC = DUtil.Dates_datetime2str(DatesN)
