@@ -51,6 +51,7 @@ from Hydro_Analysis import Hydro_Plotter as HyPl;HyPl=HyPl()
 from Hydro_Analysis.Meteo import MeteoFunctions as HyMF
 from BPumpL.BPumpL import BPumpL as BP; BP=BP()
 from BPumpL.Dates.DatesC import DatesC
+import BPumpL as BPL
 
 class Detect_Events(object): 
     '''
@@ -77,7 +78,7 @@ class Detect_Events(object):
     OUTPUT:
     '''
 
-    def __init__(self,DateA,Pres,T,HR,Extract=[5*60,5*60],Limits={'Pres':{'VRateB':0.5,'MV':-0.2},
+    def __init__(self,ID,DateA,Pres,T,HR,Extract=[5*60,5*60],Limits={'Pres':{'VRateB':0.5,'MV':-0.2},
                 'T':{'VRateB':1.7,'MV':0.2},
                 'HR':{'VRateB':10.4,'MV':-0.2}}):
         '''
@@ -98,10 +99,9 @@ class Detect_Events(object):
         self.Series['Pres'] = Pres
         self.Series['T'] = T
         self.Series['HR'] = HR
+        self.IDA = ID
         self.Limits = Limits
-        self.dt = int((self.Series['Dates'].datetime[1] - self.Series['Dates'].datetime[0]).seconds/60)
         self.Extract = Extract
-        self.Erase = 2*60/self.dt
 
         # Created Attributes
         self.SeriesC = dict() # Extracted Data
@@ -111,12 +111,31 @@ class Detect_Events(object):
         for V in Var:
             self.M[V] = []
             self.Changes[V] = dict()
+        self.dt = int((self.Series['Dates'].datetime[1] - self.Series['Dates'].datetime[0]).seconds/60)
+        self.Erase = 2*60/self.dt
+        self.PrecT = dict()
+        LabelVal = ['DurPrec','TotalPrec','IntPrec']
+        LabelValV = ['Max','Min','Mean','Sum']
+        Oper = {'Max':np.nanmax,'Min':np.nanmin,'Mean':np.nanmean,'Sum':np.nansum}
+        Values = dict()
+        # Iniziaticed Values
+        for L1 in LabelValV:
+            self.PrecT[L1] = dict()
+            for L2 in LabelVal:
+                Values[L2] = []
+                self.PrecT[L1][L2] = []
+
+        # Indicativos para la extracción de eventos
+        self.x = 0
+
+        self.EvSiT = 0
+        self.EvT = 0
 
 
         self.Oper = {'max':np.nanmax,'min':np.nanmin}
         return
 
-    def FindValue(self,Var='Pres',Oper='min',Comp='<',M=None,limits=[-5,5]):
+    def __FindValue(self,Var='Pres',Oper='min',Comp='<',M=None,limits=[-5,5]):
         '''
         DESCRIPTION:
             Method that find the minimum or maximum value in the series
@@ -231,6 +250,103 @@ class Detect_Events(object):
                 return -1
         return 1
 
+    def __ValidateEvent(self):
+        '''
+        DESCRIPTION:
+            Method that finds an event in the series
+        _________________________________________________________________________
+        
+        INPUT:
+        _________________________________________________________________________
+        
+        OUTPUT:
+        '''
+        x = self.x
+
+        IndPres = self.__FindValue(Var='Pres',Oper='min',Comp='<',
+            M=None,limits=[-5,5])
+        # Validación
+        if IndPres == -2:
+            return -2
+        if IndPres == -1:
+            return -1
+        IndTemp = self.__FindValue(Var='T',Oper='max',Comp='>',
+            M=self.MT[-1],limits=[-2*60,2*60])
+        # Validación
+        if IndTemp == -2 or IndTemp == -1:
+            if x == 0:
+                del(self.SeriesC['PresC'])
+                del(self.SeriesC['DatesP'])
+                del(self.SeriesC['Dates'])
+                self.MT.pop()
+                del(self.Changes['Pres'])
+            else:
+                self.SeriesC['PresC'] = np.delete(self.SeriesC['PresC'],x,0)
+                self.SeriesC['DatesP'] = np.delete(self.SeriesC['DatesP'],x,0)
+                self.SeriesC['Dates'] = np.delete(self.SeriesC['Dates'],x,0)
+                self.MT.pop()
+                VarC = list(self.Changes['Pres'])
+                for V in VarC:
+                    self.Changes['Pres'][V] = np.delete(self.Changes['Pres'][V],x,0)
+            if IndTemp == -1:
+                return -1
+            elif IndTemp == -2:
+                return -2
+
+        IndHR = self.__FindValue(Var='HR',Oper='min',Comp='<',
+            M=self.MT[-1],limits=[-2*60,2*60])
+        # Validación
+        if IndHR == -2 or IndHR == -1:
+            if x == 0:
+                del(self.SeriesC['PresC'])
+                del(self.SeriesC['TC'])
+                del(self.SeriesC['DatesP'])
+                del(self.SeriesC['Dates'])
+                self.MT.pop()
+                del(self.Changes['Pres'])
+                del(self.Changes['T'])
+            else:
+                self.SeriesC['PresC'] = np.delete(self.SeriesC['PresC'],x,0)
+                self.SeriesC['TC'] = np.delete(self.SeriesC['TC'],x,0)
+                self.SeriesC['DatesP'] = np.delete(self.SeriesC['DatesP'],x,0)
+                self.SeriesC['Dates'] = np.delete(self.SeriesC['Dates'],x,0)
+                self.MT.pop()
+                VarC = list(self.Changes['Pres'])
+                for V in VarC:
+                    self.Changes['Pres'][V] = np.delete(self.Changes['Pres'][V],x,0)
+                    self.Changes['T'][V] = np.delete(self.Changes['T'][V],x,0)
+            if IndHR == -1:
+                return -1
+            elif IndHR == -2:
+                return -2 
+        if IndPres == 1 and IndTemp == 1 and IndHR == 1:
+            x += 1
+
+        self.x = x
+        return 1
+
+    def DetEvent(self,EvNum=None):
+        '''
+        DESCRIPTION:
+            Method that finds several events in the series.
+        _________________________________________________________________________
+        
+        INPUT:
+            :param EvNum: An int, Number of events that wants to be extracted.
+        _________________________________________________________________________
+        
+        OUTPUT:
+        '''
+        if EvNum is None:
+            x = 1000000
+        else:
+            x = EvNum
+        while self.x != x:
+            Ind = self.__ValidateEvent()
+            if Ind == -1:
+                break
+        return
+
     def GraphValidation(self,Prec,Name='',NameArch='',PathImg='',
             ImgFolder='',Evmax=1,EvType='Tot',
             flags={'TC':False,'PresC':False,'HRC':False,'qC':False,'WC':False},
@@ -339,6 +455,194 @@ class Detect_Events(object):
                             flagBig=flagBig,vm={'vmax':[None],'vmin':[0]},Ev=iEv,
                             Date=EvTot['Dates'][iEv][0])
         return 
+
+    def LoadStations(self,DataBase='Medellin',endingmat='',Ev=0):
+        '''
+        DESCRIPTION:
+            Method that load station information for comparation, need to run
+            DtEvents first.
+        _________________________________________________________________________
+        
+        INPUT:
+            :param DataBase: A str with the data for comparation.
+            :param Ev: An Int, Number of the event that wants to be extracted.
+        _________________________________________________________________________
+        
+        OUTPUT:
+        '''
+        # ----------------
+        # Load Information
+        # ----------------
+        self.SC = BPL.Scatter_Gen(DataBase=DataBase,
+                endingmat=endingmat,PathImg='')
+        # ---------------------
+        # Station information
+        # ---------------------
+        Labels = ['ID','Name','Latitud','Longitud']
+        self.ID = self.SC.ID
+        self.St_Info = {}
+        for iSt,St in enumerate(self.ID):
+            self.St_Info[St] = {}
+            for Lab in Labels:
+                self.St_Info[St][Lab] = self.SC.StInfo[DataBase][Lab][iSt]
+            self.St_Info[St]['CodesNames'] = self.SC.StInfo[DataBase]['ID'][iSt]+ ' ' + self.SC.StInfo[DataBase]['Name'][iSt]
+        self.Ev=Ev
+
+        # ----------------
+        # Constants
+        # ----------------
+        # Dates
+        DateI = self.SeriesC['DatesP'][Ev][0]
+        DateE = self.SeriesC['DatesP'][Ev][-1]
+        lenArch = len(self.SC.Arch)
+        lenData = int((DateE-DateI).seconds/60)
+        self.DataSt = {}
+        Labels = ['FechaC','FechaCP','Prec','Pres_F','T_F','HR_F','W_F','q_F']
+        self.vmax = {}
+        self.vmin = {}
+        for Lab in Labels[2:]:
+            self.vmax[Lab] = []
+            self.vmin[Lab] = []
+
+        # ----------------
+        # Extract Data
+        # ----------------
+        for iar in range(lenArch):
+            self.DataSt[self.ID[iar]] = {}
+            self.SC.LoadData(irow=iar)
+            xi = np.where(self.SC.f['FechaCP'] == DateI)[0]
+            xf = np.where(self.SC.f['FechaCP'] == DateE)[0]
+            if len(xi) == 0 or len(xf) == 0:
+                for Lab in Labels:
+                    self.DataSt[self.ID[iar]][Lab] = np.array(lenData)
+                continue
+            for iLab,Lab in enumerate(Labels):
+                self.DataSt[self.ID[iar]][Lab] = self.SC.f[Lab][xi:xf+1]
+                if iLab > 1:
+                    self.vmax[Lab].append(np.nanmax(self.SC.f[Lab][xi:xf+1]))
+                    self.vmin[Lab].append(np.nanmin(self.SC.f[Lab][xi:xf+1]))
+
+        self.vmax2 = self.vmax.copy()
+        self.vmin2 = self.vmin.copy()
+        for Lab in Labels[2:]:
+            self.vmax[Lab] = np.nanmax(self.vmax[Lab])+0.1
+            if Lab == 'Prec':
+                self.vmin[Lab] = np.nanmin(self.vmin[Lab])
+            else:
+                self.vmin[Lab] = np.nanmin(self.vmin[Lab])-0.1
+
+
+        return
+
+    def GraphStSeries(self,Var,NameArch='',PathImg=''):
+        '''
+        DESCRIPTION:
+            Method that load station information for comparation, need to run
+            LoadStations first.
+        _________________________________________________________________________
+        
+        INPUT:
+            :param Var: A str, Variable to be compared.
+            :param Name: A str, Name of the graph.
+            :param NameArch: A str, Name of the file.
+            :param PathImg: A str, Path to save the file.
+
+        _________________________________________________________________________
+        
+        OUTPUT:
+        '''
+        VarL = {'Pres_F':'Presión'}
+        VarLL = {'Pres_F':'Presión [hPa]'}
+
+
+        LabelVal = ['DurPrec','TotalPrec','IntPrec']
+        LabelValV = ['Max','Min','Mean','Sum']
+        Oper = {'Max':np.nanmax,'Min':np.nanmin,'Mean':np.nanmean,'Sum':np.nansum}
+        Values = dict()
+        # Iniziaticed Values
+        for L1 in LabelVal:
+            Values[L1] = []
+
+        # Folder Creation
+        fH= 20
+        fV = fH * (2/3)
+
+        fig = plt.figure(figsize=DM.cm2inch(fH,fV))
+        plt.rcParams.update({'font.size': 15,'font.family': 'sans-serif'\
+            ,'font.sans-serif': 'Arial'\
+            ,'xtick.labelsize': 15,'xtick.major.size': 6,'xtick.minor.size': 4\
+            ,'xtick.major.width': 1,'xtick.minor.width': 1\
+            ,'ytick.labelsize': 15,'ytick.major.size': 12,'ytick.minor.size': 4\
+            ,'ytick.major.width': 1,'ytick.minor.width': 1\
+            ,'axes.linewidth':1\
+            ,'grid.alpha':0.1,'grid.linestyle':'-'})
+
+        x = 0
+        xx = 0
+        for iID,ID in enumerate(self.ID):
+            if xx == 0:
+                self.EvT += 1
+                xx = 1
+            PP = int(len(self.DataSt[ID]['Prec'])/2)
+            if np.nanmax(self.DataSt[ID]['Prec'][PP:PP+int(2*60/self.dt)]) > 0.01:
+                if x == 0:
+                    self.EvSiT += 1
+                    x = 1
+                # Precipitation event parameters
+                PMax = np.nanmax(self.DataSt[ID]['Prec'][PP:PP+int(2*60/self.dt)])
+                M = np.where(self.DataSt[ID]['Prec'][PP:PP+int(2*60/self.dt)] == PMax)[0][0]+PP
+                self.PrecCount = HyMF.PrecCount(self.DataSt[ID]['Prec'],self.DataSt[ID]['FechaC'],dt=self.dt,M=M)
+
+                # Label of the parameters
+                Dur = round(self.PrecCount['DurPrec'],3)
+                TotPrec = round(self.PrecCount['TotalPrec'],3)
+                if np.isnan(Dur):
+                    LabelT = self.St_Info[ID]['CodesNames'] + ' (No hay datos suficientes)'
+                else:
+                    Datest = self.PrecCount['DatesEvst'][0].strftime('%H:%M')
+                    LabelT = self.St_Info[ID]['CodesNames'] + ' ({}, {} h, {} mm)'.format(Datest,Dur,TotPrec)
+                    for L1 in LabelVal:
+                        Values[L1].append(self.PrecCount[L1])
+
+                plt.plot(self.DataSt[ID]['FechaCP'],self.DataSt[ID][Var],'--',label=LabelT)
+            else:
+                plt.plot(self.DataSt[ID]['FechaCP'],self.DataSt[ID][Var],'-',label=self.St_Info[ID]['CodesNames'])
+
+    
+
+        ax = plt.gca()
+        yTL = ax.yaxis.get_ticklocs() 
+        Ver = self.DataSt[ID]['FechaCP'][int(len(self.DataSt[ID]['FechaCP'])/2)]
+        plt.plot([Ver,Ver],[yTL[0],yTL[-1]],'k--')
+        plt.ylabel(VarLL[Var])
+        for tick in plt.gca().get_xticklabels():
+            tick.set_rotation(45)
+        # plt.title(VarL[Var])
+        lgd = plt.legend(bbox_to_anchor=(-0.15, 1.02, 1.15, .102), loc=3,
+           ncol=2, mode="expand", borderaxespad=0.,fontsize=8.0)
+        # plt.legend(loc=1)
+        plt.grid()
+
+        yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+        MyL = (yTL[1]-yTL[0])/5 # Minor tick value
+        minorLocatory = MultipleLocator(MyL)
+        plt.gca().yaxis.set_minor_locator(minorLocatory)
+
+        utl.CrFolder(PathImg+'/')
+        plt.savefig(PathImg+'/'+Var[:-2]+'_'+NameArch+'_'+str(self.Ev)+'.png' ,
+                format='png',dpi=200,bbox_extra_artists=(lgd,),bbox_inches='tight')
+        plt.close('all')
+
+        if len(Values[L1])> 0:
+            for L1 in LabelValV:
+                for L2 in LabelVal:
+                    self.PrecT[L1][L2].append(Oper[L1](np.array(Values[L2])))
+
+        return
+
+
+
+
 
 
 

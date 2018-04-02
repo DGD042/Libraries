@@ -419,9 +419,6 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
     # Error managment
     # --------------------------------------
 
-    if not(isinstance(DatesEv[0][0],str)) and not(isinstance(DatesEv[0][0],datetime)):
-        E = utl.ShowError('PrecCount','MeteoFunctions','Not dates given, review format')
-        raise E
     
     # --------------------------------------
     # Dates
@@ -429,8 +426,14 @@ def PrecCount(Prec,DatesEv,dt=1,M=60):
     
     # Manage Data Size
     if len(DatesEv.shape) == 1:
+        if not(isinstance(DatesEv[0],str)): 
+            E = utl.ShowError('PrecCount','MeteoFunctions','Not dates given, review format')
+            raise E
         EvN = 1 # Events number
     else:
+        if not(isinstance(DatesEv[0][0],str)): 
+            E = utl.ShowError('PrecCount','MeteoFunctions','Not dates given, review format')
+            raise E
         EvN = len(DatesEv) # Events number
 
 
