@@ -2016,7 +2016,7 @@ class Hydro_Plotter:
         '''
         warnings.filterwarnings('ignore')
         # Se encuentra el histograma
-        q = ~np.isnan(Data)
+        q = (~np.isnan(Data) & ~np.isinf(Data)) 
         # Se encuentra el histograma
         DH,DBin = np.histogram(Data[q],bins=Bins); [float(i) for i in DH]
 

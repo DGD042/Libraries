@@ -1327,7 +1327,7 @@ class Scatter_Gen(object):
         if Name is None:
             Name = self.NamesArch[self.irow]
 
-        if Var == 'Pres':
+        if Var == 'Pres' or Var == 'Tot':
             Var2 = 'Presión'
             Uni = 'hPa'
             Ind = 'P'
