@@ -97,21 +97,33 @@ def LoadStationsInfo(endingmatR='_CBF_MR'):
     # Las listas se organizan como [Manizales,Medellin,Amazonas,USA]
     # Rutas originales de los datos
     DataImpNames = ['Data_Imp','Data_Imp_Med','Data_Imp_Amazon',
-            'Data_Imp_Wunder_USA']
+            'Data_Imp_Wunder_USA','Data_Imp_Wunder_USA','Data_Imp_Wunder_USA',
+            'Data_Imp_Wunder_USA','Data_Imp_Wunder_USA']
     Original_DataBases = ['IDEA_CDIAC/02_mat/Manizales/',
             'Medellin_SIATA/02_mat/',
             'Amazon_LBA/ATTO/02_mat/',
-            'Wunder/02_mat/']
+            'Wunder/02_mat/',
+            'Wunder/02_mat/',
+            'Wunder/02_mat/',
+            'Wunder/02_mat/',
+            'Wunder/02_mat/',
+            ]
     Filt_DataBases = ['02_Col_Data/01_Manizales/01_mat/01_CFilt/',
             '02_Col_Data/02_Medellin/01_mat/01_CFilt/',
             '03_Amazonas/01_mat/01_CFilt/',
-            '01_USA/01_mat/01_CFilt/']
+            '01_USA/01_mat/01_CFilt/',
+            '01_USA/01_mat/01_CFilt/',
+            '01_USA/01_mat/01_CFilt/',
+            '01_USA/01_mat/01_CFilt/',
+            '01_USA/01_mat/01_CFilt/',
+            ]
 
     # ---------------------
     # Original
     # ---------------------
     # Parametros
-    DataBasesP = ['Manizales','Medellin','Amazonas','Wunder']
+    DataBasesP = ['Manizales','Medellin','Amazonas','Wunder','WunderCentro',
+            'WunderSur','WunderEste','WunderOeste']
     TimeScale = ['Original','Horarios','Diarios','CFilt','Paths']
     StationInfo = ['ID','Name','Name_Arch','Altura','Latitud','Longitud']
     StationInfoType = {'ID':str,'Name':str,'Name_Arch':str,'Altura':float,
@@ -131,18 +143,26 @@ def LoadStationsInfo(endingmatR='_CBF_MR'):
     ArchDataImp = [PathDataImp+DataImpNames[0]+'.xlsx',
             PathDataImp+DataImpNames[1]+'.xlsx',
             PathDataImp+DataImpNames[2]+'.xlsx',
-            PathDataImp+DataImpNames[3]+'.xlsx']
+            PathDataImp+DataImpNames[3]+'.xlsx',
+            PathDataImp+DataImpNames[3]+'.xlsx',
+            PathDataImp+DataImpNames[3]+'.xlsx',
+            PathDataImp+DataImpNames[3]+'.xlsx',
+            PathDataImp+DataImpNames[3]+'.xlsx',
+            ]
 
-
+    Sheet = ['Center','South','East','West']
 
     # Se cargan los archivos
     for iar,ar in enumerate(ArchDataImp):
         # Se carga la información de las estaciones
         book = xlrd.open_workbook(ar)
-        SS = book.sheet_by_name('inf_Data')
-        # Datos de las estaciones
-        Hoja = int(SS.cell(2,2).value)
-        S = book.sheet_by_name(str(Hoja))
+        if iar >= 4:
+            S = book.sheet_by_name(Sheet[iar-4])
+        else:
+            SS = book.sheet_by_name('inf_Data')
+            # Datos de las estaciones
+            Hoja = int(SS.cell(2,2).value)
+            S = book.sheet_by_name(str(Hoja))
         NEst = int(S.cell(1,0).value)
 
         x = 3 # Filas
