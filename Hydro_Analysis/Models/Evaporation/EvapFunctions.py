@@ -36,7 +36,7 @@ except ImportError:
 # -----------
 # Functions
 # -----------
-def Calc_Model_PenmanMonteith(Ta,P,A,v10,Alt,Lat,J,HR,Tp):
+def Calc_Model_PenmanMonteith(Ta,P,A,v10,Alt,Lat,J,HR,Tp,Tp0):
     '''
     DESCRIPTION:
     
@@ -44,7 +44,7 @@ def Calc_Model_PenmanMonteith(Ta,P,A,v10,Alt,Lat,J,HR,Tp):
         equation.
     _________________________________________________________________________
     INPUT:
-        :param Ta: A float or ndarray, ambient temperature.
+        :param Ta: A float or ndarray, ambient temperature in °C.
         :param P: A float or ndarray, Atmospheric Pressure in kPa. 
         :param A: A float, Thank cross sectional area in km^2.
         :param v10: A float or ndarray, Wind velocity at 10 m height in m/s.
