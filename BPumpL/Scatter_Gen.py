@@ -1355,6 +1355,20 @@ class Scatter_Gen(object):
                 'VChangeA':'Cambio de {} Durante [{}]'.format(Var2,Uni),
                 'Hour': 'Hora del Evento [LT]'}
 
+        VarLab = {'DurPrec': 'Duración del Evento',
+                'IntPrec': 'Intensidad del Evento',
+                'MaxPrec': 'Máximo de Precipitación',
+                'TotalPrec': 'Total de Precipitación',
+                'IntPrecMax': 'Intensidad Máxima del Evento',
+                'Pindex': 'Relación de Intensidades',
+                'TasaPrec': 'Tasa de Cambio de Precipitación',
+                'VRateB': 'Tasa de Cambio de {} Antes'.format(Var2),
+                'VRateA':'Tasa de Cambio de {} Durante'.format(Var2),
+                'VChangeB':'Cambio de {} Antes'.format(Var2),
+                'VChangeA':'Cambio de {} Durante'.format(Var2),
+                'Hour': 'Hora del Evento [LT]'}
+
+
         Abre = {'DurPrec': 'DP',
                 'IntPrec': 'IP',
                 'MaxPrec': 'MP',
@@ -1387,8 +1401,8 @@ class Scatter_Gen(object):
                 Bins=12
                 vmax = None
             # Total
-            HyPl.HistogramNP(Var1[Vi1],Bins,Title=' Frecuencias',
-                    Var=Variables[Vi1],
+            HyPl.HistogramNP(Var1[Vi1],Bins,
+                    Var=Variables[Vi1],Title=VarLab[Vi1],FlagTitle=True,
                     Name=Name+'_'+Abre[Vi1]+'_Ev'+EndImg,
                     PathImg=self.PathImg+ImgFolder_Scatter+'Histograms'+EndFold+'/',
                     M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst,
@@ -1406,8 +1420,8 @@ class Scatter_Gen(object):
                 Bins=12
                 vmax = None
             # Total
-            HyPl.HistogramNP(Var1[Vi1],Bins,Title=' Frecuencias',
-                    Var=Variables[Vi1],
+            HyPl.HistogramNP(Var1[Vi1],Bins,
+                    Var=Variables[Vi1],Title=VarLab[Vi1],FlagTitle=True,
                     Name=Name+'_'+Abre[Vi1]+'_Ev'+EndImg,
                     PathImg=self.PathImg+ImgFolder_Scatter+'Histograms'+EndFold+'/',
                     M='porcen',FEn=False,Left=True,FlagHour=FlagHour,flagEst=flagEst,
