@@ -526,6 +526,7 @@ class Scatter_Gen(object):
             dt = int(self.dtm)
             Data = dict()
             Data['PrecC'] = np.nanmean(EvTot['PrecC'],axis=0)
+            N = EvTot['PrecC'].shape[0]
             for iLab,Lab in enumerate(Labels):
                 if flags[Lab]:
                     Data[Lab] = np.nanmean(EvTot[Lab],axis=0)
@@ -538,7 +539,7 @@ class Scatter_Gen(object):
                     GraphInfoV={'color':['-.b','-.g'],
                         'label':['Inicio del Evento','Fin del Evento']},
                     flagBig=flagBig,vm=vm,Ev=0,
-                    flagV=False,flagAverage=True,dt=dt)
+                    flagV=False,flagAverage=True,dt=dt,N=N)
         else:
             # Se grafican los eventos
             for iEv in range(len(EvTot['PrecC'])):

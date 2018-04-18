@@ -4332,7 +4332,7 @@ class BPumpL:
             GraphInfo={'ylabel':['Precipitación [mm]'],'color':['b'],'label':['Precipitación']},
             GraphInfoV={'color':['-.b'],'label':['Inicio del Evento']},
             flagBig=False,vm={'vmax':[],'vmin':[]},Ev=0,flagV=True,
-            flagAverage=False,dt=1,Date='',flagEvent=False):
+            flagAverage=False,dt=1,Date='',flagEvent=False,N=None):
         '''
         DESCRIPTION:
 
@@ -4449,6 +4449,7 @@ class BPumpL:
                 ax.set_ylim(ymin=vm['vmin'][0])
 
         yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+        xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
 
         # Se grafican las líneas verticales
         if flagV:
@@ -4458,8 +4459,13 @@ class BPumpL:
 
         # Se organizan los ejes 
         MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+        MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
         minorLocatory = MultipleLocator(MyL)
         ax.yaxis.set_minor_locator(minorLocatory)
+
+        if flagAverage:
+            if N != None:
+                ax.text(xTL[-4]+2*MxL,yTL[-1]-5*MyL,'$N=%s$'%(N))
 
         # Se realizan los demás gráficos
         if flagSeveral:
