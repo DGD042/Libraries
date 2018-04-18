@@ -20,5 +20,5 @@ problem please contact the programmer to the following e-mails:
 ____________________________________________________________________________
 
 '''
-__all__ = ['EvapFunctions']
+__all__ = ['EvapFunctions','EvapModels']
 
