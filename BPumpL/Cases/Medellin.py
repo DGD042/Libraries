@@ -95,7 +95,7 @@ class Medellin(object):
             self.DatesSt.append(self.DatesSt[-1]+timedelta(0,60))
         self.DatesSt = np.array(self.DatesSt)
         DatesStr = DUtil.Dates_datetime2str([DateI],Date_Format='%Y%m')[0]
-        self.PathImg = 'Tesis_MscR/02_Docs/01_Tesis_Doc/Kap5/Img/Cases_'+Var+'/'+DatesStr+'/'
+        self.PathImg = 'Tesis_MscR/02_Docs/01_Tesis_Doc/Kap5/Img/Medellin/Cases_'+Var+'/'+DatesStr+'/'
         self.VarA = Var
         # ----------------
         # Load Information
@@ -211,6 +211,7 @@ class Medellin(object):
         FilesA = []
         for it,t in enumerate(self.DatesSt):
             if it >= Time:
+                print(t)
                 F = t
                 xEv = np.where(self.RadarDatesP == F+timedelta(0,5*60*60))[0]
                 if len(xEv) == 1:
@@ -225,7 +226,7 @@ class Medellin(object):
                 NCPH = RadarFile.fields['NCPH']
                 DBZHC = DBZH
                 masks = [~(np.ma.getmaskarray(VELH['data'])) & (np.ma.getdata(VELH['data'])==0),
-                        ~(np.ma.getmaskarray(DBZH['data'])) & (np.ma.getdata(DBZH['data'])<=10),
+                        ~(np.ma.getmaskarray(DBZH['data'])) & (np.ma.getdata(DBZH['data'])<=-20),
                         ~(np.ma.getmaskarray(NCPH['data'])) & (np.ma.getdata(NCPH['data'])<=0.75)]
                 total_mask = masks[0] | masks[1] | masks [2]
 
@@ -242,7 +243,7 @@ class Medellin(object):
                 self.RadarFile = RadarFile
 
                 # Se genera el mapa
-                self.RadarGraphs(RadarFile,t.strftime('%Y/%m/%d %H:%M'),t,vmin=10)
+                self.RadarGraphs(RadarFile,t.strftime('%Y/%m/%d %H:%M'),t,vmin=5)
                 utl.CrFolder(self.PathImg+'DBZH'+'/')
                 plt.savefig(self.PathImg+'DBZH'+'/'+'%04i Image'%(it)+'.png' ,format='png',dpi=200)
                 plt.close('all')
@@ -418,12 +419,13 @@ class Medellin(object):
 
                     } 
 
+        # Precipitation
         for C in Col:
             for R in Rows:
                 Sec.append([C,R])
         xx = 0
         for i in range(len(self.ID)):
-            if self.vmax2['Prec'][i] == 0:
+            if self.vmax2['Prec'][i] <= 0.2 or np.isnan(self.vmax2['Prec'][i]):
                 continue
             if xx == 5 or xx == 6 or xx > 7:
                 xx += 1
