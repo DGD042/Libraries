@@ -29,10 +29,13 @@ from datetime import date, datetime, timedelta
 # Importing Modules
 try:
     from GeoF.GeoTIFF import Functions as GF
+    from GeoF.Dates.DatesC import DatesC
+    from GeoF.Dates import DatesFunctions as DUtil
 except ImportError:
     from GeoTIFF import Functions as GF
-from EMSD.Dates.DatesC import DatesC
-from EMSD.Dates import DatesFunctions as DUtil
+    from Dates.DatesC import DatesC
+    from Dates import DatesFunctions as DUtil
+
 from Utilities import Utilities as utl
 class GeoTimeSeries(object):
     '''

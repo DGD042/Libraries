@@ -69,7 +69,7 @@ def Calc_Model_PenmanMonteith(Ta,P,A,v10,Alt,Lat,J,HR,Tp,Tp0):
     # Heath Vaporization
     Lambda = TF.HeatVaporization(Ta)
     # Psychometric Constant
-    gamma = (P*cp)(/(0.622*Lambda))
+    gamma = (P*cp)/(0.622*Lambda)
     # Aerodynamic resistance
     fu = (5/A)**(0.05)*(3.80+1.57*v10)
     ra = (da*cp)/(Gamma*fu/86400)
@@ -167,7 +167,7 @@ def DeltaEEq(RH,Ta,es,Flagconv=True):
     '''
 
     conv = 0.133322
-    DeltaE = (1-RH)*es
+    DeltaE = (1-(RH/100))*es
     if Flagconv:
         DeltaE = conv*DeltaE
     return DeltaE

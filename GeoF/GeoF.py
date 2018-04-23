@@ -73,6 +73,71 @@ class GeoF:
         self.Data = Data
         return
 
+    def LoadArray(self,Array,EPSG=4326,Vars={'Data':None,
+        'latitude':None,'longitude':None,'time':None},GeoTime=False):
+        '''
+        DESCRIPTION:
+            This class opens and manipulates data related to the raster 
+            data.
+        ________________________________________________________________________
+        INPUT:
+            :param Array:        A dict, dictionary with the information needed
+                                         to create the object. Needs the
+                                         follwing information:
+                                         Data, latitude, longitude and time if
+                                         GeoTime is True.
+            :param EPSG:         An int, epsg number of the new projection is 
+                                 defaulted to 4326 (WGS84). 
+            :param Vars:         A dict, dictionary with the names of the 
+                                         variables in the Array.
+            :param GeoTime:      A bool, flag to convert the class in a 
+                                 GeoTimeSeries class, because it has time
+                                 in it.
+        ________________________________________________________________________
+        OUTPUT:
+           :return Data: A dict, dictionary with projection ('Ptj' and 'EPSG'). 
+        '''
+        Var = ['Data','latitude','longitude','time']
+        for v in Var:
+            try:
+                a = Vars[v]
+            except KeyError:
+                Vars[v] = None
+        Data = Array
+        try:
+            self.Data = dict()
+            for v in Var:
+                if Vars[v] != None:
+                    self.Data[v] = Data[Vars[v]]
+
+            self.SetProj(EPSG=EPSG)
+            x = np.where(self.Data['latitude'] == np.min(self.Data['latitude']))[0]
+            if x[0] == 0:
+                self.Data['latitude'] = self.Data['latitude'][::-1]
+                xlat = self.Data['latitude'].shape[0]
+                for iS,S in enumerate(self.Data['Data'].shape):
+                    if S == xlat:
+                        if iS == 0:
+                            self.Data['Data'] = self.Data['Data'][::-1]
+                        if iS == 1:
+                            self.Data['Data'] = self.Data['Data'][:,::-1]
+                        if iS == 2:
+                            self.Data['Data'] = self.Data['Data'][:,:,::-1]
+
+
+            Cellsizex = self.Data['longitude'][1] - self.Data['longitude'][0]
+            Cellsizey = self.Data['latitude'][1] - self.Data['latitude'][0]
+            self.Data['geoTrans'] = (self.Data['longitude'][0],
+                    Cellsizex,0.0,self.Data['latitude'][0],0.0,Cellsizey)
+            if GeoTime:
+                Dates = self.Data['time']
+                self.Data.pop('time',None)
+                return GT(Dates,self.Data)
+        except KeyError:
+            self.Data = Data
+            return
+        return
+
     def OpenNetCDFData(self,File,VarDict=None,VarRangeDict=None,time='time',DateI=None,EPSG=4326,Vars={'Data':None,
         'latitude':None,'longitude':None,'time':None},GeoTime=False):
         '''
@@ -153,7 +218,6 @@ class GeoF:
             return
         return
 
-
     def OpenGeoTIFFData(self,File,band=1):
         '''
         DESCRIPTION:
@@ -181,7 +245,10 @@ class GeoF:
             a = re.compile('"EPSG",')
             b = re.finditer(a,self.Data['Prj'])
             c = [i.end() for i in b]
-            self.Data['EPSG'] = 'epsg:'+self.Data['Prj'][c[-1]+1:-3]
+            try:
+                self.Data['EPSG'] = 'epsg:'+self.Data['Prj'][c[-1]+1:-3]
+            except:
+                self.Data['EPSG'] = 'epsg:nan'
         return
 
     def SetProj(self,EPSG):
