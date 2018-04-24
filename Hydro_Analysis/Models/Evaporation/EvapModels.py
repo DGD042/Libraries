@@ -79,7 +79,7 @@ class Model_EvapCover(object):
 
         return
 
-    def CalculateEvaporation(self,A,CoverPer=0,PerRed=0.8):
+    def CalculateEvaporation(self,A,CoverPer=0,PerRad=0.8):
         '''
         DESCRIPTION:
             
@@ -92,6 +92,7 @@ class Model_EvapCover(object):
             :param A: A float, Area of the water body in m^2.
             :param CoverPer: A float, Percentage of cover in the water 
                              body goes between 0 and 1.
+            :param PerRad: A float, Percentage of deficit in water.
         _________________________________________________________________
         OUTPUT:
             :return E: A ndarray, Evaporation in m^3/day.
@@ -100,17 +101,13 @@ class Model_EvapCover(object):
         es = EvapM.esEq(self._Ta)
         m = EvapM.mEq(self._Ta,es)
         DeltaE = EvapM.DeltaEEq(self._RH,self._Ta,es)
-        print('rho=',np.nanmean(rho))
-        print('es=',np.nanmean(es))
-        print('m=',np.nanmean(m))
-        print('DeltaE=',np.nanmean(DeltaE))
         self.E = EvapM.Penman_Shuttleworth(self._Rn,self._U,m,rho,DeltaE,self._Lambda)
 
         # Area Cover
         self.E = self.E/1000 # m^3/m^2/day
-        self.ET = self.E*A
-        self.EC = self.E*A*(1-CoverPer)
-        self.EC = self.EC + ((1-PerRed)*self.E*(A*CoverPer))
+        self.ET = self.E*A # m^3/day
+        self.EC = self.E*A*(1-CoverPer) # m^3/day
+        self.EC = self.EC + ((1-PerRad)*self.E*(A*CoverPer)) # m^3/day
         return
 
 
