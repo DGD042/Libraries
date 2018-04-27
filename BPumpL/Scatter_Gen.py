@@ -780,7 +780,7 @@ class Scatter_Gen(object):
         self.var = self.f.keys()
         return
 
-    def Calc_Changes(self,DatesEv,Prec,VC,Pos=None,MaxMin='min',Var='Pres',EvType='Tot',MPP=None):
+    def Calc_Changes(self,DatesEv,Prec,VC,Pos=None,MaxMin='min',Var='Pres',EvType='Tot',MPP=None,flagTop=False):
         '''
         DESCRIPTION:
 
@@ -820,7 +820,7 @@ class Scatter_Gen(object):
         # Se calcula la duración de la tormenta
         self.Res_Prec[Var][EvType] = HyMF.PrecCount(Prec,DatesEv,dt=dt,M=MP)
         # Datos de las variables de cambio
-        Results = BP.C_Rates_Changes(VC,dt=dt,MP=Pos,MaxMin=MaxMin)
+        Results = BP.C_Rates_Changes(VC,dt=dt,MP=Pos,MaxMin=MaxMin,flagTop=flagTop)
         self.Res_Prec[Var][EvType].update(Results)
         self.Res_Prec[Var][EvType]['PosI'] = Pos
         # -----------------

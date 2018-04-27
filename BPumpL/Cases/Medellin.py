@@ -71,7 +71,7 @@ class Medellin(object):
         :param endingmat: A str, string denoting the end of the .mat
                           file.
     '''
-    def __init__(self,DateI,DateE,endingmat='',Var=''):
+    def __init__(self,DateI,DateE,endingmat='',Var='',flagRHI=False):
         '''
         '''
         # ----------------
@@ -97,6 +97,7 @@ class Medellin(object):
         DatesStr = DUtil.Dates_datetime2str([DateI],Date_Format='%Y%m')[0]
         self.PathImg = 'Tesis_MscR/02_Docs/01_Tesis_Doc/Kap5/Img/Medellin/Cases_'+Var+'/'+DatesStr+'/'
         self.VarA = Var
+        self.flagRHI = flagRHI
         # ----------------
         # Load Information
         # ----------------
@@ -173,6 +174,7 @@ class Medellin(object):
         INPUT:
         '''
         PathRadar = '/Users/DGD042/Documents/Est_Information/SIATA/Radar/01_nc/PPIVol/'
+        PathRadarRHI = '/Users/DGD042/Documents/Est_Information/SIATA/Radar/01_nc/RHIVol/'
         # ---------------------
         # Radar Files
         # ---------------------
@@ -182,10 +184,24 @@ class Medellin(object):
         self.PathRadar = PathRadar+DateR
         Files = gl.glob(PathRadar+DateR+'*.gz')
         if len(Files) == 0:
-            self.ShowError('LoadRadar','Medellin','No Radar Files Found')
+            self.ShowError('LoadRadar','Medellin','No Radar PPIVol Files Found')
         self.Files = gl.glob(PathRadar+DateR+'*.gz')
         self.RadarDates = np.array([i[-32:-32+8]+i[-32+9:-32+8+5] for i in Files])
         self.RadarDatesP = DUtil.Dates_str2datetime(self.RadarDates,Date_Format='%Y%m%d%H%M')
+        # ---------------------
+        # Radar Files RHI
+        # ---------------------
+        if self.flagRHI:
+            self.DateRIRHI = self.DateI+timedelta(0,5*60*60)
+            self.DateRERHI = self.DateE+timedelta(0,5*60*60)
+            DateR = '%04i%02i/'%(self.DateRIRHI.year,self.DateRERHI.month)
+            self.PathRadar = PathRadarRHI+DateR
+            Files = gl.glob(PathRadarRHI+DateR+'*.gz')
+            if len(Files) == 0:
+                self.ShowError('LoadRadar','Medellin','No Radar RHIVol Files Found')
+            self.FilesRHI = gl.glob(PathRadarRHI+DateR+'*.gz')
+            self.RadarRHIDates = np.array([i[-32:-32+8]+i[-32+9:-32+8+5] for i in Files])
+            self.RadarRHIDatesP = DUtil.Dates_str2datetime(self.RadarRHIDates,Date_Format='%Y%m%d%H%M')
         # ---------------------
         # Dates
         # ---------------------
@@ -425,7 +441,7 @@ class Medellin(object):
                 Sec.append([C,R])
         xx = 0
         for i in range(len(self.ID)):
-            if self.vmax2['Prec'][i] <= 0.2 or np.isnan(self.vmax2['Prec'][i]):
+            if self.vmax2['Prec'][i] <= 0.1 or np.isnan(self.vmax2['Prec'][i]):
                 continue
             if xx == 5 or xx == 6 or xx > 7:
                 xx += 1
