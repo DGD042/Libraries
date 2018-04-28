@@ -136,7 +136,7 @@ class Wunder(object):
 
         # Stations
         self.Stations = Stations
-        self.Arch = dict()
+        self.Arch = dict()        
         for St in Stations:
             self.Arch[St] = gl.glob(PathData+St+'/*.txt')
             if len(self.Arch[St]) == 0:
@@ -144,7 +144,7 @@ class Wunder(object):
 
         return
 
-    def LoadData(self,Station=None,flagComplete=True):
+    def LoadData(self,Station=None,flagComplete=True,dt=5):
         '''
         DESCRIPTION:
             This function loads the data of a station and compiles 
@@ -270,7 +270,7 @@ class Wunder(object):
             DataC[self.LabDataSave[Lab]] = VC['VC']
             # Se pasa la información a cada 5 minutos
             DatesCC,DatesCN,DataCC[self.LabDataSave[Lab]] = DMan.Ca_E(DatesC,
-                    DataC[self.LabDataSave[Lab]],dt=5,escala=-1,
+                    DataC[self.LabDataSave[Lab]],dt=dt,escala=-1,
                     op=self.LabDataOper[Lab],flagNaN=False)
             # Data Eliminations
             if self.ElimOver[self.LabDataSave[Lab]] != None:
@@ -281,7 +281,7 @@ class Wunder(object):
             # Se convierten los datos
             DatesC2, DatesNC2, VC2 = EM.Ca_EC(Date=DatesCC,V1=DataCC[self.LabDataSave[Lab]],
                     op=self.LabDataOper1[Lab],
-                    key=None,dtm=5,op2=self.LabDataOper2[Lab],op3=self.LabDataOper3[Lab])
+                    key=None,dtm=dt,op2=self.LabDataOper2[Lab],op3=self.LabDataOper3[Lab])
 
             for LabH in LabelsH:
                 DataH[self.LabDataSave[Lab]+LabH] = VC2[LabH]
