@@ -195,7 +195,7 @@ class Medellin(object):
             self.DateRIRHI = self.DateI+timedelta(0,5*60*60)
             self.DateRERHI = self.DateE+timedelta(0,5*60*60)
             DateR = '%04i%02i/'%(self.DateRIRHI.year,self.DateRERHI.month)
-            self.PathRadar = PathRadarRHI+DateR
+            self.PathRadarRHI = PathRadarRHI+DateR
             Files = gl.glob(PathRadarRHI+DateR+'*.gz')
             if len(Files) == 0:
                 self.ShowError('LoadRadar','Medellin','No Radar RHIVol Files Found')
@@ -212,9 +212,14 @@ class Medellin(object):
         while len(xf) == 0:
             xf = np.where(self.RadarDatesP == self.DateRE-timedelta(0,60))[0]
 
-        self.ArchRadar = Files[xi:xf+1]
+        self.ArchRadar = self.Files[xi:xf+1]
         self.RadarDates = self.RadarDates[xi:xf+1]
         self.RadarDatesP = DUtil.Dates_str2datetime(self.RadarDates,Date_Format='%Y%m%d%H%M')
+        
+        if self.flagRHI:
+            self.ArchRadarRHI = self.FilesRHI[xi:xf+1]
+            self.RadarRHIDates = self.RadarRHIDates[xi:xf+1]
+            self.RadarRHIDatesP = DUtil.Dates_str2datetime(self.RadarRHIDates,Date_Format='%Y%m%d%H%M')
         return
 
     def PlotData(self,Time=0):
@@ -265,7 +270,120 @@ class Medellin(object):
                 plt.close('all')
         return
 
-    def Opengz(self,File,PathData,PathData2):
+    def PlotDataRHI(self,Time=0):
+        '''
+        DESCRIPTION:
+            This method plots all the case information.
+        _________________________________________________________________
+        INPUT:
+        '''
+        FilesA = []
+        FilesARHI = []
+        for it,t in enumerate(self.DatesSt):
+            if it >= Time:
+                print(t)
+                F = t
+                xEv = np.where(self.RadarDatesP == F+timedelta(0,5*60*60))[0]
+                if len(xEv) == 1:
+                    FilesA.append(self.ArchRadar[xEv[0]][len(self.PathRadar):])
+                if len(FilesA) == 0:
+                    continue
+                RadarFile = self.Opengz(FilesA[-1],self.PathRadar,self.PathRadar)
+                # Se verifican los datos de Radar
+                if RadarFile == -1:
+                    continue
+                # Se corrige la información de Radar
+                VELH = RadarFile.fields['VELH']
+                DBZH  = RadarFile.fields['DBZH']
+                NCPH = RadarFile.fields['NCPH']
+                DBZHC = DBZH
+                masks = [~(np.ma.getmaskarray(VELH['data'])) & (np.ma.getdata(VELH['data'])==0),
+                        ~(np.ma.getmaskarray(DBZH['data'])) & (np.ma.getdata(DBZH['data'])<=-20),
+                        ~(np.ma.getmaskarray(NCPH['data'])) & (np.ma.getdata(NCPH['data'])<=0.75)]
+                total_mask = masks[0] | masks[1] | masks [2]
+
+                DBZHC['data'] = np.ma.masked_where(total_mask,DBZHC['data'])
+                RadarFile.add_field('DBZHC', DBZHC)
+
+                # Attenuation
+                spec_at, cor_z = pyart.correct.calculate_attenuation(
+                    RadarFile, 0, refl_field='DBZH',
+                    ncp_field='NCPH', rhv_field='SNRHC',
+                    phidp_field='PHIDP')
+                RadarFile.add_field('specific_attenuation', spec_at)
+                RadarFile.add_field('corrected_reflectivity_horizontal', cor_z)
+                self.RadarFile = RadarFile
+
+                # RHI
+                xEv = np.where(self.RadarRHIDatesP == F+timedelta(0,5*60*60))[0]
+                if len(xEv) == 1:
+                    FilesARHI.append(self.ArchRadarRHI[xEv[0]][len(self.PathRadarRHI):])
+                if len(FilesARHI) == 0:
+                    continue
+                RadarRHIFile = self.Opengz(FilesARHI[-1],self.PathRadarRHI,self.PathRadarRHI,flagRHI=False)
+                # Se verifican los datos de Radar
+                if RadarRHIFile == -1:
+                    continue
+                # Se corrige la información de Radar
+                VELH = RadarRHIFile.fields['VELH']
+                DBZH  = RadarRHIFile.fields['DBZH']
+                NCPH = RadarRHIFile.fields['NCPH']
+                DBZHC = DBZH
+                masks = [~(np.ma.getmaskarray(VELH['data'])) & (np.ma.getdata(VELH['data'])==0),
+                        ~(np.ma.getmaskarray(DBZH['data'])) & (np.ma.getdata(DBZH['data'])<=-20),
+                        ~(np.ma.getmaskarray(NCPH['data'])) & (np.ma.getdata(NCPH['data'])<=0.75)]
+                total_mask = masks[0] | masks[1] | masks [2]
+
+                DBZHC['data'] = np.ma.masked_where(total_mask,DBZHC['data'])
+                RadarRHIFile.add_field('DBZHC', DBZHC)
+
+                # Attenuation
+                spec_at, cor_z = pyart.correct.calculate_attenuation(
+                    RadarRHIFile, 0, refl_field='DBZH',
+                    ncp_field='NCPH', rhv_field='SNRHC',
+                    phidp_field='PHIDP')
+                RadarRHIFile.add_field('specific_attenuation', spec_at)
+                RadarRHIFile.add_field('corrected_reflectivity_horizontal', cor_z)
+                self.RadarRHIFile = RadarRHIFile
+
+                radar = RadarRHIFile
+
+                display = pyart.graph.RadarDisplay(radar)
+
+                fig = plt.figure(figsize=[12, 17])
+                fig.subplots_adjust(hspace=0.4)
+                xlabel = 'Distance from radar (km)'
+                ylabel = 'Height agl (km)'
+                colorbar_label = 'Hz. Eq. Refl. Fac. (dBZ)'
+                nplots = radar.nsweeps
+
+                for snum in radar.sweep_number['data']:
+
+                    fixed_angle = radar.fixed_angle['data'][snum]
+                    title = 'HSRHI Az=%.3f' % (fixed_angle)
+                    ax = fig.add_subplot(nplots, 1, snum+1)
+                    display.plot('corrected_reflectivity_horizontal', snum, vmin=-20, vmax=20,
+                                 mask_outside=False, title=title,
+                                 axislabels=(xlabel, ylabel),
+                                 colorbar_label=colorbar_label, ax=ax)
+                    display.set_limits(ylim=[0, 15], ax=ax)
+
+                figure_title = 'Time: ' + t
+                fig.text(0.35, 0.92, figure_title)
+
+                plt.show()
+                aaa
+
+                # -------
+
+                # Se genera el mapa
+                self.RadarGraphs(RadarFile,t.strftime('%Y/%m/%d %H:%M'),t,vmin=5)
+                utl.CrFolder(self.PathImg+'DBZH_RHI'+'/')
+                plt.savefig(self.PathImg+'DBZH_RHI'+'/'+'%04i Image'%(it)+'.png' ,format='png',dpi=200)
+                plt.close('all')
+        return
+
+    def Opengz(self,File,PathData,PathData2,flagRHI=False):
         '''
         DESCRIPTION:
             This method open a gz file, loads the data an then deletes
@@ -275,7 +393,11 @@ class Medellin(object):
         '''
         os.system('gzip -d --keep ' + PathData2 + File)
         try:
-            RadarFile = CFR.read_cfradial(PathData+File[:-3])
+            if flagRHI:
+                RadarFile = pyart.io.read_rsl(PathData+File[:-3])
+            else:
+                RadarFile = CFR.read_cfradial(PathData+File[:-3])
+
         except OSError:
             return -1
 
