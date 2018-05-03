@@ -889,3 +889,35 @@ def EDnetCDFFile(File,VarDict=None,VarRangeDict=None):
 
     return Data
 
+def EDmat(File):
+    '''
+    DESCRIPTION:
+
+        This function extract the information of a mat file.
+    _______________________________________________________________________
+
+    INPUT:
+        :param File: A str, File that would be extracted including the 
+                     path.
+    _______________________________________________________________________
+    
+    OUTPUT:
+        :return Data: A dict, Extracted Data Dictionary.    
+    '''
+    f = sio.loadmat(File)
+
+    Keys = list(f)
+    # Extracción info
+    Data = dict()
+    for key in Keys:
+        try:
+            _shape = f[key].shape
+            lenshape = len(f[key].shape)
+            if lenshape == 2 and _shape[0] == 1:
+                Data[key] = f[key][0]
+            else:
+                Data[key] = f[key]
+        except AttributeError:
+            continue
+
+    return Data

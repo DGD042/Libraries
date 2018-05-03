@@ -97,6 +97,49 @@ def MapsShape_Raster(Raster,Shape=None,Var='Data',Name='Results',PathImg='',*arg
 
     return
 
+def Select_Grid(DataS,Lat,Lon,VarLab,LatLab='latitude',LonLab='longitude'):
+    '''
+    _________________________________________________________________________
+    
+    DESCRIPTION:
+        
+        This Function allows to select the grid in which a station is 
+        located.
+    _________________________________________________________________________
+
+    INPUT:
+        :param DataS:  A dict, dictionary with the field data.
+        :param Lat:    A float, Latitude of the station.
+        :param Lon:    A float, Longitude of the station.
+        :param LatLab: A str, Latitude key.
+        :param LonLab: A str, Lingitude key.
+    _________________________________________________________________________
+    OUTPUT:
+        :return Series: A ndarray, dictionary with the field data.
+        :return LatR:   A dict, dictionary with the field data.
+        :return LonR:   A dict, dictionary with the field data.
+    '''
+
+    # Latitude
+    Cellsize = DataS[LatLab][0]-DataS[LatLab][1]
+    Latitude1 = DataS[LatLab][(DataS[LatLab]>=Lat)][-1]
+    Latitude2 = DataS[LatLab][(DataS[LatLab]<=Lat)][0]
+    if Lat < Latitude2+Cellsize/2:
+        LatR = Latitude2
+    elif Lat >= Latitude1-Cellsize/2:
+        LatR = Latitude1
+    # Longitude
+    Cellsize = DataS[LonLab][1]-DataS[LonLab][0]
+    Longitude1 = DataS[LonLab][(DataS[LonLab]>=Lon)][0]
+    Longitude2 = DataS[LonLab][(DataS[LonLab]<=Lon)][-1]
+    if Lon <= Longitude2+Cellsize/2:
+        LonR = Longitude2
+    elif Lon > Longitude1-Cellsize/2:
+        LonR = Longitude1
+    Series = DataS[VarLab][:,DataS[LatLab]==LatR,:]
+    Series = DataS[VarLab][:,0,DataS[LonLab]==LonR]
+    
+    return Series[:,0], LatR, LonR
 
 
 
