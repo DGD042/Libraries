@@ -492,4 +492,68 @@ def MIA(FechasC,Fechas,Data):
 
     return N, FechaNaN
         
+def Clip_Series(DataP,DataS,DatesP,DatesS,TimeScale='Diarios',dtP=timedelta(1),dtS=timedelta(1)):
+     # Se completa la información
+        YiP = DatesP[0].year
+        YfP = DatesP[-1].year
+        YiS = DatesS[0].year
+        YfS = DatesS[-2].year
 
+        if YiP >= YiS:
+            Yi = YiP
+        else:
+            Yi = YiS
+        if YfP >= YfS:
+            Yf = YfS
+        else:
+            Yf = YfP
+
+        if YfS < YiP or YfP < YiS:
+            raise Exception('Las series no se encuentran para realizar la comparación')
+
+        if TimeScale == 'Horarios':
+            SeriesP = CompDC(DatesP,DataP,
+                    datetime(Yi,1,1,0,0),datetime(Yf,12,31,23,59),
+                    dtm=dtS) 
+            SeriesS = EMSD.CompDC(DatesS,SeriesS,datetime(Yi,1,1,0,0),
+                    datetime(Yf,12,31,23,59),dtm=dtP) 
+        if TimeScale == 'Diarios':
+            SeriesP = CompDC(DatesP,DataP,
+                    date(Yi,1,1),date(Yf,12,31),
+                    dtm=dtP) 
+            SeriesS = CompDC(DatesS,DataS,
+                    date(Yi,1,1),date(Yf,12,31),
+                    dtm=dtS) 
+        if TimeScale == 'Mensual':
+            # Mensual
+            DatesMP = []
+            for A in range(DatesP[0].year,DatesP[-1].year+1):
+                for M in range(1,13):
+                    DatesMP.append(date(A,M,1))
+            DatesMP = np.array(DatesMP)
+            DatesM = np.array([i.year for i in DatesMP])
+            xi = np.where(DatesM == Yi)[0][0]
+            xf = np.where(DatesM == Yf)[0][-1]
+            self.SeriesPM = dict()
+            self.SeriesPM['DatesN'] = DatesMP[xi:xf]
+            self.SeriesPM['DatesC'] = DatesM[xi:xf]
+            self.SeriesPM['VC'] = DataP[xi:xf]
+            # Secundaria
+            # Diarios
+            self.SeriesS = CompDC(DatesS,SeriesS,date(Yi,1,1),
+                    date(Yf,12,31),dtm=timedelta(1,0)) 
+            # Mensual
+            DatesMS = []
+            for A in range(DatesS[0].year,DatesS[-1].year+1):
+                for M in range(1,13):
+                    DatesMS.append(date(A,M,1))
+            DatesMS = np.array(DatesMS)
+            DatesM = np.array([i.year for i in DatesMS])
+            xi = np.where(DatesM == Yi)[0][0]
+            xf = np.where(DatesM == Yf)[0][-1]
+            SeriesS = dict()
+            SeriesS['DatesN'] = DatesMS[xi:xf]
+            SeriesS['DatesC'] = DatesM[xi:xf]
+            SeriesS['VC'] = SeriesSM[xi:xf]
+
+        return SeriesP,SeriesS
