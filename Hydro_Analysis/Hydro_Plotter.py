@@ -1733,7 +1733,7 @@ class Hydro_Plotter:
         ax = plt.gca()
         xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
         MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-        plt.xlim([0,np.nanmax(V1)+2*MxL])
+        plt.xlim([np.nanmin(V1)-2*MxL,np.nanmax(V1)+2*MxL])
 
         xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
         MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
