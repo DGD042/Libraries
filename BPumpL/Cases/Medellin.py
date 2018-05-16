@@ -49,10 +49,12 @@ from datetime import date, datetime, timedelta
 # ------------------
 # Importing Modules
 import BPumpL as BPL
+from BPumpL.BPumpL import BPumpL as BP; BP=BP()
 from Utilities import Data_Man as DMan
 from GeoF.GeoTIFF import Functions as GF
 from Utilities import Utilities as utl
 from Hydro_Analysis import Hydro_Plotter as HyPl; HyPl=HyPl()
+from Hydro_Analysis.Meteo import MeteoFunctions as HyMF
 from EMSD.Dates import DatesFunctions as DUtil
 
 # ------------------
@@ -128,7 +130,18 @@ class Medellin(object):
         lenArch = len(self.SC.Arch)
         lenData = int((self.DateE-self.DateI).seconds/60)
         self.DataSt = {}
-        Labels = ['FechaCP','Prec','Pres_F','T_F','HR_F','W_F','q_F']
+        self.PrecCount = {}
+        self.Changes = {}
+        self.IDC = []
+        dt = 1
+        # Horas atras
+        TBef = 1
+        # minutos hacia adelante
+        TAft = 30
+        Labels = ['FechaC','FechaCP','Prec','Pres_F','T_F','HR_F','W_F','q_F']
+        LabCh = ['Pres_F','T_F','HR_F']
+        opers = {'Pres_F':np.nanmin,'T_F':np.nanmax,'HR_F':np.nanmin}
+        MaxMin = {'Pres_F':'min','T_F':'max','HR_F':'min'}
         self.vmax = {}
         self.vmin = {}
         for Lab in Labels[1:]:
@@ -150,13 +163,40 @@ class Medellin(object):
                 continue
             for iLab,Lab in enumerate(Labels):
                 self.DataSt[self.ID[iar]][Lab] = self.SC.f[Lab][xi:xf+1]
-                if iLab > 0:
+                if iLab > 1:
                     self.vmax[Lab].append(np.nanmax(self.SC.f[Lab][xi:xf+1]))
                     self.vmin[Lab].append(np.nanmin(self.SC.f[Lab][xi:xf+1]))
 
+            # Changes
+            if np.nanmax(self.DataSt[self.ID[iar]]['Prec']) == 0 or np.isnan(np.nanmax(self.DataSt[self.ID[iar]]['Prec'])):
+                continue
+            xMax = np.where(self.DataSt[self.ID[iar]]['Prec'] == np.nanmax(self.DataSt[self.ID[iar]]['Prec']))[0][0]
+            # Precipitation
+            self.PrecCount[self.ID[iar]] = HyMF.PrecCount(self.DataSt[self.ID[iar]]['Prec'],self.DataSt[self.ID[iar]]['FechaC'],dt=1,M=xMax)
+            
+            try:
+                flag = np.isnan(self.PrecCount[self.ID[iar]]['DatesEvst'][0])
+            except TypeError:
+                flag = False
+            if flag:
+                continue
+            
+            # Change First
+            xEv = np.where(self.DataSt[self.ID[iar]]['FechaCP'] == self.PrecCount[self.ID[iar]]['DatesEvst'][0])[0][0]
+            Bef = xEv-int(60/dt*TBef)
+            Aft = xEv+int(60/dt*(TAft/60)) 
+            self.Changes[self.ID[iar]] = dict()
+            for Var in LabCh:
+                oper = opers[Var]
+                Min = oper(self.DataSt[self.ID[iar]][Var][Bef:Aft])
+                xMin1 = np.where(self.DataSt[self.ID[iar]][Var][:Aft]==Min)[0][-1]
+                self.Changes[self.ID[iar]][Var] = BP.C_Rates_Changes(self.DataSt[self.ID[iar]][Var],dt=dt,
+                        MP=xMin1,MaxMin=MaxMin[Var],flagTop=False)
+            self.IDC.append(self.ID[iar])
+
         self.vmax2 = self.vmax.copy()
         self.vmin2 = self.vmin.copy()
-        for Lab in Labels[1:]:
+        for Lab in Labels[2:]:
             self.vmax[Lab] = np.nanmax(self.vmax[Lab])+0.1
             if Lab == 'Prec':
                 self.vmin[Lab] = np.nanmin(self.vmin[Lab])
