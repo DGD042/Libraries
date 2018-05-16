@@ -2072,6 +2072,10 @@ class Hydro_Plotter:
         # Se cambia el valor de los ejes.
         plt.xticks(centerD) # Se cambia el valor de los ejes
         ax = plt.gca()
+        if isinstance(Bins,list) or isinstance(Bins,np.ndarray):
+            plt.xlim([Bins[0],Bins[-1]])
+        else:
+            plt.xlim([DBin[0],DBin[-1]])
         if FlagHour:
             CCStr = []
             for C in centerD:
@@ -2086,7 +2090,11 @@ class Hydro_Plotter:
         for tick in ax.get_xticklabels():
             tick.set_rotation(45)
 
-        plt.xlim([DBin[0],DBin[-1]])
+        ax = plt.gca()
+        xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+        MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+        yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+        MyL = np.abs(np.abs(yTL[1])-np.abs(yTL[0]))/5 # minorLocatory value
         if vmax != None:
             plt.ylim([0,vmax])
         if flagEst:
