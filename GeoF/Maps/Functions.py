@@ -137,7 +137,7 @@ def Select_Grid(DataS,Lat,Lon,VarLab,LatLab='latitude',LonLab='longitude'):
     elif Lon > Longitude1-Cellsize/2:
         LonR = Longitude1
     Series = DataS[VarLab][:,DataS[LatLab]==LatR,:]
-    Series = DataS[VarLab][:,0,DataS[LonLab]==LonR]
+    Series = Series[:,0,DataS[LonLab]==LonR]
     
     return Series[:,0], LatR, LonR
 
