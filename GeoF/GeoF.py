@@ -332,13 +332,13 @@ class GeoF:
         _shape = Data['Data'].shape
         latitude = np.empty(_shape[0])*np.nan
         longitude = np.empty(_shape[1])*np.nan
-        # latitudeitude
+        # latitude
         for ilat in range(len(latitude)):
             if ilat == 0:
                 latitude[ilat] = geoTrans[3]
             else:
                 latitude[ilat] = latitude[ilat-1]+Clat
-        # longitudegitude
+        # longitude
         for ilon in range(len(longitude)):
             if ilon == 0:
                 longitude[ilon] = geoTrans[0]

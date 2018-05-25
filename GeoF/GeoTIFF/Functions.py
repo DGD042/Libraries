@@ -75,17 +75,17 @@ def GeoTIFFEx(Ar,band=1):
     Lat = np.empty(_shape[0])*np.nan
     Lon = np.empty(_shape[1])*np.nan
     # Latitude
+    Clon = geoTrans[1]
     Clat = geoTrans[-1]
     for ilat in range(len(Lat)):
         if ilat == 0:
-            Lat[ilat] = geoTrans[3]
+            Lat[ilat] = geoTrans[3]#-(Clat/2.0)
         else:
             Lat[ilat] = Lat[ilat-1]+Clat
     # Longitude
-    Clon = geoTrans[1]
     for ilon in range(len(Lon)):
         if ilon == 0:
-            Lon[ilon] = geoTrans[0]
+            Lon[ilon] = geoTrans[0]#-(Clon/2.0)
         else:
             Lon[ilon] = Lon[ilon-1]+Clon
 

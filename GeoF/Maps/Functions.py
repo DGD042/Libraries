@@ -124,18 +124,18 @@ def Select_Grid(DataS,Lat,Lon,VarLab,LatLab='latitude',LonLab='longitude'):
     Cellsize = DataS[LatLab][0]-DataS[LatLab][1]
     Latitude1 = DataS[LatLab][(DataS[LatLab]>=Lat)][-1]
     Latitude2 = DataS[LatLab][(DataS[LatLab]<=Lat)][0]
-    if Lat < Latitude2+Cellsize/2:
-        LatR = Latitude2
-    elif Lat >= Latitude1-Cellsize/2:
+    if Lat < Latitude1:
         LatR = Latitude1
+    elif Lat >= Latitude2:
+        LatR = Latitude2
     # Longitude
     Cellsize = DataS[LonLab][1]-DataS[LonLab][0]
     Longitude1 = DataS[LonLab][(DataS[LonLab]>=Lon)][0]
     Longitude2 = DataS[LonLab][(DataS[LonLab]<=Lon)][-1]
-    if Lon <= Longitude2+Cellsize/2:
-        LonR = Longitude2
-    elif Lon > Longitude1-Cellsize/2:
+    if Lon <= Longitude1:
         LonR = Longitude1
+    elif Lon > Longitude2:
+        LonR = Longitude2
     Series = DataS[VarLab][:,DataS[LatLab]==LatR,:]
     Series = Series[:,0,DataS[LonLab]==LonR]
     
