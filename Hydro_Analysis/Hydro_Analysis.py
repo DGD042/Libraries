@@ -107,10 +107,7 @@ class Hydro_Analysis(object):
             self.DateH = None
         if not(DateM is None):
             DatesM = DatesC(DateM)
-            if isinstance(DateM[0],str) or isinstance(DateM[0],datetime):
-                self.DateM = DatesM.datetime
-            else:
-                self.DateM = None
+            self.DateM = DatesM.datetime
         else:
             self.DateM = None
         if not(VarH is None):
@@ -192,7 +189,7 @@ class Hydro_Analysis(object):
         # ----------------
         if Var == None and self.VarH == None:
             raise utl.ShowError('CiclD','Hydro_Analysis','No Data added')
-        if Years == None and self.DateH == None:
+        if Years == None and self.DateH is None:
             raise utl.ShowError('CiclD','Hydro_Analysis','No Dates added')
         if Years == None and Dates == None:
             Dates = self.DateH
@@ -633,7 +630,7 @@ class Hydro_Analysis(object):
         # --------------------
         if VMes == None and self.VarM == None:
             raise utl.ShowError('CiclA','Hydro_Analysis','No Data added')
-        if Years == None and self.DateM == None:
+        if Years is None and self.DateM is None:
             raise utl.ShowError('CiclA','Hydro_Analysis','No Dates added')
         if Years == None: 
             Years = [self.DateM[0].year,self.DateM[-1].year]

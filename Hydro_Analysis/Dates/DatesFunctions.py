@@ -98,7 +98,7 @@ def Dates_str2datetime(Dates,Date_Format=None,flagQuick=False):
             break
         except:
             if iF == len(Date_Formats)-1:
-                utl.ShowError('Dates_str2datetime','DatesUtil','Bad date format, change format')
+                raise TypeError('Bad date format, change format')
             else:
                 continue
     # -------------------------
