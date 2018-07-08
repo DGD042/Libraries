@@ -127,8 +127,8 @@ class GeoF:
 
             Cellsizex = self.Data['longitude'][1] - self.Data['longitude'][0]
             Cellsizey = self.Data['latitude'][1] - self.Data['latitude'][0]
-            self.Data['geoTrans'] = (self.Data['longitude'][0],
-                    Cellsizex,0.0,self.Data['latitude'][0],0.0,Cellsizey)
+            self.Data['geoTrans'] = (self.Data['longitude'][0]-Cellsizex/2,
+                    Cellsizex,0.0,self.Data['latitude'][0]-Cellsizey/2,0.0,Cellsizey)
             if GeoTime:
                 Dates = self.Data['time']
                 self.Data.pop('time',None)

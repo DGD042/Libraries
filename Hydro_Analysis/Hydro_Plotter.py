@@ -23,6 +23,10 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib.patches as patches
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+import matplotlib.dates as mdates
+import matplotlib.mlab as mlab
+from mpl_toolkits.axes_grid1 import host_subplot
+import mpl_toolkits.axisartist as AA
 import sys
 import warnings
 from scipy import stats as st
@@ -36,7 +40,10 @@ from datetime import date, datetime, timedelta
 # Importing Modules
 from Utilities import Utilities as utl
 from Utilities import Data_Man as DM
-
+try:
+    from Hydro_Analysis.Dates.DatesC import DatesC
+except ImportError:
+    from Dates.DatesC import DatesC
 
 class Hydro_Plotter:
     def __init__(self):
@@ -71,11 +78,11 @@ class Hydro_Plotter:
         __________________________________________________________________
             
             INPUT:
-        + Date: Fechas en formato ordinal.
+        :param Date: Fechas en formato ordinal.
         __________________________________________________________________
 
             OUTPUT: 
-        - Labels: Labes que se ubicarán en los ejes.
+        :return Labels: Labes que se ubicarán en los ejes.
         '''
 
         Year = [date.fromordinal(int(i)).year for i in Date]
@@ -381,6 +388,7 @@ class Hydro_Plotter:
         plt.savefig(PathImg + Var +'_NaN_Mens' + '.png',format='png',dpi=self.dpi )
         plt.close('all')
 
+    # Cycles
     def DalyCycle(self,HH,CiDT,ErrT,VarL='',VarLL='',MaxMin=None,Name='',NameA='Figura',PathImg='',vlimits=None,**args):
         '''
         DESCRIPTION:
@@ -676,7 +684,8 @@ class Hydro_Plotter:
         plt.savefig(PathImg + 'T'+VarInd+'_' + Name+'.png',format = 'png',dpi=self.dpi )
         plt.close('all')
 
-    def AnnualCycle(self,MesM,MesE,VarL,VarLL,Name,NameA,PathImg,AH=False,**args):
+    def AnnualCycle(self,MesM,MesE=None,VarL='',VarLL='',Name='',NameA='Test',
+            PathImg='',AH=False,flagE=True,colors=None,labels=None,v=None,**args):
         '''
             DESCRIPTION:
         
@@ -685,15 +694,19 @@ class Hydro_Plotter:
         _________________________________________________________________________
 
             INPUT:
-        + MesM: Valor medio del mes, debe ir desde enero hasta diciembre.
-        + MesE: Barras de error de los valores.
-        + VarL: Labes de la variable con unidades.
-        + VarLL: Label de la variable sin unidades.
-        + Name: Nombre de la Estación.
-        + NameA: Nombre del archivo.
-        + PathImg: Ruta donde se quiere guardar el archivo.
-        + AH: Este es un flag para saber si se hace el gráfico con el año hidrológico.
-        + **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
+        :param MesM: Valor medio del mes, debe ir desde enero hasta diciembre.
+        :param MesE: Barras de error de los valores.
+        :param VarL: Labes de la variable con unidades.
+        :param VarLL: Label de la variable sin unidades.
+        :param Name: Nombre de la Estación.
+        :param NameA: Nombre del archivo.
+        :param PathImg: Ruta donde se quiere guardar el archivo.
+        :param AH: Este es un flag para saber si se hace el gráfico con el año hidrológico.
+        :param flagE: A boolean, flag to include Errors.
+        :param colors: a list, list with colors of the lines.
+        :param labels: a list, list with the labels of the lines.
+        :param v: a list, list with two values with the min and max.
+        :param **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
         _________________________________________________________________________
         
             OUTPUT:
@@ -708,12 +721,24 @@ class Hydro_Plotter:
         Months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dec']
         if AH:
             Months2 = Months[5:]+Months[:5]
-            MesM2 = np.hstack((MesM[5:],MesM[:5]))
-            MesE2 = np.hstack((MesE[5:],MesE[:5]))
+            if len(MesM.shape) > 1:
+                MesM2 = np.empty(MesM.shape)*np.nan
+                for i in range(MesM.shape[0]):
+                    MesM2[i] = np.hstack((MesM[i,5:],MesM[i,:5]))
+            else:
+                MesM2 = np.hstack((MesM[5:],MesM[:5]))
+            if flagE:
+                if len(MesE.shape) > 1:
+                    MesE2 = np.empty(MesE.shape)*np.nan
+                    for i in range(MesM.shape[0]):
+                        MesE2 = np.hstack((MesE[i,5:],MesE[i,:5]))
+                else:
+                    MesE2 = np.hstack((MesE[5:],MesE[:5]))
         else:
             Months2 = Months
             MesM2 = MesM
-            MesE2 = MesE
+            if flagE:
+                MesE2 = MesE
 
         # Se genera la gráfica
         F = plt.figure(figsize=DM.cm2inch(fH,fV))
@@ -734,10 +759,41 @@ class Hydro_Plotter:
         plt.tick_params(axis='y',which='major',direction='inout') 
         plt.grid()
         # Argumentos que se deben incluir color=C,label=VarLL,lw=1.5
-        plt.errorbar(np.arange(1,13),MesM2,yerr=MesE2,fmt='-',**args)
+        if flagE:
+            if len(MesM2.shape) > 1:
+                for i in range(MesM2.shape[0]):
+                    if colors is None:
+                        if labels is None:
+                            plt.errorbar(np.arange(1,13),MesM2[i],yerr=MesE2[i],fmt='-')
+                        else:
+                            plt.errorbar(np.arange(1,13),MesM2[i],yerr=MesE2[i],fmt='-',label=labels[i])
+                    else:
+                        if labels is None:
+                            plt.errorbar(np.arange(1,13),MesM2[i],yerr=MesE2[i],fmt='-',color=colors[i])
+                        else:
+                            plt.errorbar(np.arange(1,13),MesM2[i],yerr=MesE2[i],fmt='-',color=colors[i],label=labels[i])
+            else:
+                plt.errorbar(np.arange(1,13),MesM2,yerr=MesE2,fmt='-',**args)
+        else:
+            if len(MesM2.shape) > 1:
+                for i in range(MesM2.shape[0]):
+                    if colors is None:
+                        if labels is None:
+                            plt.plot(np.arange(1,13),MesM2[i])
+                        else:
+                            plt.plot(np.arange(1,13),MesM2[i],label=labels[i])
+                    else:
+                        if labels is None:
+                            plt.plot(np.arange(1,13),MesM2[i],color=colors[i])
+                        else:
+                            plt.plot(np.arange(1,13),MesM2[i],color=colors[i],label=labels[i])
+            else:
+                plt.plot(np.arange(1,13),MesM2,**args)
         plt.title('Ciclo anual de '+ VarLL +' en ' + Name,fontsize=15 )  # Colocamos el título del gráfico
         plt.ylabel(VarL,fontsize=16)  # Colocamos la etiqueta en el eje x
         plt.xlabel('Meses',fontsize=16)  # Colocamos la etiqueta en el eje y
+        if not(v is None):
+            plt.ylim(v)
         # The minor ticks are included
         ax = plt.gca()
         yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
@@ -746,6 +802,8 @@ class Hydro_Plotter:
         plt.gca().yaxis.set_minor_locator(minorLocatory)
         ax.set_xlim([0.5,12.5])
         plt.xticks(np.arange(1,13), Months2) # Se cambia el valor de los ejes
+        if not(labels is None):
+            plt.legend(loc=0)
         plt.tight_layout()
         plt.savefig(PathImg + 'CAErr_' + NameA+'.png',format='png',dpi=self.dpi )
         plt.close('all')
@@ -2277,4 +2335,219 @@ class Hydro_Plotter:
             tick.set_rotation(45)
         plt.tight_layout()
         plt.savefig(PathImg+ Name + '_' +Var+Filt+'_Series.png',format='png',dpi=300)
+        plt.close('all')
+
+    def EventsSeriesGen(self,DatesEv,Data,DataV=None,DataKeyV=None,DataKey=None,PathImg='',
+            Name='',NameArch='',
+            GraphInfo={'ylabel':['Precipitación [mm]'],'color':['b'],'label':['Precipitación']},
+            GraphInfoV={'color':['-.b'],'label':['Inicio del Evento']},
+            flagBig=False,vm={'vmax':[],'vmin':[]},Ev=0,flagV=False,
+            flagAverage=False,dt=1,Date='',flagEvent=False,N=None):
+        '''
+        DESCRIPTION:
+
+            Esta función realiza los gráficos de los diferentes eventos
+            solamente de los eventos de precipitación.
+        _______________________________________________________________________
+        INPUT:
+            :param DatesEv:     A ndarray, Dates of the events.
+            :param Data:        A dict, Diccionario con las variables
+                                            que se graficarán.
+            :param DataV:       A dict, Diccionario con las líneas verticales
+                                        estos deben ser fechas en formato
+                                        datetime.
+            :param DataKeyV:    A list, Lista con keys de los valores verticales.
+
+        '''
+        # Se organizan las fechas
+        if flagAverage:
+            H = int(len(DatesEv)/2)
+            FechaEvv = np.arange(-H,H,1)
+            FechaEvv = FechaEvv*dt/60
+        else:
+            FechaEvv = DatesEv
+
+        if DataKey is None:
+            flagSeveral = False
+        elif len(DataKey) >= 1:
+            flagSeveral = True
+
+        if len(vm['vmax']) == 0 and len(vm['vmin']) == 0:
+            flagVm = False
+        else:
+            flagVm = True
+
+        if flagVm:
+            if len(vm['vmax']) >= 1 and len(vm['vmin']) >= 1:
+                flagVmax = True
+                flagVmin = True
+            elif len(vm['vmax']) >= 1:
+                flagVmax = True
+                flagVmin = False
+            elif len(vm['vmin']) >= 1:
+                flagVmax = False
+                flagVmin = True
+
+        # -------------------------
+        # Se grafican los eventos
+        # -------------------------
+
+        # Se grafican las dos series
+        fH=30 # Largo de la Figura
+        fV = fH*(2/3) # Ancho de la Figura
+
+
+        if flagBig:
+            fH=30 # Largo de la Figura
+            fV = fH*(2/3) # Ancho de la Figura
+            lensize=16
+            plt.rcParams.update({'font.size': 28,'font.family': 'sans-serif'\
+                ,'font.sans-serif': 'Arial Narrow'\
+                ,'xtick.labelsize': 28,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 28,'ytick.major.size': 12,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
+            offNew = 10
+        else:
+            lensize=15
+            plt.rcParams.update({'font.size': 18,'font.family': 'sans-serif'\
+                ,'font.sans-serif': 'Arial Narrow'\
+                ,'xtick.labelsize': 18,'xtick.major.size': 6,'xtick.minor.size': 4\
+                ,'xtick.major.width': 1,'xtick.minor.width': 1\
+                ,'ytick.labelsize': 18,'ytick.major.size': 12,'ytick.minor.size': 4\
+                ,'ytick.major.width': 1,'ytick.minor.width': 1\
+                ,'axes.linewidth':1\
+                ,'grid.alpha':0.1,'grid.linestyle':'-'})
+            offNew = 0
+
+        plt.xticks(rotation=45)
+        f = plt.figure(figsize=DM.cm2inch(fH,fV))
+        ax = host_subplot(111, axes_class=AA.Axes)
+        ax.tick_params(axis='x',which='both',bottom='on',top='off',\
+            labelbottom='on',direction='out')
+        ax.tick_params(axis='y',which='both',left='on',right='off',\
+            labelleft='on')
+        ax.tick_params(axis='y',which='major',direction='inout') 
+        if flagSeveral:
+            if len(DataKey) >= 1:
+                DataP = Data[DataKey[0]]
+        else:
+            DataP = Data
+
+        # Se grafica el gráfico principal
+        ax.plot(FechaEvv,DataP,color=GraphInfo['color'][0],label=GraphInfo['label'][0])
+        if not(flagAverage):
+            ax.axis["bottom"].major_ticklabels.set_rotation(30)
+            ax.axis["bottom"].major_ticklabels.set_ha("right")
+            ax.axis["bottom"].label.set_pad(30)
+            ax.axis["bottom"].format_xdata = mdates.DateFormatter('%H%M')
+        ax.axis["left"].label.set_color(color=GraphInfo['color'][0])
+        ax.set_ylabel(GraphInfo['ylabel'][0])
+
+        # Se escala el eje 
+        if flagVm:
+            if (flagVmax and flagVmin) and (not(vm['vmin'][0] is None) and not(vm['vmax'][0] is None)):
+                ax.set_ylim([vm['vmin'][0],vm['vmax'][0]])
+            elif flagVmax and not(vm['vmax'][0] is None):
+                ax.set_ylim(ymax=vm['vmax'][0])
+            elif flagVmin and not(vm['vmin'][0] is None):
+                ax.set_ylim(ymin=vm['vmin'][0])
+
+        yTL = ax.yaxis.get_ticklocs() # List of Ticks in y
+        xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
+
+        # Se grafican las líneas verticales
+        if flagV:
+            for ilab,lab in enumerate(DataKeyV):
+                ax.plot([DataV[lab],DataV[lab]],[yTL[0],yTL[-1]],
+                        GraphInfoV['color'][ilab],label=GraphInfoV['label'][ilab])
+
+        # Se organizan los ejes 
+        MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+        MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
+        minorLocatory = MultipleLocator(MyL)
+        ax.yaxis.set_minor_locator(minorLocatory)
+
+        if flagAverage:
+            if N != None:
+                ax.text(xTL[-4]+2*MxL,yTL[-1]-5*MyL,'$N=%s$'%(N))
+
+        # Se realizan los demás gráficos
+        if flagSeveral:
+            axi = [ax.twinx() for i in range(len(DataKey)-1)]
+            for ilab,lab in enumerate(DataKey):
+                if ilab >= 1:
+                    axi[ilab-1].plot(FechaEvv,Data[lab],color=GraphInfo['color'][ilab],
+                            label=GraphInfo['label'][ilab])
+                    axi[ilab-1].set_ylabel(GraphInfo['ylabel'][ilab])
+                    if flagVm and len(vm['vmax']) > 1:
+                        if (not(vm['vmin'][ilab] is None) and not(vm['vmax'][ilab] is None)):
+                            axi[ilab-1].set_ylim([vm['vmin'][ilab],vm['vmax'][ilab]])
+                        elif not(vm['vmax'][ilab] is None):
+                            axi[ilab-1].set_ylim(ymax=vm['vmax'][ilab])
+                        elif not(vm['vmin'][ilab] is None):
+                            axi[ilab-1].set_ylim(ymin=vm['vmin'][ilab])
+
+                    if ilab == 2:
+                        offset = 80+offNew
+                        new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
+                        axi[ilab-1].axis["right"] = new_fixed_axis(loc="right",
+                                                        axes=axi[ilab-1],
+                                                        offset=(offset, 0))
+                        axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
+                    elif ilab == 3:
+                        # axi[ilab-1].spines['right'].set_position(('axes',-0.25))
+                        offset = -65-offNew
+                        new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
+                        axi[ilab-1].axis["right"] = new_fixed_axis(loc="left",
+                                                        axes=axi[ilab-1],
+                                                        offset=(offset, 0))
+                        axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
+                    else:
+                        offset = 0
+                        new_fixed_axis = axi[ilab-1].get_grid_helper().new_fixed_axis
+                        axi[ilab-1].axis["right"] = new_fixed_axis(loc="right",
+                                                        axes=axi[ilab-1],
+                                                        offset=(offset, 0))
+                        axi[ilab-1].axis["right"].label.set_color(color=GraphInfo['color'][ilab])
+
+                    # Se organizan los ejes 
+                    yTL = axi[ilab-1].yaxis.get_ticklocs() # List of Ticks in y
+                    MyL = (yTL[1]-yTL[0])/5 # minorLocatory value
+                    minorLocatory = MultipleLocator(MyL)
+                    axi[ilab-1].yaxis.set_minor_locator(minorLocatory)
+                    axi[ilab-1].format_xdata = mdates.DateFormatter('%H%M')
+
+        if flagAverage:
+            ax.set_xlabel('Tiempo [h]')
+            ax.set_title(r"Diagrama de Compuestos en "+Name)
+            if flagBig:
+                ax.set_title(Name)
+        else:
+            if Date == '':
+                ax.set_title(Name)
+            else:
+                ax.set_title(Name+r" Evento "+Date)
+        if not(flagBig):
+            plt.legend(loc=4,framealpha=0.6,fontsize=lensize)
+        # plt.grid()
+        if flagAverage:
+            # Se crea la carpeta para guardar la imágen
+            utl.CrFolder(PathImg + 'Average/')
+            Nameout = PathImg + 'Average/' + NameArch 
+        elif flagEvent:
+            # Se crea la carpeta para guardar la imágen
+            DateL = Date.split('/')
+            utl.CrFolder(PathImg + DateL[0]+DateL[1]+DateL[2] + '/')
+            Nameout = PathImg + '/' + DateL[0]+DateL[1]+DateL[2] + '/'\
+                    + NameArch + '_Ev_' + str(Ev)
+        else:
+            # Se crea la carpeta para guardar la imágen
+            utl.CrFolder(PathImg + NameArch + '/')
+            Nameout = PathImg + NameArch + '/' + NameArch + '_Ev_'+str(Ev)
+        plt.tight_layout()
+
+        plt.savefig(Nameout+'.png',format='png',dpi=200)
         plt.close('all')
