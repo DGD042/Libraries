@@ -282,9 +282,12 @@ class Proc(object):
                     else:
                         self.f[v] = self.f[v]
                 else:
+                    print(v)
                     if self.flag['Variables2']:
+                        print(np.nanmean(self.f[self.Variables2[v]]))
                         self.f[self.Variables2[v]] = self.f[self.Variables2[v]]-np.nanmean(self.f[self.Variables2[v]])
                     else:
+                        print(np.nanmean(self.f[self.f[v]]))
                         self.f[v] = self.f[v]-np.nanmean(self.f[v])
 
         self.var = list(self.f)

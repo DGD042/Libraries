@@ -2338,16 +2338,14 @@ class Hydro_Plotter:
         plt.close('all')
 
     def EventsSeriesGen(self,DatesEv,Data,DataV=None,DataKeyV=None,DataKey=None,PathImg='',
-            Name='',NameArch='',
+            Name='',NameArch='',GraphInfoV={'color':['-.b'],'label':['Inicio del Evento']},
             GraphInfo={'ylabel':['Precipitación [mm]'],'color':['b'],'label':['Precipitación']},
-            GraphInfoV={'color':['-.b'],'label':['Inicio del Evento']},
             flagBig=False,vm={'vmax':[],'vmin':[]},Ev=0,flagV=False,
             flagAverage=False,dt=1,Date='',flagEvent=False,N=None):
         '''
         DESCRIPTION:
 
-            Esta función realiza los gráficos de los diferentes eventos
-            solamente de los eventos de precipitación.
+            This method plots several lines in different axis.
         _______________________________________________________________________
         INPUT:
             :param DatesEv:     A ndarray, Dates of the events.

@@ -3825,8 +3825,8 @@ class BPumpL:
                 M = MP[iC]
             else:
                 M = MP
-            qNaN = sum(~np.isnan(VC[M-2*(60/dt):M+2*(60/dt)]))
-            qT = len(VC[M-2*(60/dt):M+2*(60/dt)])
+            qNaN = sum(~np.isnan(VC[int(M-2*(60/dt)):int(M+2*(60/dt))]))
+            qT = len(VC[int(M-2*(60/dt)):int(M+2*(60/dt))])
 
             if qNaN < qT*0.60:
                 for Lab in ResVar:
@@ -3840,8 +3840,8 @@ class BPumpL:
                     M = MP[iC]
                 else:
                     M = MP
-                qNaN = sum(~np.isnan(VC[iC][M-2*(60/dt):M+2*(60/dt)]))
-                qT = len(VC[iC][M-2*(60/dt):M+2*(60/dt)])
+                qNaN = sum(~np.isnan(VC[iC][int(M-2*(60/dt)):int(M+2*(60/dt))]))
+                qT = len(VC[iC][int(M-2*(60/dt)):int(M+2*(60/dt))])
 
                 if qNaN < qT*0.60:
                     for Lab in ResVar:
@@ -3947,16 +3947,16 @@ class BPumpL:
                     # Se utiliza como referencia 2 horas antes 
 
                     if VVC == 1:
-                        MaxVarA = np.nanmax(VC[M:M+2*(60/dt)])
+                        MaxVarA = np.nanmax(VC[M:int(M+2*(60/dt))])
                         PosA = np.where(VC[M:] == MaxVarA)[0][0]
                         if MaxVarA < -0.2:
-                            MaxVarA = np.nanmax(VC[M:M+3*(60/dt)])
+                            MaxVarA = np.nanmax(VC[M:int(M+3*(60/dt))])
                             PosA = np.where(VC[M:] == MaxVarA)[0][0]
                     else:
-                        MaxVarA = np.nanmax(VC[iC][M:M+2*(60/dt)])
+                        MaxVarA = np.nanmax(VC[iC][M:int(M+2*(60/dt))])
                         PosA = np.where(VC[iC][M:] == MaxVarA)[0][0]
                         if MaxVarA < -0.2:
-                            MaxVarA = np.nanmax(VC[iC][M:M+3*(60/dt)])
+                            MaxVarA = np.nanmax(VC[iC][M:int(M+3*(60/dt))])
                             PosA = np.where(VC[iC][M:] == MaxVarA)[0][0]
 
                     # Se guarda la posición
@@ -4072,16 +4072,16 @@ class BPumpL:
                     # Se encuentra el valor mínimo después
                     # Se utiliza como referencia 2 horas antes 
                     if VVC == 1:
-                        MinVarA = np.nanmin(VC[M:M+2*(60/dt)])
+                        MinVarA = np.nanmin(VC[M:int(M+2*(60/dt))])
                         PosA = np.where(VC[M:] == MinVarA)[0][0]
                         if MinVarA < -0.2:
-                            MinVarA = np.nanmin(VC[M:M+3*(60/dt)])
+                            MinVarA = np.nanmin(VC[M:int(M+3*(60/dt))])
                             PosA = np.where(VC[M:] == MinVarA)[0][0]
                     else:
-                        MinVarA = np.nanmin(VC[iC][M:M+2*(60/dt)])
+                        MinVarA = np.nanmin(VC[iC][M:int(M+2*(60/dt))])
                         PosA = np.where(VC[iC][M:] == MinVarA)[0][0]
                         if MinVarA < -0.2:
-                            MinVarA = np.nanmin(VC[iC][M:M+3*(60/dt)])
+                            MinVarA = np.nanmin(VC[iC][M:int(M+3*(60/dt))])
                             PosA = np.where(VC[iC][M:] == MinVarA)[0][0]
 
                     # Se guarda la posición
