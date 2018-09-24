@@ -189,7 +189,7 @@ def EDTXT(File,deli=',',colStr=(0,),colData=(1,),row_skip=1,flagHeader=True,
     # String Data
     if colStr != None:
         DataStr = np.genfromtxt(File,dtype=str,usecols=colStr,delimiter=deli,
-                skip_header=row_skip,skip_footer=row_end,unpack=True)
+                skip_header=row_skip,skip_footer=row_end,unpack=True,encoding='utf-8')
         if flagstrNaN:
             DataStr[DataStr == str_NaN] = 'nan'
         if len(colStr) == 1:

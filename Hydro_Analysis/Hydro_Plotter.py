@@ -685,7 +685,7 @@ class Hydro_Plotter:
         plt.close('all')
 
     def AnnualCycle(self,MesM,MesE=None,VarL='',VarLL='',Name='',NameA='Test',
-            PathImg='',AH=False,flagE=True,colors=None,labels=None,v=None,**args):
+            PathImg='',AH=False,flagE=True,colors=None,labels=None,v=None,flagIng=False,**args):
         '''
             DESCRIPTION:
         
@@ -706,6 +706,7 @@ class Hydro_Plotter:
         :param colors: a list, list with colors of the lines.
         :param labels: a list, list with the labels of the lines.
         :param v: a list, list with two values with the min and max.
+        :param flagIng: A boolean, flag to change titles for english.
         :param **args: Argumentos adicionales para la gráfica, como color o ancho de la línea.
         _________________________________________________________________________
         
@@ -718,7 +719,10 @@ class Hydro_Plotter:
         # Se crea la carpeta para guardar la imágen
         utl.CrFolder(PathImg)
         # Vector de meses
-        Months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dec']
+        if flagIng:
+            Months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+        else:
+            Months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dec']
         if AH:
             Months2 = Months[5:]+Months[:5]
             if len(MesM.shape) > 1:
@@ -789,9 +793,13 @@ class Hydro_Plotter:
                             plt.plot(np.arange(1,13),MesM2[i],color=colors[i],label=labels[i])
             else:
                 plt.plot(np.arange(1,13),MesM2,**args)
-        plt.title('Ciclo anual de '+ VarLL +' en ' + Name,fontsize=15 )  # Colocamos el título del gráfico
+        if flagIng:
+            plt.title('Annual Cycle of '+ VarLL +' in ' + Name,fontsize=15 )  # Colocamos el título del gráfico
+            plt.xlabel('Months',fontsize=16)  # Colocamos la etiqueta en el eje y
+        else:
+            plt.title('Ciclo anual de '+ VarLL +' en ' + Name,fontsize=15 )  # Colocamos el título del gráfico
+            plt.xlabel('Meses',fontsize=16)  # Colocamos la etiqueta en el eje y
         plt.ylabel(VarL,fontsize=16)  # Colocamos la etiqueta en el eje x
-        plt.xlabel('Meses',fontsize=16)  # Colocamos la etiqueta en el eje y
         if not(v is None):
             plt.ylim(v)
         # The minor ticks are included

@@ -187,29 +187,29 @@ class Hydro_Analysis(object):
         # ----------------
         # Error Managmet
         # ----------------
-        if Var == None and self.VarH == None:
+        if Var is None and self.VarH is None:
             raise utl.ShowError('CiclD','Hydro_Analysis','No Data added')
         if Years == None and self.DateH is None:
             raise utl.ShowError('CiclD','Hydro_Analysis','No Dates added')
-        if Years == None and Dates == None:
+        if Years is None and Dates is None:
             Dates = self.DateH
-        if Var == None:
+        if Var is None:
             Var = self.VarH
-        if DTH == None:
+        if DTH is None:
             DTH = self.DTH
-        if FlagG == None:
+        if FlagG is None:
             FlagG = self.FlagG
-        if PathImg == None:
+        if PathImg is None:
             PathImg = self.PathImg
-        if NameA == None:
+        if NameA is None:
             NameA = self.NameA
-        if Name == None:
+        if Name is None:
             Name = self.Name
-        if VarLL == None:
+        if VarLL is None:
             VarLL = self.VarLL
-        if VarL == None:
+        if VarL is None:
             VarL = self.VarL
-        if C == None:
+        if C is None:
             C = self.color
 
         # Calculus
@@ -628,27 +628,27 @@ class Hydro_Analysis(object):
         # --------------------
         # Error Managment
         # --------------------
-        if VMes == None and self.VarM == None:
+        if VMes is None and self.VarM is None:
             raise utl.ShowError('CiclA','Hydro_Analysis','No Data added')
         if Years is None and self.DateM is None:
             raise utl.ShowError('CiclA','Hydro_Analysis','No Dates added')
-        if Years == None: 
+        if Years is None: 
             Years = [self.DateM[0].year,self.DateM[-1].year]
-        if VMes == None:
+        if VMes is None:
             VMes = self.VarM
-        if FlagG == None:
+        if FlagG is None:
             FlagG = self.FlagG
-        if PathImg == None:
+        if PathImg is None:
             PathImg = self.PathImg
-        if NameArch == None:
+        if NameArch is None:
             NameArch = self.NameA
-        if Name == None:
+        if Name is None:
             Name = self.Name
-        if VarLL == None:
+        if VarLL is None:
             VarLL = self.VarLL
-        if VarL == None:
+        if VarL is None:
             VarL = self.VarL
-        if C == None:
+        if C is None:
             C = self.color
         
         results = CCy.CiclA(VMes,Years,flagA=flagA,oper=oper)
