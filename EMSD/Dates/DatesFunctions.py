@@ -98,7 +98,7 @@ def Dates_str2datetime(Dates,Date_Format=None,flagQuick=False):
             break
         except:
             if iF == len(Date_Formats)-1:
-                utl.ShowError('Dates_str2datetime','DatesUtil','Bad date format, change format')
+                raise ValueError('<Dates_str2datetime> ,Bad date format, change format')
             else:
                 continue
     # -------------------------
@@ -204,8 +204,7 @@ def Dates_ampm224h(Dates,Hours=None,Date_Format=None):
         except:
             DatesP = None
             if iF == len(Date_Formats)-1:
-                Er = utl.ShowError('Dates_ampm224h','DatesUtil','Bad date format, change format')
-                return Er
+                raise ValueError('<Dates_ampm224h> ,Bad date format, change format')
             else:
                 continue
 
@@ -238,23 +237,23 @@ def Dates_Comp(DateI,DateE,dtm=timedelta(1)):
     # Error managment
     # ---------------------
     if isinstance(dtm,timedelta) == False:
-        Er = utl.ShowError('Dates_Comp','DatesUtil','Bad dtm format')
+        raise ValueError('<Dates_Comp>, Bad dtm format')
         raise Er
 
     if isinstance(DateI,datetime) and dtm.seconds == 0:
-        Er = utl.ShowError('Dates_Comp','DatesUtil','Bad time delta given')
+        raise ValueError('<Dates_Comp>, Bad time delta given')
         raise Er
 
     if isinstance(DateI,date) == False or isinstance(DateE,date) == False:
-        Er = utl.ShowError('Dates_Comp','DatesUtil','Bad DateI and DateE format')
+        raise ValueError('<Dates_Comp>, Bad DateI or DateE format')
         raise Er
 
     if isinstance(DateI,datetime) and isinstance(DateE,datetime) == False:
-        Er = utl.ShowError('Dates_Comp','DatesUtil','Bad DateI and DateE format')
+        raise ValueError('<Dates_Comp>, Bad DateI or DateE format')
         raise Er
 
     if isinstance(DateI,datetime) == False and isinstance(DateE,datetime):
-        Er = utl.ShowError('Dates_Comp','DatesUtil','Bad DateI and DateE format')
+        raise ValueError('<Dates_Comp>, Bad DateI or DateE format')
         raise Er
     # ---------------------
     # Generate series

@@ -137,7 +137,7 @@ def CiclD(Var,Years=None,Dates=None,DTH=24,flagZeros=False):
     VarM = np.reshape(np.copy(Var),(-1,DTH))
     CiDT, DesT, ErrT =  MeanError(VarM,axis=0)
     Results = {'MonthsM':MonthsM,'MonthsMM':MonthsMM,'MonthsME':MonthsME,
-            'CiDT':CiDT,'ErrT':ErrT,'TriM':TriM,'TriMM':TriMM,'TriMD':TriMD,'TriME':TriME}
+            'CiDT':CiDT,'ErrT':ErrT,'DesT':DesT,'TriM':TriM,'TriMM':TriMM,'TriMD':TriMD,'TriME':TriME}
 
     return Results
 
