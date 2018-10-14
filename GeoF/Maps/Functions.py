@@ -20,9 +20,9 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import matplotlib.dates as mdates
 import matplotlib.mlab as mlab
 from mpl_toolkits.axes_grid1 import host_subplot
-import mpl_toolkits.axisartist as AA
-from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.basemap import Basemap
+# import mpl_toolkits.axisartist as AA
+# from mpl_toolkits.mplot3d import Axes3D
+# from mpl_toolkits.basemap import Basemap
 import matplotlib.image as mpimg
 from matplotlib import animation
 # System
@@ -122,24 +122,36 @@ def Select_Grid(DataS,Lat,Lon,VarLab,LatLab='latitude',LonLab='longitude'):
 
     # Latitude
     Cellsize = DataS[LatLab][0]-DataS[LatLab][1]
+    DataS[LatLab] = DataS[LatLab]-Cellsize/2.0
     Latitude1 = DataS[LatLab][(DataS[LatLab]>=Lat)][-1]
     Latitude2 = DataS[LatLab][(DataS[LatLab]<=Lat)][0]
-    if Lat < Latitude1:
-        LatR = Latitude1
-    elif Lat >= Latitude2:
+    if Lat <= Latitude1:
         LatR = Latitude2
+    elif Lat >= Latitude2:
+        LatR = Latitude1
+
     # Longitude
     Cellsize = DataS[LonLab][1]-DataS[LonLab][0]
+    DataS[LonLab] = DataS[LonLab]-Cellsize/2.0
     Longitude1 = DataS[LonLab][(DataS[LonLab]>=Lon)][0]
     Longitude2 = DataS[LonLab][(DataS[LonLab]<=Lon)][-1]
     if Lon <= Longitude1:
-        LonR = Longitude1
-    elif Lon > Longitude2:
         LonR = Longitude2
-    Series = DataS[VarLab][:,DataS[LatLab]==LatR,:]
-    Series = Series[:,0,DataS[LonLab]==LonR]
+    elif Lon >= Longitude2:
+        LonR = Longitude1
+
+    # Clip
+    if len(DataS[VarLab].shape)>=3:
+        Series = DataS[VarLab][:,DataS[LatLab]==LatR,:]
+        Series = Series[:,0,DataS[LonLab]==LonR]
+        Series = Series[:,0]
+    else:
+        Series = DataS[VarLab][DataS[LatLab]==LatR,:]
+        Series = Series[0,DataS[LonLab]==LonR]
+        Series = Series[0]
+
     
-    return Series[:,0], LatR, LonR
+    return Series, LatR, LonR
 
 
 
