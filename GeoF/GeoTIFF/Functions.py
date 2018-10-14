@@ -74,6 +74,7 @@ def GeoTIFFEx(Ar,band=1):
     _shape = Data['Data'].shape
     Lat = np.empty(_shape[0])*np.nan
     Lon = np.empty(_shape[1])*np.nan
+    # Coordinates are Cell Centered
     # Latitude
     Clon = geoTrans[1]
     Clat = geoTrans[-1]
