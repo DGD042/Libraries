@@ -1686,7 +1686,7 @@ class Hydro_Plotter:
         ax = plt.gca()
         xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
         MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
-        plt.xlim([0,np.nanmax(V1)+2*MxL])
+        plt.xlim([np.nanmin(V1)-2*MxL,np.nanmax(V1)+2*MxL])
 
         xTL = ax.xaxis.get_ticklocs() # List of Ticks in x
         MxL = (xTL[1]-xTL[0])/5 # minorLocatorx value
@@ -2250,13 +2250,14 @@ class Hydro_Plotter:
             labelleft='on')
         plt.tick_params(axis='y',which='major',direction='inout') 
         plt.grid()
-        # plt.plot((fs*0.5/np.pi)*w, abs(h), label="order = %d" % order)
-        # plt.plot((fs*0.5)*w, abs(h), label="order = %d" % order)
-        plt.plot(w, abs(h), label="order = %d" % order)
-        # plt.semilogx(w,  20 * np.log10(abs(h)), label="order = %d" % order)
-        plt.title('Butterworth filter frequency response')
-        plt.xlabel('Frequency [radians / second]')
-        plt.ylabel('Amplitude [dB]')
+        # plt.plot((fs*0.5/np.pi)*w, abs(h), label="orden = %d" % order)
+        # plt.plot((fs*0.5)*w, abs(h), label="orden = %d" % order)
+        # plt.plot(w, abs(h), label="orden = %d" % order)
+        plt.semilogx(((1/w)*5)/60*np.pi,  abs(h), label="30 min - 5 h Filtro de paso banda")
+        plt.title('Filtro Butterworth')
+        plt.xlabel('Periodo [h]')
+        plt.ylabel(r'(Respuesta de Magnitud)$^2$')
+        plt.legend(loc=1)
         # The minor ticks are included
         ax = plt.gca()
         yTL = ax.yaxis.get_ticklocs() # List of Ticks in y

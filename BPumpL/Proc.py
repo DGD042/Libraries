@@ -82,6 +82,7 @@ class Proc(object):
         LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]',
                 'Presión [hPa]','Hum. Espec. [kg/kg]','Tasa de Mezcla [kg/g]']
         self.DataBase = DataBase
+        self.PathImg = PathImg
         
         self.mmHg2hPa = 1.3332239
 
@@ -301,6 +302,8 @@ class Proc(object):
         '''
         print(' Se realiza el filtro Butterworth')
         Var = self.Variables
+        if PathImg == '':
+            PathImg = self.PathImg
             
         for iv,v in enumerate(Var):
             if self.flag[v]:
@@ -309,7 +312,7 @@ class Proc(object):
                     self.f[self.Variables3[v]] = self.f[self.Variables2[v]][qn]
                     if v != 'PrecC':
                         fs = len(self.f[self.Variables3[v]])
-                        b,a = anet.ButterworthFiler([lowcut,highcut],order,fs,btype='bandpass',flagG=flagG,worN=fs,PathImg=PathImg,Name='Filt_Function')
+                        b,a = anet.ButterworthFiler([lowcut,highcut],order,fs,btype='bandpass',flagG=True,worN=fs,PathImg=self.PathImg,Name='Filt_Function')
                         self.f[self.Variables4[v]] = anet.Filt_ButterworthApp(self.f[self.Variables3[v]],[lowcut,highcut],order,fs,btype='bandpass')
                         # b,a = anet.ButterworthFiler(highcut,order,fs,btype='lowpass',flagG=flagG,worN=fs,PathImg=PathImg,Name='Filt_Function')
                         # self.f[self.Variables4[v]] = anet.Filt_ButterworthApp(self.f[self.Variables3[v]],highcut,order,fs,btype='lowpass')
