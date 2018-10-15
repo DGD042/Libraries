@@ -17,6 +17,7 @@ from datetime import date, datetime, timedelta
 import csv
 import xlrd
 import xlsxwriter as xlsxwl
+import json
 # System
 import sys
 import os
@@ -921,3 +922,25 @@ def EDmat(File):
             continue
 
     return Data
+
+def LoadJson(File):
+    '''
+    DESCRIPTION:
+
+        This function extract the information of Json File
+    _______________________________________________________________________
+
+    INPUT:
+        :param File: A str, File that would be extracted including the 
+                     path.
+    _______________________________________________________________________
+    
+    OUTPUT:
+        :return Data: A dict, Extracted Data Dictionary.    
+    '''
+
+    with open(File,'r') as f:
+        a = json.load(f)
+
+    return a
+
