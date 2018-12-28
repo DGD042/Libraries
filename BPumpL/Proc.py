@@ -81,6 +81,10 @@ class Proc(object):
                 'Humedad Especifica','Tasa de Mezcla de Vapor de Agua']
         LabelVU = ['Precipitación [mm]','Temperatura [°C]','Hum. Rel. [%]',
                 'Presión [hPa]','Hum. Espec. [kg/kg]','Tasa de Mezcla [kg/g]']
+        LabelV = ['Rainfall','Temperature','Relative Humidity','Pressure',
+                'Specific Humidity','Tasa de Mezcla de Vapor de Agua']
+        LabelVU = ['Rainfall [mm]','Temperature [°C]','Rel. Hum. [%]',
+                'Pressure [hPa]','Hum. Espec. [kg/kg]','Tasa de Mezcla [kg/g]']
         self.DataBase = DataBase
         self.PathImg = PathImg
         
@@ -294,7 +298,7 @@ class Proc(object):
         self.var = list(self.f)
         return
     
-    def ButterFilt(self,lowcut,highcut,order=2,flagG=False,xTi=0,xTf=24*60/5,PathImg=''):
+    def ButterFilt(self,lowcut,highcut,order=2,flagG=False,xTi=0,xTf=int(24*60/5),PathImg=''):
         '''
         DESCRIPTION:
 

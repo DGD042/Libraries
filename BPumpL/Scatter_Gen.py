@@ -47,6 +47,7 @@ import time
 from Utilities import Utilities as utl
 from Utilities import DatesUtil as DUtil; DUtil=DUtil()
 from Utilities import Data_Man as DM
+import EMSD.Extract_Data as ExD
 from AnET import CFitting as CF; CF=CF()
 from Hydro_Analysis import Hydro_Plotter as HyPl;HyPl=HyPl()
 from Hydro_Analysis.Meteo import MeteoFunctions as HyMF
@@ -147,6 +148,8 @@ class Scatter_Gen(object):
                 self.f['FechaEvP'] = np.vstack((self.f['FechaEvP'],DUtil.Dates_str2datetime(self.f['FechaEv'][i],Date_Format='%Y/%m/%d-%H%M',flagQuick=True)))
 
         if self.flag['FechaC']:
+            f = ExD.EDmat(self.Arch2[irow])
+            self.f2 = f
             self.f['FechaC']
             self.f['FechaCP'] = DUtil.Dates_str2datetime(self.f['FechaC'],Date_Format='%Y/%m/%d-%H%M',flagQuick=True)
             # Delta de tiempo
@@ -158,6 +161,7 @@ class Scatter_Gen(object):
         else:
             self.flag['FechaC'] = True
             f = sio.loadmat(self.Arch2[irow])
+            self.f2 = f
             self.f['FechaC'] = f['FechaC']
             self.FechaC = True
             self.f['FechaCP'] = DUtil.Dates_str2datetime(self.f['FechaC'],Date_Format='%Y/%m/%d-%H%M',flagQuick=True)
@@ -452,7 +456,8 @@ class Scatter_Gen(object):
             flags={'TC':False,'PresC':False,'HRC':False,'qC':False,'WC':False},
             flagAver=False,flagBig=False,DataV=None,DataKeyV=['DatesEvst','DatesEvend'],
             vm = {'vmax':[None],'vmin':[0]},
-            GraphInfoV={'color':['-.b','-.g'],'label':['Inicio del Evento','Fin del Evento']}):
+            GraphInfoV={'color':['-.b','-.g'],'label':['Inicio del Evento','Fin del Evento']},
+            flagEng=True):
         '''
         DESCRIPTION:
             Con esta función se pretenden graficar los diferentes eventos de 
@@ -473,18 +478,31 @@ class Scatter_Gen(object):
 
 
         Labels = ['PresC','TC','HRC','qC','WC']
-        UnitsDict = {'TC':'Temperatura [°C]','PresC':'Presión [hPa]','HRC':'Humedad Relativa [%]',
-                'qC':'Humedad Específica [g/kg]','WC':'Relación de Mezcla [g/kg]'}
-        ColorDict = {'TC':'r','PresC':'k','HRC':'g',
-                'qC':'g','WC':'m'}
-        LabelDict = {'TC':'Temperatura','PresC':'Presión','HRC':'Humedad Relativa',
-                'qC':'Humedad Específica','WC':'Relación de Mezcla de V.A.'}
+        if flagEng==False:
+            UnitsDict = {'TC':'Temperatura [°C]','PresC':'Presión [hPa]','HRC':'Humedad Relativa [%]',
+                    'qC':'Humedad Específica [g/kg]','WC':'Relación de Mezcla [g/kg]'}
+            ColorDict = {'TC':'r','PresC':'k','HRC':'g',
+                    'qC':'g','WC':'m'}
+            LabelDict = {'TC':'Temperatura','PresC':'Presión','HRC':'Humedad Relativa',
+                    'qC':'Humedad Específica','WC':'Relación de Mezcla de V.A.'}
+            Units = ['Precipitación [mm]']
+            Label = ['Precipitación']
+            ending=''
+        else:
+            UnitsDict = {'TC':'Temperature [°C]','PresC':'Pressure [hPa]',
+                    'HRC':'Relative Humidity [%]',
+                    'qC':'Specific Humidity [g/kg]','WC':'Mixing Ratio [g/kg]'}
+            ColorDict = {'TC':'r','PresC':'k','HRC':'g',
+                    'qC':'g','WC':'m'}
+            LabelDict = {'TC':'Temperature','PresC':'Pressure','HRC':'Relative Humidity',
+                    'qC':'Specific Humidity','WC':'Mixing Ratio'}
+            Units = ['Rainfall [mm]']
+            Label = ['Rainfall']
+            ending='_eng'
 
 
         DataKeys = ['PrecC']
-        Units = ['Precipitación [mm]']
         Color = ['b']
-        Label = ['Precipitación']
         Vars = 'Prec'
         for iLab,Lab in enumerate(Labels):
             if flags[Lab]:
@@ -533,7 +551,7 @@ class Scatter_Gen(object):
             BP.EventsSeriesGen(EvTot['FechaEv'][0],Data,self.PrecCount,
                     DataKeyV=DataKeyV,DataKey=DataKeys,
                     PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
-                    Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
+                    Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow]+ending,
                     GraphInfo={'ylabel':Units,'color':Color,
                         'label':Label},
                     GraphInfoV={'color':['-.b','-.g'],
@@ -555,7 +573,7 @@ class Scatter_Gen(object):
                     BP.EventsSeriesGen(EvTot['FechaEv'][iEv],Data,DataVer,
                             DataKeyV=DataKeyV,DataKey=DataKeys,
                             PathImg=self.PathImg+ImgFolder+'Series/'+EvType+'/'+Vars+'/',
-                            Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow],
+                            Name=self.Names[self.irow],NameArch=self.NamesArch[self.irow]+ending,
                             GraphInfo={'ylabel':Units,'color':Color,
                                 'label':Label},
                             GraphInfoV=GraphInfoV,flagV=False,

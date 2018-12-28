@@ -4542,7 +4542,7 @@ class BPumpL:
                     axi[ilab-1].format_xdata = mdates.DateFormatter('%H%M')
 
         if flagAverage:
-            ax.set_xlabel('Tiempo [h]')
+            ax.set_xlabel('Time [h]')
             ax.set_title(r"Diagrama de Compuestos en "+Name)
             if flagBig:
                 ax.set_title(Name)

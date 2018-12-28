@@ -112,6 +112,9 @@ def NoNaN(X,Y,flagN=True):
     N = sum(q) 
     XX = X[q]
     YY = Y[q]
+    q = ~(np.isinf(XX) | np.isinf(YY))
+    XX = XX[q]
+    YY = YY[q]
 
     if flagN == True:
         return XX,YY,N

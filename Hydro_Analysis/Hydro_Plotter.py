@@ -389,7 +389,8 @@ class Hydro_Plotter:
         plt.close('all')
 
     # Cycles
-    def DalyCycle(self,HH,CiDT,ErrT,VarL='',VarLL='',MaxMin=None,Name='',NameA='Figura',PathImg='',vlimits=None,**args):
+    def DalyCycle(self,HH,CiDT,ErrT,VarL='',VarLL='',MaxMin=None,Name='',
+            NameA='Figura',PathImg='',vlimits=None,flagIng=True,**args):
         '''
         DESCRIPTION:
         
@@ -454,7 +455,10 @@ class Hydro_Plotter:
         else:
             plt.title('Ciclo Diurno de ' + VarLL + ' en ' + Name,fontsize=self.fontsize)  # Colocamos el título del gráfico
         plt.ylabel(VarL,fontsize=self.fontsize)  # Colocamos la etiqueta en el eje x
-        plt.xlabel('Horas',fontsize=self.fontsize)  # Colocamos la etiqueta en el eje y
+        if flagIng:
+            plt.xlabel('Hours',fontsize=self.fontsize)  # Colocamos la etiqueta en el eje y
+        else:
+            plt.xlabel('Horas',fontsize=self.fontsize)  # Colocamos la etiqueta en el eje y
         ax = plt.gca()
         plt.xlim([0,23])
         if not(vlimits is None):
@@ -552,7 +556,9 @@ class Hydro_Plotter:
         plt.close('all')
         return
 
-    def DalyAnCycle(self,MonthsM,PathImg='',Name='',NameSt='',VarL='',VarLL='',VarInd='',FlagMan=False,vmax=None,vmin=None,Flagcbar=True,FlagIng=False,FlagSeveral=True):
+    def DalyAnCycle(self,MonthsM,PathImg='',Name='',NameSt='',VarL='',
+            VarLL='',VarInd='',FlagMan=False,vmax=None,vmin=None,
+            Flagcbar=True,FlagIng=False,FlagSeveral=True):
         '''
         DESCRIPTION:
             
@@ -2254,9 +2260,9 @@ class Hydro_Plotter:
         # plt.plot((fs*0.5)*w, abs(h), label="orden = %d" % order)
         # plt.plot(w, abs(h), label="orden = %d" % order)
         plt.semilogx(((1/w)*5)/60*np.pi,  abs(h), label="30 min - 5 h Filtro de paso banda")
-        plt.title('Filtro Butterworth')
-        plt.xlabel('Periodo [h]')
-        plt.ylabel(r'(Respuesta de Magnitud)$^2$')
+        plt.title('Butterworth Filter')
+        plt.xlabel('Period [h]')
+        plt.ylabel(r'(Response Magnitud)$^2$')
         plt.legend(loc=1)
         # The minor ticks are included
         ax = plt.gca()
@@ -2306,10 +2312,10 @@ class Hydro_Plotter:
 
         axs[0].plot(dates[a:b],Data[a:b],'k-')
         axs[0].axes.get_xaxis().set_visible(False)
-        axs[0].set_title('Serie sin filtrar',fontsize=16)
+        axs[0].set_title('No Filtered Series',fontsize=16)
         axs[0].set_ylabel(VarU,fontsize=16)
         axs[1].plot(dates[a:b],DataF[a:b],'k-')
-        axs[1].set_title('Serie filtrada',fontsize=16)
+        axs[1].set_title('Filtered Series',fontsize=16)
         axs[1].set_ylabel(VarU,fontsize=16)
         # axs[1].set_xlabel(u'Fecha',fontsize=16)
         # for tick in axs[0].get_xticklabels():
@@ -2350,7 +2356,7 @@ class Hydro_Plotter:
             Name='',NameArch='',GraphInfoV={'color':['-.b'],'label':['Inicio del Evento']},
             GraphInfo={'ylabel':['Precipitación [mm]'],'color':['b'],'label':['Precipitación']},
             flagBig=False,vm={'vmax':[],'vmin':[]},Ev=0,flagV=False,
-            flagAverage=False,dt=1,Date='',flagEvent=False,N=None):
+            flagAverage=False,dt=1,Date='',flagEvent=False,N=None,flagEng=True):
         '''
         DESCRIPTION:
 
@@ -2528,8 +2534,12 @@ class Hydro_Plotter:
                     axi[ilab-1].format_xdata = mdates.DateFormatter('%H%M')
 
         if flagAverage:
-            ax.set_xlabel('Tiempo [h]')
-            ax.set_title(r"Diagrama de Compuestos en "+Name)
+            if flagEng:
+                ax.set_xlabel('Time [h]')
+                ax.set_title(r"Composites in "+Name)
+            else:
+                ax.set_xlabel('Tiempo [h]')
+                ax.set_title(r"Diagrama de Compuestos en "+Name)
             if flagBig:
                 ax.set_title(Name)
         else:
@@ -2539,6 +2549,7 @@ class Hydro_Plotter:
                 ax.set_title(Name+r" Evento "+Date)
         if not(flagBig):
             plt.legend(loc=4,framealpha=0.6,fontsize=lensize)
+        ax.set_xlabel('Time [h]')
         # plt.grid()
         if flagAverage:
             # Se crea la carpeta para guardar la imágen
